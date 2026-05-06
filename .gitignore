@@ -1,0 +1,20 @@
+# Hugo output
+/public/
+/resources/_gen/
+/.hugo_build.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Copilot instructions (keep local only)
+.github/copilot-instructions.md
+
+# Temp
+*.log
