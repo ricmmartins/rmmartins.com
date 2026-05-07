@@ -20,6 +20,7 @@ The complete and always updated log is on the [Activity Log](https://github.com/
 
 | Project | Description | Link |
 |---------|-------------|------|
+| Decodifica.Tech | Daily tech news digest synthesized from 290+ international sources into a single summary in Portuguese. Cloud, AI, DevOps, security & software engineering — with a daily podcast on Spotify. *(Content in Portuguese only for now)* | [decodifica.tech](https://decodifica.tech) |
 | AI for Infra | Practical AI handbook for infrastructure engineers. 220+ pages, 15 chapters, 10 troubleshooting scenarios | [ai4infra.com](https://ai4infra.com) |
 | From Server to Cluster | Kubernetes ebook for Linux professionals. 15 chapters bridging Linux skills → K8s with hands-on labs | [fromservertocluster.com](https://fromservertocluster.com) |
 | K8s Hackathon | Hands-on Kubernetes hackathon. 20 challenges covering 100% of CKA + CKAD + CKS certification domains | [k8shackathon.com](https://k8shackathon.com) |
