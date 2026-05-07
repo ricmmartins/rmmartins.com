@@ -46,35 +46,29 @@
     color: #e74c3c;
 }
 
-.terminal-cursor {
-    animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-    50% { opacity: 0; }
-}
-
 .not-found-section {
     text-align: center;
     padding: 3rem 1rem 2rem;
     position: relative;
+    overflow: hidden;
 }
 
 .not-found-bg {
-    font-size: 10rem;
+    font-size: clamp(6rem, 20vw, 12rem);
     font-weight: 900;
-    color: rgba(0,0,0,0.03);
+    color: rgba(0,0,0,0.06);
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -60%);
+    transform: translate(-50%, -50%);
     z-index: 0;
     pointer-events: none;
     letter-spacing: 0.1em;
+    user-select: none;
 }
 
 .dark .not-found-bg {
-    color: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.06);
 }
 
 .not-found-title {
