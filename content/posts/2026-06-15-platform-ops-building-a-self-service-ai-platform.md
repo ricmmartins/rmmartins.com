@@ -1,5 +1,6 @@
 ---
 slug: "platform-ops-building-a-self-service-ai-platform"
+translationKey: "platform-ops-construindo-uma-plataforma-ai-self-service"
 title: "Platform ops: building a self-service AI platform"
 description: "You've become the bottleneck. Multi-tenancy, GPU scheduling, Kueue, quotas, priority classes, and how to stop being a help desk and become a platform engineer."
 date: 2026-06-15T10:00:00-04:00

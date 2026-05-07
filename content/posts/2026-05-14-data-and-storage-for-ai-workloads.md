@@ -1,5 +1,6 @@
 ---
 slug: "data-and-storage-for-ai-workloads"
+translationKey: "dados-e-storage-para-workloads-de-ai"
 title: "Data and storage for AI workloads: the bottleneck nobody sees"
 description: "Expensive GPUs sitting idle waiting for slow disk is the #1 problem in AI infrastructure. Learn how to diagnose data starvation, choose the right storage, and build a pipeline that keeps GPUs fed."
 date: 2026-05-14T10:00:00-04:00

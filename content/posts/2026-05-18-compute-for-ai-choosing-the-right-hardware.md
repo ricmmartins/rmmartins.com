@@ -1,5 +1,6 @@
 ---
 slug: "compute-for-ai-choosing-the-right-hardware"
+translationKey: "compute-para-ai-escolhendo-o-hardware-certo"
 title: "Compute for AI: choosing the right hardware (and connecting it properly)"
 description: "The difference between a two-day training job and a 90-minute one isn't a faster GPU. It's knowing which GPU to use and how to connect them. A complete guide to GPU VMs on Azure."
 date: 2026-05-18T10:00:00-04:00

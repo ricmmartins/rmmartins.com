@@ -1,5 +1,6 @@
 ---
 slug: "cost-engineering-for-ai-when-idle-gpus-cost-more-than-your-car"
+translationKey: "cost-engineering-para-ai-quando-gpu-idle-custa-mais-que-seu-carro"
 title: "Cost engineering for AI: when idle GPUs cost more than your car"
 description: "A GPU idle over the weekend costs $4,700. Spot VMs, PTU vs pay-per-token, right-sizing, tagging, and FinOps to keep the CFO happy without killing innovation."
 date: 2026-06-11T10:00:00-04:00

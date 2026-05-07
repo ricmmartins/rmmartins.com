@@ -1,0 +1,45 @@
+{{- /* Hreflang tags for multilingual SEO (EN ↔ PT) */ -}}
+{{- if .IsHome }}
+<link rel="alternate" hreflang="en" href="https://rmmartins.com/" />
+<link rel="alternate" hreflang="pt-BR" href="https://ricardomartins.com.br/" />
+<link rel="alternate" hreflang="x-default" href="https://rmmartins.com/" />
+{{- else if .Params.translationKey }}
+<link rel="alternate" hreflang="en" href="{{ .Permalink }}" />
+<link rel="alternate" hreflang="pt-BR" href="https://ricardomartins.com.br/{{ .Params.translationKey }}/" />
+<link rel="alternate" hreflang="x-default" href="{{ .Permalink }}" />
+{{- end }}
+
+{{- /* Enhanced Person Schema for homepage */ -}}
+{{- if .IsHome }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Ricardo Martins",
+  "jobTitle": "Principal Solutions Engineer",
+  "worksFor": {
+    "@type": "Organization",
+    "name": "Microsoft"
+  },
+  "url": "https://rmmartins.com",
+  "image": "https://rmmartins.com/images/profile.png",
+  "description": "Blog about Cloud Architecture, Azure, Kubernetes, DevOps and AI by Ricardo Martins.",
+  "sameAs": [
+    "https://linkedin.com/in/ricmmartins",
+    "https://github.com/ricmmartins",
+    "https://x.com/ricmmartins",
+    "https://ricardomartins.com.br"
+  ],
+  "knowsAbout": [
+    "Microsoft Azure",
+    "Cloud Computing",
+    "Kubernetes",
+    "DevOps",
+    "Linux",
+    "Docker",
+    "Infrastructure as Code",
+    "Artificial Intelligence"
+  ]
+}
+</script>
+{{- end }}

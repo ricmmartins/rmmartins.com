@@ -1,5 +1,6 @@
 ---
 slug: "mlops-model-lifecycle-for-infra-engineers"
+translationKey: "mlops-ciclo-de-vida-do-modelo-pra-quem-e-de-infra"
 title: "MLOps: model lifecycle for infra engineers"
 description: "A data scientist sends you model_final_v2_FIXED.pt and says 'put it in production'. Sound familiar? MLOps is the same CI/CD you already know, applied to ML models."
 date: 2026-05-30T10:00:00-04:00

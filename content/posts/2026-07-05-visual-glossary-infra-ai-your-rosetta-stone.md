@@ -1,5 +1,6 @@
 ---
 slug: "visual-glossary-infra-ai-your-rosetta-stone"
+translationKey: "glossario-visual-infra-ai-sua-pedra-de-roseta"
 title: "Visual glossary infra ↔ AI: your Rosetta Stone"
 description: "Every AI term mapped to an infrastructure concept you already know. From 'model' to 'ZeRO', with practical analogies and context for when each one shows up in your work."
 date: 2026-07-05T10:00:00-04:00
