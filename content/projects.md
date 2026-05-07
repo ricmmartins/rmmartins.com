@@ -39,7 +39,7 @@ A progressive learning path for infrastructure professionals:
 | Guide | Link |
 |-------|------|
 | AKS Learning Path | [aks-learning.github.io](https://aks-learning.github.io/learningpath/) |
-| Azure Fundamentals Study Guide | [azure-fundamentals.com](https://azure-fundamentals.com/) |
+| Azure Fundamentals Study Guide | [github.com/ricmmartins/study-guide-az900](https://github.com/ricmmartins/study-guide-az900) |
 | Azure Readiness | [aka.ms/azreadiness](https://aka.ms/azreadiness) |
 | Azure Certification Guide | [aka.ms/azcertification](https://aka.ms/azcertification) |
 
