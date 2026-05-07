@@ -46,11 +46,19 @@
     color: #e74c3c;
 }
 
+.terminal-cursor {
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
 .not-found-section {
     text-align: center;
-    padding: 3rem 1rem 2rem;
+    padding: 4rem 1rem 3rem;
+    min-height: 280px;
     position: relative;
-    overflow: hidden;
 }
 
 .not-found-bg {
