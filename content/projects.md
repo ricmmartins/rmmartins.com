@@ -27,7 +27,7 @@ The complete and always updated log is on the [Activity Log](https://github.com/
 | K8s Hackathon | Hands-on Kubernetes hackathon. 20 challenges covering 100% of CKA + CKAD + CKS certification domains | [k8shackathon.com](https://k8shackathon.com) |
 | Linux Hackathon | The 1st Linux hackathon by Microsoft, part of the official "What The Hack" program | [linuxhackathon.com](https://linuxhackathon.com) |
 | PTU Calculator | PTU estimator for Azure OpenAI. Compares PAYGO, PTU and hybrid pricing models | [ptucalc.com](https://ptucalc.com) |
-| Azure Cert Prep | 28 hands-on challenges for AZ-104 with 100% exam coverage. Break-and-fix scenarios, one-click Codespaces labs, ~$5 total cost | [azurecertprep.github.io](https://azurecertprep.github.io/) |
+| Azure Cert Prep | 205 hands-on challenges across 5 Microsoft certification exams (AZ-900, AZ-104, AZ-305, AZ-400, SC-500). 100% exam coverage with validated commands, break-and-fix scenarios, and one-click labs in GitHub Codespaces. Free and open-source | [azurecertprep.github.io](https://azurecertprep.github.io/) |
 | Azure Governance Made Simple | 30 chapters on identity, policy, IaC, cost, observability and governance at scale | [azgovernance.com](https://azgovernance.com) |
 | Startup-Scale Landing Zone | Opinionated landing zone for startups on Azure. Deploy in under 1 hour (Bicep + Terraform) | [startupscalelanding.zone](https://startupscalelanding.zone) |
 | AKS Newsletter | Monthly curated updates on Azure Kubernetes Service | [aksnewsletter.com](https://aksnewsletter.com) |
