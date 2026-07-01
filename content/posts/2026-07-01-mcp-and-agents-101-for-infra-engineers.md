@@ -27,12 +27,33 @@ Forget the marketing definition. In practice, an agent is the combination of fou
 
 The difference between an agent and a traditional automation script is where the decision lives. In a script, you wrote the flow: "if X, do Y." In an agent, you describe the goal and the available tools, and the model decides the sequence of calls in real time, based on what each tool returns. The loop, in practice, is always this dance:
 
-```
-user prompt + available tools → model decides →
-model requests a tool call → host executes the tool →
-result goes back to the model → model decides again →
-... until it returns final text or hits an iteration limit
-```
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" style="width:100%;height:auto" role="img" aria-label="Agent execution loop: prompt enters, model decides, requests tool call, host executes, result goes back to model">
+<defs>
+<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+</marker>
+</defs>
+<g font-family="Segoe UI, Arial, sans-serif">
+<rect x="20" y="45" width="135" height="44" rx="7" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+<text x="87" y="64" text-anchor="middle" font-size="10" fill="#1a3a5c">User Prompt +</text>
+<text x="87" y="78" text-anchor="middle" font-size="10" fill="#1a3a5c">Available Tools</text>
+<line x1="155" y1="67" x2="195" y2="67" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="200" y="45" width="120" height="44" rx="7" fill="#e1d5e7" stroke="#9673a6" stroke-width="2"/>
+<text x="260" y="71" text-anchor="middle" font-size="11" font-weight="bold" fill="#4a235a">Model Decides</text>
+<line x1="320" y1="67" x2="365" y2="67" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="370" y="45" width="130" height="44" rx="7" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+<text x="435" y="64" text-anchor="middle" font-size="10" fill="#7c6200">Requests</text>
+<text x="435" y="78" text-anchor="middle" font-size="10" fill="#7c6200">Tool Call</text>
+<line x1="500" y1="67" x2="540" y2="67" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="545" y="45" width="135" height="44" rx="7" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+<text x="612" y="64" text-anchor="middle" font-size="10" fill="#1b5e20">Host Executes</text>
+<text x="612" y="78" text-anchor="middle" font-size="10" fill="#1b5e20">the Tool</text>
+<path d="M 612 89 L 612 120 C 612 135, 600 140, 580 140 L 280 140 C 265 140, 260 135, 260 125 L 260 95" stroke="#555" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+<text x="430" y="155" text-anchor="middle" font-size="10" fill="#555">result goes back</text>
+<line x1="260" y1="89" x2="260" y2="175" stroke="#9673a6" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+<text x="260" y="193" text-anchor="middle" font-size="10" fill="#9673a6">Final text or iteration limit</text>
+</g>
+</svg>
 
 Think of it as a runbook executed not by a human reading Confluence, but by an LLM reading the descriptions of the tools available to it. It's powerful because it generalizes: you don't need a script for every scenario. And it's risky for the same reason: the path it takes isn't 100% predictable.
 
@@ -50,22 +71,30 @@ The analogy that lands best for infra folks is LSP (the Language Server Protocol
 
 The architecture has three pieces:
 
-```
- ┌───────────────────────────────┐
- │             HOST               │   Claude, Copilot, Cursor, your agent
- │   ┌─────────────────────────┐ │
- │   │  MCP Client (1 per srv)  │ │
- │   └────────────┬─────────────┘ │
- └────────────────┼────────────────┘
-                   │ stdio  /  HTTP + streaming
-                   ▼
- ┌───────────────────────────────┐
- │           MCP SERVER           │   e.g. AKS-MCP, GitHub, Postgres
- │   tools  ·  resources  ·  prompts
- └────────────────┬────────────────┘
-                   ▼
-            real API / resource (Azure, K8s, database...)
-```
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 310" style="width:100%;height:auto" role="img" aria-label="MCP Architecture: Host containing MCP Client, connected via transport to MCP Server exposing tools, resources and prompts">
+<defs>
+<marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+</marker>
+</defs>
+<g font-family="Segoe UI, Arial, sans-serif">
+<rect x="40" y="20" width="340" height="90" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+<text x="210" y="42" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">HOST</text>
+<rect x="80" y="55" width="260" height="40" rx="6" fill="#ffffff" stroke="#6c8ebf" stroke-width="1.5" stroke-dasharray="4,3"/>
+<text x="210" y="79" text-anchor="middle" font-size="11" fill="#1a3a5c">MCP Client (1 per server)</text>
+<text x="400" y="55" font-size="10" fill="#666">Claude, Copilot, Cursor,</text>
+<text x="400" y="68" font-size="10" fill="#666">your agent</text>
+<line x1="210" y1="110" x2="210" y2="155" stroke="#555" stroke-width="2" marker-end="url(#arr2)"/>
+<text x="225" y="138" font-size="10" fill="#555">stdio / HTTP + streaming</text>
+<rect x="40" y="160" width="340" height="80" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+<text x="210" y="185" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">MCP SERVER</text>
+<text x="210" y="218" text-anchor="middle" font-size="11" fill="#1b5e20">tools · resources · prompts</text>
+<text x="400" y="195" font-size="10" fill="#666">e.g. AKS-MCP, GitHub,</text>
+<text x="400" y="208" font-size="10" fill="#666">Postgres</text>
+<line x1="210" y1="240" x2="210" y2="275" stroke="#555" stroke-width="2" marker-end="url(#arr2)"/>
+<text x="210" y="295" text-anchor="middle" font-size="11" fill="#444">real API / resource (Azure, K8s, database...)</text>
+</g>
+</svg>
 
 - **Host**: the application that orchestrates the loop and shows the interface to the user.
 - **MCP Client**: lives inside the host, keeps a 1-to-1 connection with each server.
