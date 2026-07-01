@@ -3,7 +3,7 @@ slug: "agent-governance-microsoft-foundry"
 translationKey: "governanca-agentes-microsoft-foundry"
 title: "Agent Governance on Microsoft Foundry"
 description: "How Microsoft Foundry handles identity, RBAC, tool catalogs, and policy enforcement for AI agents at organizational scale."
-date: 2026-07-21T10:00:00-04:00
+date: 2026-07-28T10:00:00-04:00
 categories:
   - AI
   - Azure
@@ -112,10 +112,10 @@ If your company is at that point — several teams standing up agents with no co
 
 *This is post 5 of the series "MCP, Agents, and Agent Teams for Infrastructure Engineers":*
 
-1. [MCP and Agents 101](/2026/07/08/mcp-and-agents-101-for-infra-engineers/)
-2. [The Deterministic 429 Watchdog](/2026/07/10/deterministic-429-watchdog-azure-openai/)
+1. [MCP and Agents 101](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
+2. [The Deterministic 429 Watchdog](/2026/07/08/deterministic-429-watchdog-azure-openai/)
 3. [From Script to Agent](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
-4. [Multi-Agent Orchestration](/2026/07/17/multi-agent-orchestration-aks-openai-correlation/)
+4. [Multi-Agent Orchestration](/2026/07/21/multi-agent-orchestration-aks-openai-correlation/)
 5. **Governance on Microsoft Foundry**
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*

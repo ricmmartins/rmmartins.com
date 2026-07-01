@@ -3,7 +3,7 @@ slug: "multi-agent-orchestration-aks-openai-correlation"
 translationKey: "orquestracao-multi-agentes-aks-openai-correlacao"
 title: "Multi-Agent Orchestration: Correlating AKS and Azure OpenAI"
 description: "An orchestrator that combines the AKS diagnostics agent with the token watchdog to answer 'did someone deploy something?' automatically."
-date: 2026-07-17T10:00:00-04:00
+date: 2026-07-21T10:00:00-04:00
 categories:
   - AI
   - Azure
@@ -98,11 +98,11 @@ With four different agents running (watchdog, AKS sub-agent, orchestrator, and t
 
 *This is post 4 of the series "MCP, Agents, and Agent Teams for Infrastructure Engineers":*
 
-1. [MCP and Agents 101](/2026/07/08/mcp-and-agents-101-for-infra-engineers/)
-2. [The Deterministic 429 Watchdog](/2026/07/10/deterministic-429-watchdog-azure-openai/)
+1. [MCP and Agents 101](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
+2. [The Deterministic 429 Watchdog](/2026/07/08/deterministic-429-watchdog-azure-openai/)
 3. [From Script to Agent](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
 4. **Multi-Agent Orchestration**
-5. [Governance on Microsoft Foundry](/2026/07/21/agent-governance-microsoft-foundry/)
+5. [Governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
 

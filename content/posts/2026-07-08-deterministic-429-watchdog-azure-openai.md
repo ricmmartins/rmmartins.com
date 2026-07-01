@@ -3,7 +3,7 @@ slug: "deterministic-429-watchdog-azure-openai"
 translationKey: "watchdog-429-deterministico-azure-openai"
 title: "Building a Deterministic 429 Watchdog for Azure OpenAI"
 description: "An MCP server that detects token consumption trends before the 429 happens — no LLM required, just metrics and a cron job."
-date: 2026-07-10T10:00:00-04:00
+date: 2026-07-08T10:00:00-04:00
 categories:
   - AI
   - Azure
@@ -184,11 +184,11 @@ If you want to test the pure-script version before even touching MCP, it's liter
 
 *This is post 2 of the series "MCP, Agents, and Agent Teams for Infrastructure Engineers":*
 
-1. [MCP and Agents 101](/2026/07/08/mcp-and-agents-101-for-infra-engineers/)
+1. [MCP and Agents 101](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
 2. **The Deterministic 429 Watchdog**
 3. [From Script to Agent](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
-4. [Multi-Agent Orchestration](/2026/07/17/multi-agent-orchestration-aks-openai-correlation/)
-5. [Governance on Microsoft Foundry](/2026/07/21/agent-governance-microsoft-foundry/)
+4. [Multi-Agent Orchestration](/2026/07/21/multi-agent-orchestration-aks-openai-correlation/)
+5. [Governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
 

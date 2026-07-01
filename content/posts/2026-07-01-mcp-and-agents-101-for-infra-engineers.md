@@ -3,7 +3,7 @@ slug: "mcp-and-agents-101-for-infra-engineers"
 translationKey: "mcp-e-agentes-101-para-engenheiros-de-infra"
 title: "MCP and AI Agents 101 for Infrastructure Engineers"
 description: "What MCP is, how AI agents work, and what changes operationally — explained for infra/SRE engineers with a real AKS example."
-date: 2026-07-08T10:00:00-04:00
+date: 2026-07-01T10:00:00-04:00
 categories:
   - AI
   - Azure
@@ -170,10 +170,10 @@ If you're into applied infrastructure content like this, I keep writing about Az
 *This is post 1 of the series "MCP, Agents, and Agent Teams for Infrastructure Engineers":*
 
 1. **MCP and Agents 101**
-2. [The Deterministic 429 Watchdog](/2026/07/10/deterministic-429-watchdog-azure-openai/)
+2. [The Deterministic 429 Watchdog](/2026/07/08/deterministic-429-watchdog-azure-openai/)
 3. [From Script to Agent](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
-4. [Multi-Agent Orchestration](/2026/07/17/multi-agent-orchestration-aks-openai-correlation/)
-5. [Governance on Microsoft Foundry](/2026/07/21/agent-governance-microsoft-foundry/)
+4. [Multi-Agent Orchestration](/2026/07/21/multi-agent-orchestration-aks-openai-correlation/)
+5. [Governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
 
