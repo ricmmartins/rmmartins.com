@@ -85,7 +85,7 @@ That gives you per-project isolation right in Terraform state: every new team th
 
 ## What the platform still doesn't solve on its own
 
-Worth being honest about the limits, because "the platform handles that" is the phrase that generates the most false sense of security. Defender for Cloud's AI workload protection plan (in preview as of early 2026) covers prompt injection detection, anomalous inference volume, and access from unexpected geolocations, but it doesn't cover grounding data integrity (writes to RAG containers) or managed identity lateral movement between hub and Key Vault. Platform governance centralizes and formalizes what you should already be doing. It doesn't think for you about which tools a specific agent actually needs. That's still your design work, the same tool-by-tool exercise we did across the previous four posts.
+There are limits, though, and "the platform handles that" is the phrase that most reliably generates a false sense of security. Defender for Cloud's AI workload protection plan (in preview as of early 2026) covers prompt injection detection, anomalous inference volume, and access from unexpected geolocations, but it doesn't cover grounding data integrity (writes to RAG containers) or managed identity lateral movement between hub and Key Vault. Platform governance centralizes and formalizes what you should already be doing. It doesn't think for you about which tools a specific agent actually needs. That's still your design work, the same tool-by-tool exercise we did across the previous four posts.
 
 To close with something practical: you can monitor changes to content safety or RAI policy directly via Log Analytics, treating it as a security configuration change, not a routine ML operation:
 
@@ -102,7 +102,7 @@ AzureActivity
 
 Five posts, from concept to governance: what MCP is and how an agent decides the sequence of calls on its own; a watchdog that started as a deterministic script and only later gained reasoning, with the guardrail of never gaining the power to act; an orchestrator that correlates two agents without creating a new attack surface; and now the platform layer that formalizes all of it beyond what fits in the memory of whoever wrote the code.
 
-The thread connecting all five is always the same: decision autonomy, yes; autonomy to act on production, no, unless it's an explicit, auditable, reviewed choice rather than a configuration accident. That holds for the `--access-level readonly` on a command-line flag, and it holds for the tool catalog of an entire Microsoft platform. Same principle, different scales.
+The thread connecting all five is always the same: decision autonomy, yes; autonomy to act on production, no, unless it's an explicit, auditable, reviewed choice rather than a configuration accident. That holds for the `--access-level readonly` on a command-line flag, and it holds for the tool catalog of an entire Microsoft platform, at a completely different scale.
 
 If your company is at that point, with several teams standing up agents with no coordination and nobody yet knowing how to look at this centrally, that's exactly the kind of design I help work through. Happy to talk if that's useful.
 

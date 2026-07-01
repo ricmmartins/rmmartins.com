@@ -23,7 +23,7 @@ At some point in the last few months, someone on your team showed up talking abo
 
 ## What an agent actually is
 
-Forget the marketing definition. In practice, an agent is the combination of four things: a model that decides what to do next, a set of tools it can invoke, an execution loop that orchestrates the back-and-forth between the two, and some kind of memory that holds state through the process.
+In practice, an agent is the combination of four things: a model that decides what to do next, a set of tools it can invoke, an execution loop that orchestrates the back-and-forth between the two, and some kind of memory that holds state through the process.
 
 The difference between an agent and a traditional automation script is where the decision lives. In a script, you wrote the flow: "if X, do Y." In an agent, you describe the goal and the available tools, and the model decides the sequence of calls in real time, based on what each tool returns. The loop, in practice, is always this dance:
 

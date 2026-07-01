@@ -62,7 +62,7 @@ The first one gives the agent a baseline for comparison: "has this happened befo
 
 ## Where the model comes in (and where it doesn't)
 
-Here's the most important operational point in this post: **the model does not run every minute**. The deterministic script from post 2 stays the poller: it runs on the cron, once a minute, at zero LLM cost, and only triggers a model call once the threshold is crossed. Putting an LLM in the loop on every iteration of a monitoring cycle is wasting money on a path that, the overwhelming majority of the time, needs no reasoning at all. It's only worth paying the cost of a model call to decide the response level in the minutes the threshold actually gets crossed.
+One thing to get right in this design: **the model does not run every minute**. The deterministic script from post 2 stays the poller: it runs on the cron, once a minute, at zero LLM cost, and only triggers a model call once the threshold is crossed. Putting an LLM in the loop on every iteration of a monitoring cycle is wasting money on a path that, the overwhelming majority of the time, needs no reasoning at all. It's only worth paying the cost of a model call to decide the response level in the minutes the threshold actually gets crossed.
 
 ```
  cron (1x/min, zero LLM cost)

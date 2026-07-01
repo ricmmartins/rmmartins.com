@@ -29,7 +29,7 @@ The industry-standard answer is retry with exponential backoff and jitter, readi
 
 ## What Azure already solves without you writing a line of code
 
-Before building anything, it's worth being honest about how much of this problem the platform already solves on its own. Azure OpenAI exposes native metrics in Azure Monitor per deployment: the real API names are `TokenTransaction` (processed tokens), `AzureOpenAIRequests` (total calls), `ProcessedPromptTokens`, `GeneratedTokens`, and the latency metrics, all filterable by the `ModelDeploymentName` dimension. A simple threshold alert, "warn when `TokenTransaction` crosses X tokens in 1 minute", doesn't need an agent, MCP, or any code at all. It's an `azurerm_monitor_metric_alert` pointing at an `azurerm_monitor_action_group` with email and a Slack webhook, solved in plain Terraform:
+Before building anything, though: the platform already solves a good chunk of this on its own. Azure OpenAI exposes native metrics in Azure Monitor per deployment: the real API names are `TokenTransaction` (processed tokens), `AzureOpenAIRequests` (total calls), `ProcessedPromptTokens`, `GeneratedTokens`, and the latency metrics, all filterable by the `ModelDeploymentName` dimension. A simple threshold alert, "warn when `TokenTransaction` crosses X tokens in 1 minute", doesn't need an agent, MCP, or any code at all. It's an `azurerm_monitor_metric_alert` pointing at an `azurerm_monitor_action_group` with email and a Slack webhook, solved in plain Terraform:
 
 ```hcl
 resource "azurerm_monitor_action_group" "ia_oncall" {
