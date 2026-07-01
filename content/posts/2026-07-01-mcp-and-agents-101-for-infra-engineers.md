@@ -27,7 +27,7 @@ In practice, an agent is the combination of four things: a model that decides wh
 
 The difference between an agent and a traditional automation script is where the decision lives. In a script, you wrote the flow: "if X, do Y." In an agent, you describe the goal and the available tools, and the model decides the sequence of calls in real time, based on what each tool returns. The loop, in practice, is always this dance:
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" style="width:100%;height:auto" role="img" aria-label="Agent execution loop: prompt enters, model decides, requests tool call, host executes, result goes back to model">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" style="width:100%;height:auto" role="img" aria-label="Agent execution loop: prompt enters, model decides, requests tool call, host executes, result goes back to model">
 <defs>
 <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
 <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
@@ -41,6 +41,7 @@ The difference between an agent and a traditional automation script is where the
 <rect x="200" y="45" width="120" height="44" rx="7" fill="#e1d5e7" stroke="#9673a6" stroke-width="2"/>
 <text x="260" y="71" text-anchor="middle" font-size="11" font-weight="bold" fill="#4a235a">Model Decides</text>
 <line x1="320" y1="67" x2="365" y2="67" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+<text x="342" y="59" font-size="9" fill="#555">tool call</text>
 <rect x="370" y="45" width="130" height="44" rx="7" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
 <text x="435" y="64" text-anchor="middle" font-size="10" fill="#7c6200">Requests</text>
 <text x="435" y="78" text-anchor="middle" font-size="10" fill="#7c6200">Tool Call</text>
@@ -50,8 +51,11 @@ The difference between an agent and a traditional automation script is where the
 <text x="612" y="78" text-anchor="middle" font-size="10" fill="#1b5e20">the Tool</text>
 <path d="M 612 89 L 612 120 C 612 135, 600 140, 580 140 L 280 140 C 265 140, 260 135, 260 125 L 260 95" stroke="#555" stroke-width="2" fill="none" marker-end="url(#arr)"/>
 <text x="430" y="155" text-anchor="middle" font-size="10" fill="#555">result goes back</text>
-<line x1="260" y1="89" x2="260" y2="175" stroke="#9673a6" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arr)"/>
-<text x="260" y="193" text-anchor="middle" font-size="10" fill="#9673a6">Final text or iteration limit</text>
+<line x1="260" y1="89" x2="260" y2="170" stroke="#9673a6" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+<text x="275" y="130" font-size="9" fill="#9673a6">done</text>
+<rect x="195" y="177" width="130" height="36" rx="7" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+<text x="260" y="193" text-anchor="middle" font-size="10" fill="#7a2020">Final Response</text>
+<text x="260" y="206" text-anchor="middle" font-size="9" fill="#7a2020">or iteration limit</text>
 </g>
 </svg>
 
