@@ -71,28 +71,44 @@ The analogy that lands best for infra folks is LSP (the Language Server Protocol
 
 The architecture has three pieces:
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 310" style="width:100%;height:auto" role="img" aria-label="MCP Architecture: Host containing MCP Client, connected via transport to MCP Server exposing tools, resources and prompts">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400" style="width:100%;height:auto" role="img" aria-label="MCP Architecture: Host with multiple MCP Clients, each connected 1:1 to a different MCP Server">
 <defs>
 <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
 <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
 </marker>
 </defs>
 <g font-family="Segoe UI, Arial, sans-serif">
-<rect x="40" y="20" width="340" height="90" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
-<text x="210" y="42" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">HOST</text>
-<rect x="80" y="55" width="260" height="40" rx="6" fill="#ffffff" stroke="#6c8ebf" stroke-width="1.5" stroke-dasharray="4,3"/>
-<text x="210" y="79" text-anchor="middle" font-size="11" fill="#1a3a5c">MCP Client (1 per server)</text>
-<text x="400" y="55" font-size="10" fill="#666">Claude, Copilot, Cursor,</text>
-<text x="400" y="68" font-size="10" fill="#666">your agent</text>
-<line x1="210" y1="110" x2="210" y2="155" stroke="#555" stroke-width="2" marker-end="url(#arr2)"/>
-<text x="225" y="138" font-size="10" fill="#555">stdio / HTTP + streaming</text>
-<rect x="40" y="160" width="340" height="80" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
-<text x="210" y="185" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">MCP SERVER</text>
-<text x="210" y="218" text-anchor="middle" font-size="11" fill="#1b5e20">tools · resources · prompts</text>
-<text x="400" y="195" font-size="10" fill="#666">e.g. AKS-MCP, GitHub,</text>
-<text x="400" y="208" font-size="10" fill="#666">Postgres</text>
-<line x1="210" y1="240" x2="210" y2="275" stroke="#555" stroke-width="2" marker-end="url(#arr2)"/>
-<text x="210" y="295" text-anchor="middle" font-size="11" fill="#444">real API / resource (Azure, K8s, database...)</text>
+<rect x="30" y="15" width="640" height="105" rx="10" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+<text x="350" y="38" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">HOST (Claude, Copilot, Cursor, your agent)</text>
+<rect x="60" y="52" width="170" height="42" rx="6" fill="#ffffff" stroke="#6c8ebf" stroke-width="1.5" stroke-dasharray="4,3"/>
+<text x="145" y="77" text-anchor="middle" font-size="11" fill="#1a3a5c">MCP Client 1</text>
+<rect x="265" y="52" width="170" height="42" rx="6" fill="#ffffff" stroke="#6c8ebf" stroke-width="1.5" stroke-dasharray="4,3"/>
+<text x="350" y="77" text-anchor="middle" font-size="11" fill="#1a3a5c">MCP Client 2</text>
+<rect x="470" y="52" width="170" height="42" rx="6" fill="#ffffff" stroke="#6c8ebf" stroke-width="1.5" stroke-dasharray="4,3"/>
+<text x="555" y="77" text-anchor="middle" font-size="11" fill="#1a3a5c">MCP Client 3</text>
+<line x1="145" y1="125" x2="145" y2="188" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+<line x1="350" y1="125" x2="350" y2="188" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+<line x1="555" y1="125" x2="555" y2="188" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+<text x="350" y="160" text-anchor="middle" font-size="10" fill="#555">JSON-RPC 2.0 via stdio / HTTP + streaming</text>
+<rect x="60" y="195" width="170" height="75" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+<text x="145" y="220" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">GitHub MCP</text>
+<text x="145" y="250" text-anchor="middle" font-size="9" fill="#1b5e20">tools · resources · prompts</text>
+<rect x="265" y="195" width="170" height="75" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+<text x="350" y="220" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">AKS-MCP</text>
+<text x="350" y="250" text-anchor="middle" font-size="9" fill="#1b5e20">tools · resources · prompts</text>
+<rect x="470" y="195" width="170" height="75" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+<text x="555" y="220" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">Postgres MCP</text>
+<text x="555" y="250" text-anchor="middle" font-size="9" fill="#1b5e20">tools · resources · prompts</text>
+<line x1="145" y1="275" x2="145" y2="328" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+<line x1="350" y1="275" x2="350" y2="328" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+<line x1="555" y1="275" x2="555" y2="328" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+<rect x="60" y="335" width="170" height="42" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+<text x="145" y="360" text-anchor="middle" font-size="11" fill="#7c6200">GitHub REST API</text>
+<rect x="265" y="335" width="170" height="42" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+<text x="350" y="360" text-anchor="middle" font-size="11" fill="#7c6200">Azure / K8s API</text>
+<rect x="470" y="335" width="170" height="42" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+<text x="555" y="360" text-anchor="middle" font-size="11" fill="#7c6200">PostgreSQL</text>
+<text x="350" y="395" text-anchor="middle" font-size="10" fill="#666">Each client maintains a 1:1 connection to its server</text>
 </g>
 </svg>
 
