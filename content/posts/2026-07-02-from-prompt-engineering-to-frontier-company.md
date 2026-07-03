@@ -30,29 +30,35 @@ This evolution tells a story. And I think few people have stopped to connect the
 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 520" style="width:100%;height:auto" role="img" aria-label="Evolution of AI engineering: from Prompt Engineering to Frontier Company, showing each discipline as a step in a vertical timeline">
 <defs>
-<marker id="arrow-down" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
-<path d="M 0 0 L 5 10 L 10 0 z" fill="#6c8ebf"/>
+<marker id="arr-blue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#6c8ebf"/>
+</marker>
+<marker id="arr-purple" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#9673a6"/>
+</marker>
+<marker id="arr-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#82b366"/>
 </marker>
 </defs>
 <g font-family="Segoe UI, Arial, sans-serif">
 <rect x="250" y="10" width="280" height="42" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
 <text x="390" y="36" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">Prompt Engineering</text>
-<line x1="390" y1="52" x2="390" y2="78" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrow-down)"/>
+<line x1="390" y1="52" x2="390" y2="78" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arr-blue)"/>
 <rect x="250" y="80" width="280" height="42" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
 <text x="390" y="106" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">Context Engineering</text>
-<line x1="390" y1="122" x2="390" y2="148" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrow-down)"/>
+<line x1="390" y1="122" x2="390" y2="148" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arr-blue)"/>
 <rect x="250" y="150" width="280" height="42" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
 <text x="390" y="176" text-anchor="middle" font-size="13" font-weight="bold" fill="#1a3a5c">RAG + Tool Calling</text>
-<line x1="390" y1="192" x2="390" y2="218" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrow-down)"/>
+<line x1="390" y1="192" x2="390" y2="218" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arr-purple)"/>
 <rect x="250" y="220" width="280" height="42" rx="8" fill="#e1d5e7" stroke="#9673a6" stroke-width="2"/>
 <text x="390" y="246" text-anchor="middle" font-size="13" font-weight="bold" fill="#4a235a">Agent Engineering</text>
-<line x1="390" y1="262" x2="390" y2="288" stroke="#9673a6" stroke-width="2" marker-end="url(#arrow-down)"/>
+<line x1="390" y1="262" x2="390" y2="288" stroke="#9673a6" stroke-width="2" marker-end="url(#arr-purple)"/>
 <rect x="250" y="290" width="280" height="42" rx="8" fill="#e1d5e7" stroke="#9673a6" stroke-width="2"/>
 <text x="390" y="316" text-anchor="middle" font-size="13" font-weight="bold" fill="#4a235a">Harness Engineering</text>
-<line x1="390" y1="332" x2="390" y2="358" stroke="#9673a6" stroke-width="2" marker-end="url(#arrow-down)"/>
+<line x1="390" y1="332" x2="390" y2="358" stroke="#9673a6" stroke-width="2" marker-end="url(#arr-purple)"/>
 <rect x="250" y="360" width="280" height="42" rx="8" fill="#e1d5e7" stroke="#9673a6" stroke-width="2"/>
 <text x="390" y="386" text-anchor="middle" font-size="13" font-weight="bold" fill="#4a235a">Multi-Agent Systems</text>
-<line x1="390" y1="402" x2="390" y2="428" stroke="#82b366" stroke-width="2" marker-end="url(#arrow-down)"/>
+<line x1="390" y1="402" x2="390" y2="428" stroke="#82b366" stroke-width="2" marker-end="url(#arr-green)"/>
 <rect x="250" y="430" width="280" height="48" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2.5"/>
 <text x="390" y="459" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">Frontier Company</text>
 <text x="60" y="36" font-size="11" fill="#888">2023</text>
