@@ -19,15 +19,15 @@ series:
 ---
 # Chapter 5: Governance on Microsoft Foundry
 
-The four previous posts built agents I designed myself, where I know exactly what each tool does and remember off the top of my head which flag restricts what. That works right up until another team, without having read this series, stands up their own agent on the same platform, and at that point the question stops being "is this tool safe" and becomes "how do I know, at the organizational level, what's running and with what permissions." That's the moment governance stops being a good practice and becomes a prerequisite.
+The previous four posts built agents I designed myself, so I could still keep the whole thing in my head. That arrangement lasts right up until another team stands up its own agent on the same platform. Then the question stops being "is this tool safe" and becomes "how do I know what is running, where, and with which permissions?" That is the point where governance stops being a nice habit and becomes table stakes.
 
-Microsoft's platform for this, now called **Microsoft Foundry** (the name that came after "Azure AI Foundry," worth checking which one still shows up in your subscription, the rename is still rolling out in some places), already covers a good chunk of what I applied by hand in the earlier posts. This post is about where the platform solves this for you and where it doesn't, because both matter to whoever is going to sign off on this governance.
+Microsoft's platform for this, now called **Microsoft Foundry**, already covers a good chunk of what I applied by hand in the earlier posts. You may still see the older Azure AI Foundry naming in parts of the portal and in older docs while the rename finishes rolling out. This post is about what the platform handles for you and what it still leaves on your desk, because both matter to whoever has to sign off on the design.
 
-## Hubs and projects as the unit of isolation
+## Foundry resource and project as the unit of isolation
 
-Foundry's structure has two layers: the hub is a shared workspace with centralized compute, storage, Key Vault, and Container Registry; the project is the isolated unit within it, typically per team. Data, whether files, conversation history, or search indexes, doesn't leak from one project to another, even when both live under the same hub.
+In the current Foundry model, the top-level resource is the Foundry account itself and projects sit underneath it as isolated workspaces for teams. If you still have older hub-based setups in your subscription, you may still see that vocabulary, but new Terraform examples and the newer control plane center on the Foundry resource plus projects. Files, conversation state, and indexes stay scoped to the project unless you choose to share something explicitly.
 
-Applying this to the series' agents: the token watchdog and the AKS diagnoser could perfectly well live in the same project, since they belong to the same SRE team. But if the data team decides to build its own agent on top of the same hub, it lands in a separate project by default, without anyone having to remember to configure isolation manually every time.
+Applied to the agents from this series, the token watchdog and the AKS diagnoser could live in the same project because they belong to the same SRE team. If the data team builds its own agent under the same Foundry resource, it should land in a different project by default. That separation should not depend on anyone remembering a portal checkbox on a Friday afternoon.
 
 ## Granular RBAC: who creates isn't who publishes
 
@@ -53,27 +53,30 @@ In post 3, the guardrail I proposed for the watchdog was logging the reasoning b
 
 RBAC per environment (dev, test, production), only a pipeline service principal with an audited OIDC token promoting between them, and rollback that's just pointing the active-version pointer back, with no re-deploy. This closes a question none of the earlier posts covered: who changed this agent, when, and how do I get back to the previous version without rebuilding anything by hand.
 
-## Provisioning hub and project via Terraform
+## Provisioning a Foundry resource and project via Terraform
 
-Foundry's hub and project have native resources in the `azurerm` provider: `azurerm_ai_foundry` (the hub) and `azurerm_ai_foundry_project` (the project), confirmed in the Terraform Registry:
+This part changed quickly enough that it is worth being precise. The current Microsoft Learn guidance for new deployments uses `azurerm_cognitive_account` for the Foundry resource and `azurerm_cognitive_account_project` for the project. The older `azurerm_ai_foundry` resources still exist for classic hub-based setups, but they are not where I would start for a new build. A minimal AzureRM example now looks like this:
 
 ```hcl
-resource "azurerm_ai_foundry" "hub" {
-  name                = "hub-sre-ai"
+resource "azurerm_cognitive_account" "foundry" {
+  name                = "foundry-sre-ai"
   location            = azurerm_resource_group.ai.location
   resource_group_name = azurerm_resource_group.ai.name
-  storage_account_id  = azurerm_storage_account.ai.id
-  key_vault_id        = azurerm_key_vault.ai.id
+  kind                = "AIServices"
+  sku_name            = "S0"
 
   identity {
     type = "SystemAssigned"
   }
+
+  custom_subdomain_name      = "foundry-sre-ai"
+  project_management_enabled = true
 }
 
-resource "azurerm_ai_foundry_project" "watchdog" {
-  name               = "project-watchdog-429"
-  location           = azurerm_ai_foundry.hub.location
-  ai_services_hub_id = azurerm_ai_foundry.hub.id
+resource "azurerm_cognitive_account_project" "watchdog" {
+  name                 = "project-watchdog-429"
+  location             = azurerm_resource_group.ai.location
+  cognitive_account_id = azurerm_cognitive_account.foundry.id
 
   identity {
     type = "SystemAssigned"
@@ -81,11 +84,11 @@ resource "azurerm_ai_foundry_project" "watchdog" {
 }
 ```
 
-That gives you per-project isolation right in Terraform state: every new team that needs a project is one more block, reviewable in a pull request, instead of someone clicking around the portal that nobody remembers later.
+That gets you per-project isolation in Terraform state. Every new team becomes one more reviewable block in a pull request instead of another half-remembered click path in the portal.
 
 ## What the platform still doesn't solve on its own
 
-There are limits, though, and "the platform handles that" is the phrase that most reliably generates a false sense of security. Defender for Cloud's AI workload protection plan (in preview as of early 2026) covers prompt injection detection, anomalous inference volume, and access from unexpected geolocations, but it doesn't cover grounding data integrity (writes to RAG containers) or managed identity lateral movement between hub and Key Vault. Platform governance centralizes and formalizes what you should already be doing. It doesn't think for you about which tools a specific agent actually needs. That's still your design work, the same tool-by-tool exercise we did across the previous four posts.
+There are limits, and "the platform handles that" is still one of the more dangerous sentences in architecture work. Foundry and the surrounding Azure controls help with policy, identity, tracing, and central visibility. They do not magically solve data integrity for your grounding sources or least-privilege design between Foundry, Key Vault, Search, storage, and whatever else your agent touches. Platform governance formalizes what you should already be doing. It does not do the tool-by-tool thinking for you.
 
 To close with something practical: you can monitor changes to content safety or RAI policy directly via Log Analytics, treating it as a security configuration change, not a routine ML operation:
 
@@ -104,20 +107,8 @@ Five posts, from concept to governance: what MCP is and how an agent decides the
 
 The thread connecting all five is always the same: decision autonomy, yes; autonomy to act on production, no, unless it's an explicit, auditable, reviewed choice rather than a configuration accident. That holds for the `--access-level readonly` on a command-line flag, and it holds for the tool catalog of an entire Microsoft platform, at a completely different scale.
 
-If your company is at that point, with several teams standing up agents with no coordination and nobody yet knowing how to look at this centrally, that's exactly the kind of design I help work through. Happy to talk if that's useful.
+If your company is already at the point where several teams are standing up agents with no shared view, do this design work early. Untangling it later is slower and usually more political.
 
-**Companion repo**: I've put together all the Terraform used from post 2 through post 5, covering Cognitive Account/Deployment, Action Group, Metric Alert, managed identity with RBAC, and Foundry hub and project, in a single, per-post-commented file, in `infra/terraform/main.tf`.
-
----
-
-*This is post 5 of the series "MCP, Agents, and Agent Teams for Infrastructure Engineers":*
-
-1. [MCP and Agents 101](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
-2. [The Deterministic 429 Watchdog](/2026/07/08/deterministic-429-watchdog-azure-openai/)
-3. [From Script to Agent](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
-4. [Multi-Agent Orchestration](/2026/07/21/multi-agent-orchestration-aks-openai-correlation/)
-5. **Governance on Microsoft Foundry**
-
-*Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
+**Companion repo**: I put together the Terraform used from post 2 through post 5, covering Cognitive Account and deployment resources, Action Group, Metric Alert, managed identity with RBAC, and the Foundry resource plus project, in a single per-post-commented file at `infra/terraform/main.tf`.
 
 *Leia este post em [Português](https://ricardomartins.com.br/governanca-agentes-microsoft-foundry/).*

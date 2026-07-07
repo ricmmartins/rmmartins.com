@@ -20,7 +20,7 @@ The VP of Product walks into the daily standup: "I want the chatbot to answer qu
 
 The ML team says: "We'll implement RAG."
 
-Everyone nods. You get the job of provisioning the infrastructure. Before you start creating resources, it's worth understanding what RAG is actually doing under the hood.
+Everyone nods. You get the job of provisioning the infrastructure. Before you start creating resources, you should know what RAG is actually doing under the hood.
 
 ## The map for infra engineers
 
@@ -159,6 +159,7 @@ az rest --method PUT \
 
 ```python
 import os
+import tiktoken
 from azure.search.documents import SearchClient
 from azure.core.credentials import AzureKeyCredential
 from openai import AzureOpenAI
@@ -176,15 +177,18 @@ openai_client = AzureOpenAI(
     api_version="2024-06-01"
 )
 
+tokenizer = tiktoken.encoding_for_model("text-embedding-3-small")
+
 def chunk_text(text, chunk_size=800, overlap=200):
-    """Split text into overlapping chunks."""
-    words = text.split()
+    """Split text into overlapping, token-aware chunks."""
+    token_ids = tokenizer.encode(text)
     chunks = []
     start = 0
-    while start < len(words):
+    while start < len(token_ids):
         end = start + chunk_size
-        chunk = " ".join(words[start:end])
-        chunks.append(chunk)
+        chunks.append(tokenizer.decode(token_ids[start:end]))
+        if end >= len(token_ids):
+            break
         start = end - overlap
     return chunks
 
@@ -198,9 +202,9 @@ def get_embedding(text):
 
 def index_document(file_path, title):
     """Process and index a document."""
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
-    
+
     chunks = chunk_text(content)
     documents = []
     for i, chunk in enumerate(chunks):
@@ -213,9 +217,9 @@ def index_document(file_path, title):
             "embedding": get_embedding(chunk)
         }
         documents.append(doc)
-    
+
     search_client.upload_documents(documents=documents)
-    print(f"Indexado: {title} ({len(chunks)} chunks)")
+    print(f"Indexed: {title} ({len(chunks)} chunks)")
 ```
 
 ### Step 4: Query with hybrid search
@@ -252,9 +256,9 @@ def rag_query(question, top_k=5):
         model="gpt-4o",
         messages=[
             {"role": "system", "content": 
-             "Responda a pergunta usando APENAS o contexto fornecido. "
-             "Se a informação não estiver no contexto, diga que não encontrou."},
-            {"role": "user", "content": f"Contexto:\n{context}\n\nPergunta: {question}"}
+             "Answer the question using ONLY the provided context. "
+             "If the answer is not in the context, say so clearly."},
+            {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"}
         ],
         temperature=0.1
     )
@@ -293,10 +297,10 @@ Azure AI Search does this natively and merges the scores with **Reciprocal Rank 
 | Azure AI Search (Standard S1) | ~$250/month per search unit | Number of documents and queries |
 | Embedding generation (indexing) | ~$0.02 per 1M input tokens | Document volume |
 | Embedding generation (query) | Negligible | Queries are short |
-| LLM (GPT-4o Global Standard) | ~$2.50/1M input, ~$7.50/1M output | Number of queries |
+| LLM (GPT-4o Global Standard) | ~$5.00/1M input, ~$15.00/1M output | Number of queries |
 | Storage (embeddings) | Included in Search | Dimension × quantity |
 
-For 10,000 documents (~50MB of text), indexing costs about ~$5 in embeddings. Serving 1,000 queries/day with 5 chunks each costs about ~$15/day in LLM tokens.
+For 10,000 documents (~50MB of text), indexing still costs only a few dollars in embeddings. Serving 1,000 queries/day with 5 chunks each is where the real bill starts, and the exact number depends on your prompt size, response length, region, and model pricing at the time.
 
 ## Common problems and how to fix them
 
@@ -319,7 +323,7 @@ For 10,000 documents (~50MB of text), indexing costs about ~$5 in embeddings. Se
 
 - **RAG is not magic.** It's search + LLM. If search returns garbage, the LLM gives you well-phrased garbage.
 - **Chunking matters more than it looks.** Spend time testing different strategies for your document type.
-- **Hybrid search > vector-only.** Always. Especially with technical documentation full of specific terms.
+- **Hybrid search usually beats vector-only** for technical documentation full of service names, IDs, and error codes.
 - **Monitor retrieval separately from generation.** If the model gets it wrong, first check whether the right chunks are being retrieved.
 - **Cost scales with queries, not documents.** Indexing is cheap. Serving thousands of GPT-4o requests is where the real cost lives.
 

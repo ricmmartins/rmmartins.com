@@ -19,13 +19,13 @@ series:
 ---
 # Chapter 1: MCP and AI Agents 101
 
-At some point in the last few months, someone on your team showed up talking about an "AI agent" or an "MCP server" and asked you to grant access, ship a deployment, or explain to the CISO why there's a non-deterministic process with permission to touch the production cluster. This post is the mental model I wish I'd had before touching any of this for the first time: no hype, and with a real example running on Azure along the way.
+At some point in the last few months, someone on your team probably showed up talking about an "AI agent" or an "MCP server" and asked for cluster access, a deployment, or an explanation for the CISO. I wish I'd had a clean mental model before I touched any of this. That's what this post is: no hype, and a real Azure example so this does not stay in slideware.
 
 ## What an agent actually is
 
 In practice, an agent is the combination of four things: a model that decides what to do next, a set of tools it can invoke, an execution loop that orchestrates the back-and-forth between the two, and some kind of memory that holds state through the process.
 
-The difference between an agent and a traditional automation script is where the decision lives. In a script, you wrote the flow: "if X, do Y." In an agent, you describe the goal and the available tools, and the model decides the sequence of calls in real time, based on what each tool returns. The loop, in practice, is always this dance:
+The difference between an agent and a traditional automation script is where the decision lives. In a script, you wrote the flow: "if X, do Y." In an agent, you describe the goal and the available tools, and the model decides the sequence of calls in real time, based on what each tool returns. The loop is usually this:
 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" style="width:100%;height:auto" role="img" aria-label="Agent execution loop: prompt enters, model decides, requests tool call, host executes, result goes back to model">
 <defs>
@@ -59,7 +59,7 @@ The difference between an agent and a traditional automation script is where the
 </g>
 </svg>
 
-Think of it as a runbook executed not by a human reading Confluence, but by an LLM reading the descriptions of the tools available to it. It's powerful because it generalizes: you don't need a script for every scenario. And it's risky for the same reason: the path it takes isn't 100% predictable.
+Think of it as a runbook executed by an LLM instead of a human staring at Confluence. That is useful because you do not need a bespoke script for every scenario. It is also the risk. The path is shaped at runtime, and it will not be perfectly predictable.
 
 ## Tool calling: the mechanism behind everything
 
@@ -93,7 +93,7 @@ The architecture has three pieces:
 <line x1="145" y1="125" x2="145" y2="188" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
 <line x1="350" y1="125" x2="350" y2="188" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
 <line x1="555" y1="125" x2="555" y2="188" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
-<text x="350" y="160" text-anchor="middle" font-size="10" fill="#555">JSON-RPC 2.0 via stdio / HTTP + streaming</text>
+<text x="350" y="160" text-anchor="middle" font-size="10" fill="#555">JSON-RPC 2.0 via stdio / Streamable HTTP</text>
 <rect x="60" y="195" width="170" height="75" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
 <text x="145" y="220" text-anchor="middle" font-size="12" font-weight="bold" fill="#1b5e20">GitHub MCP</text>
 <text x="145" y="250" text-anchor="middle" font-size="9" fill="#1b5e20">tools · resources · prompts</text>
@@ -118,7 +118,7 @@ The architecture has three pieces:
 
 - **Host**: the application that orchestrates the loop and shows the interface to the user.
 - **MCP Client**: lives inside the host, keeps a 1-to-1 connection with each server.
-- **MCP Server**: the process that exposes capabilities, local (via `stdio`) or remote (via HTTP with streaming and OAuth).
+- **MCP Server**: the process that exposes capabilities, either local over `stdio` or remote over Streamable HTTP, usually with TLS and auth in front of it.
 
 And what a server exposes are three kinds of primitives: **tools** (actions, verbs like `scale_deployment`), **resources** (data that can become context, nouns like a log or a document), and **prompts** (reusable templates the server suggests the model use for a specific task).
 
@@ -140,7 +140,7 @@ The detail that matters most on the operations side is `--access-level readonly`
 
 ## Building an agent from scratch
 
-Set aside, for a moment, which framework to use: the architecture is the same whether it's LangChain, an agent SDK, or raw code calling the API.
+Set framework choices aside for a minute. The architecture is basically the same whether you use LangChain, an agent SDK, or raw API calls.
 
 It starts with model choice, a trade-off between cost, latency, and reasoning quality. That matters more here than in a simple chatbot, because an agent makes multiple calls per task, not one. On top of that comes the system prompt, which defines the role, the limits of what the agent can do, and the expected response format. It's the onboarding document for your non-deterministic "employee."
 
@@ -208,21 +208,12 @@ Finally, cost is an operational metric, not just a financial one. Every loop ite
 
 ## Wrapping up
 
-MCP is the protocol that standardizes how agents connect to tools and data: the LSP of the agent world, now under the Linux Foundation's neutral governance. An agent is model, tools, execution loop, and guardrails. It's not magic; it's an architecture with a non-deterministic component in the middle. An agent team is composition: several specialized agents coordinated, with the same trade-offs as any distributed system. And as `aks-mcp` shows, this isn't a lab experiment anymore. It's official tooling running against production clusters, with the same risks and the same demands as any other component that touches critical infrastructure: least privilege, observability, cost limits, and approval gates wherever the action is irreversible.
+MCP standardizes how agents connect to tools and data: LSP for the agent world, now under neutral governance in the Linux Foundation ecosystem. An agent is model, tools, execution loop, and guardrails. Nothing mystical. Just architecture with a non-deterministic component in the middle. Agent teams are the same story at a larger scale: specialization buys you focus, but it also buys you latency, cost, and debugging pain. And as `aks-mcp` shows, this is not lab-demo material anymore. It is official tooling pointed at production clusters, which means it deserves the same least-privilege rules, observability, cost controls, and approval gates you would demand from any other privileged service.
 
 If you're into applied infrastructure content like this, I keep writing about Azure, AKS, and SRE at [rmmartins.com](https://rmmartins.com), and you'll find more hands-on Kubernetes material at [k8shackathon.com](https://k8shackathon.com) and [fromservertocluster.com](https://fromservertocluster.com).
 
 *This series has a companion repo with the full Terraform used from post 2 through post 5; link at the end of post 5.*
 
----
-
-*This is post 1 of the series "MCP, Agents, and Agent Teams for Infrastructure Engineers":*
-
-1. **MCP and Agents 101**
-2. [The Deterministic 429 Watchdog](/2026/07/08/deterministic-429-watchdog-azure-openai/)
-3. [From Script to Agent](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
-4. [Multi-Agent Orchestration](/2026/07/21/multi-agent-orchestration-aks-openai-correlation/)
-5. [Governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
 

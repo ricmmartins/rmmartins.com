@@ -24,7 +24,7 @@ Last year: "how do I build an agent?"
 
 This year, the conversation is different. People are asking how to transform an entire organization to operate with agents. Not a chatbot on the website. Dozens of agents embedded in business processes, with governance, observability, granular permissions.
 
-This evolution tells a story. And I think few people have stopped to connect the dots.
+That progression tells a story, and we often discuss each phase as if it appeared out of nowhere.
 
 ## The timeline
 
@@ -96,13 +96,13 @@ The value was never just in the brain. It was always in the system around it.
 
 ## Harness engineering: the name of the game now
 
-A formula that's been showing up a lot this year captures it well:
+One formula that captures the mood this year is:
 
 ```
 Agent = Model + Harness
 ```
 
-The model is the "brain." The harness is everything that turns that brain into an agent that works in production. An analogy I like: think of an F1 driver. The driver is the LLM. The car, radio, telemetry, pit crew, tire strategy, and race regulations are the harness. Put the best driver in a bad car and he loses the race.
+The model is the "brain." The harness is everything that turns that brain into an agent that works in production. The analogy I keep coming back to is motorsport. The driver is the LLM. The car, radio, telemetry, pit crew, and race rules are the harness. Put the best driver in a bad car and you still lose.
 
 In practice, the harness of a corporate agent includes:
 
@@ -157,6 +157,7 @@ And the CPU metrics would come from Monitor:
 az monitor metrics list \
   --resource "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{vm}" \
   --metric "Percentage CPU" \
+  --aggregation Average \
   --interval PT1H \
   --start-time 2026-07-02T00:00:00Z \
   --end-time 2026-07-03T00:00:00Z \
@@ -211,7 +212,7 @@ If the previous era was "cloud native," maybe this one is "agent native."
 
 ## The real differentiator
 
-A few years from now, I doubt anyone will ask which model your company uses. The same way nobody today asks which hypervisor runs your environment or which web server delivers your site.
+A few years from now, I doubt anyone will care much which model your company uses. Nobody asks which hypervisor runs your environment unless something is already on fire.
 
 The differentiator will be elsewhere:
 
@@ -220,9 +221,7 @@ The differentiator will be elsewhere:
 - In the integration between agents and people
 - In the ability to turn artificial intelligence into organizational intelligence
 
-Because companies don't compete on models. They compete on the ability to use knowledge to make better decisions, faster.
-
-And the system that enables that has a name: harness.
+Companies do not compete on models alone. They compete on how well they turn knowledge, permissions, and systems into better decisions. That system is the harness.
 
 ---
 

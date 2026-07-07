@@ -18,7 +18,7 @@ tags:
 
 You build a RAG pipeline, connect it to Azure OpenAI, and the answers come back... meh. Generic. Sometimes it ignores the context you sent. Sometimes it makes things up. The model is powerful, but the input you send determines 80% of the output quality.
 
-Context engineering is the discipline of assembling that input so the model gives you exactly what you need. It is not "prompt engineering" (which became a buzzword). It is actual engineering: structure, constraints, trade-offs.
+Context engineering is the discipline of assembling that input so the model gives you what you actually need. It is not just "prompt engineering" with a fresher label. It is engineering: structure, constraints, and trade-offs.
 
 ## The map for infra engineers
 
@@ -54,7 +54,7 @@ Think of this like building the body of a POST request. The payload structure de
 
 ## Token budget: capacity planning for context
 
-The context window is finite. GPT-4o has 128K tokens, but that does not mean you should use all of them. Input tokens cost money and increase latency (attention is O(n²), remember?).
+The context window is finite. GPT-4o has 128K tokens, but that does not mean you should use all of them. Input tokens cost money and increase latency. In the common dense-attention case, the cost of paying attention to long context still grows fast enough that sloppy prompts hurt.
 
 A typical split:
 
@@ -242,7 +242,7 @@ Each tool definition consumes tokens from the context window. A typical definiti
 
 ### Chain of Thought (CoT)
 
-Instruct the model to "think step by step" before answering. This improves accuracy on problems that require reasoning.
+For problems that need reasoning, ask for a stepwise analysis or a structured diagnosis instead of a one-shot answer. That usually improves accuracy, especially in troubleshooting flows.
 
 ```
 System prompt:
@@ -281,14 +281,14 @@ Response:
 
 ### Prompt caching
 
-Recent models support caching the prompt prefix. If the system prompt + tool definitions are the same across requests, the model reuses that processing. That reduces latency and cost.
+Recent models support caching the prompt prefix. On supported Azure OpenAI models this is automatic. If the system prompt and tool definitions stay the same across requests, the service can reuse that work and cut both latency and cost.
 
 ```
 Request 1: [system_prompt + tools + user_msg_1] → cache miss (process everything)
 Request 2: [system_prompt + tools + user_msg_2] → prefix cache hit (process only user_msg_2)
 ```
 
-Azure OpenAI applies this automatically. The more stable the beginning of your prompt is, the more cache hits you get.
+The more stable the beginning of your prompt is, the more cache hits you get. Put the static parts first and keep timestamps, IDs, and other per-request noise later in the prompt.
 
 ## Anti-patterns: what not to do
 
@@ -334,7 +334,7 @@ After you put it in production, monitor:
 - **Few-shot > description.** Showing examples works better than explaining in words what you want.
 - **Tools cost tokens.** Every tool definition takes space. Only expose the tools that are relevant to the current context.
 
-In the next post, we'll talk about **LLM Evals**: how to measure whether the model is actually responding well. Because without metrics, context engineering is guesswork.
+The natural next step is **LLM Evals**: measuring whether the model is actually responding well. Without metrics, context engineering turns into educated superstition.
 
 ## Further reading
 

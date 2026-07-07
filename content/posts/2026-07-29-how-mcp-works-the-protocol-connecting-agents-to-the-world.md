@@ -16,11 +16,11 @@ tags:
   - azure
 ---
 
-You've probably used MCP from the host side already. This post is the other view: what is actually on the wire. If the [MCP 101 post](/2026/07/01/mcp-and-agents-101-for-infra-engineers/) was the architecture diagram, this is the protocol trace. The short version: MCP is **JSON-RPC 2.0** plus a standard handshake, capability discovery, and a couple of transports. If LSP standardized editor-to-language-server traffic, MCP does the same for host-to-tool-server traffic.
+You've probably used MCP from the host side already. This post is the other angle: what is actually on the wire. If the [MCP 101 post](/2026/07/01/mcp-and-agents-101-for-infra-engineers/) was the architecture diagram, this one is the packet trace. The short version is that MCP is **JSON-RPC 2.0** plus a standard handshake, capability discovery, and two standard transports. If LSP standardized editor-to-language-server traffic, MCP does the same for host-to-tool-server traffic.
 
 ## JSON-RPC 2.0: the foundation
 
-At the wire level, MCP is just JSON messages. Not REST paths. Not protobuf frames. Not a WebSocket-only protocol. Plain JSON-RPC 2.0 envelopes moving over a transport.
+At the wire level, MCP is just JSON messages. Not REST paths. Not protobuf frames. Not a WebSocket-only protocol. Just JSON-RPC 2.0 envelopes moving over a transport.
 
 For infra engineers, the comparison looks like this:
 
@@ -52,7 +52,7 @@ The `id` field is the correlation key. Same idea as a request ID in distributed 
 
 Every MCP connection starts the same way: with `initialize`. Conceptually, this is closer to a TLS or SSH handshake than to a first REST call. Before either side starts doing useful work, they agree on **protocol version** and **capabilities**.
 
-The client starts:
+The client starts with `initialize`:
 
 ```json
 {
@@ -75,7 +75,7 @@ The client starts:
 }
 ```
 
-The server answers with the version it will use and the capability families it supports:
+The server replies with the version it will use and the capability families it supports:
 
 ```json
 {
@@ -141,7 +141,7 @@ The model host sends every client-to-server JSON-RPC message as an HTTP `POST` t
 1. Immediate `application/json` response for simple request/response flows
 2. `text/event-stream` if it wants to stream server messages over SSE before the final response
 
-This feels like REST plus server push. Not WebSocket, because you still use normal HTTP requests. Not plain REST, because the payload is RPC. Clients can also open `GET /mcp` as an SSE stream for server-initiated notifications or requests.
+This feels a bit like REST with server push. It is not WebSocket, because you still use normal HTTP requests. It is not plain REST either, because the payload is RPC. Clients can also open `GET /mcp` as an SSE stream for server-initiated notifications or requests.
 
 For infra teams, the good news is that this fits normal API plumbing: reverse proxies, load balancers, gateways, TLS termination, and central auth. The spec also defines `Mcp-Session-Id` for stateful sessions and `MCP-Protocol-Version` for explicit version signaling on later requests.
 
@@ -342,7 +342,7 @@ Once you see MCP as JSON-RPC over a transport, the operational picture gets clea
 
 **Versioning:** pin and test client/server combinations. The move from older HTTP+SSE examples to Streamable HTTP is a good reminder that protocol guidance changes.
 
-MCP is often described as "USB-C for AI tools." That's useful as a first analogy, but at the protocol level it's closer to **LSP for agents**: JSON-RPC messages, negotiated capabilities, structured schemas, and a strong separation between the client that orchestrates and the server that exposes domain-specific power.
+MCP is often described as "USB-C for AI tools." Fine as a first analogy. At the protocol level it is closer to **LSP for agents**: JSON-RPC messages, negotiated capabilities, structured schemas, and a clean separation between the client that orchestrates and the server that exposes domain-specific power.
 
 Once you understand that, the black box disappears. An MCP session becomes something you can debug with the same instincts you already use for HTTP APIs, SSH, and streaming control planes.
 

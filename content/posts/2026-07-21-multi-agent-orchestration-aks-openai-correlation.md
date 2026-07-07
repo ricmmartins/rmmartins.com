@@ -19,7 +19,7 @@ series:
 ---
 # Chapter 4: Multi-Agent Orchestration
 
-So far the series has built two separate things: in post 1, an agent that talks to AKS via `aks-mcp` to diagnose the cluster; in posts 2 and 3, a watchdog that watches TPM consumption on Azure OpenAI and decides how urgent an alert should be. Both work in isolation, and isolated they already deliver value. But separated, they also leave the most obvious question unanswered: when token consumption spikes out of nowhere, the first thing any SRE asks is "did someone deploy something?" Today, that question is still manual, with someone looking at the watchdog's alert in one tab and the AKS dashboard in another.
+So far the series has built two separate things: in post 1, an agent that talks to AKS via `aks-mcp` to diagnose the cluster; in posts 2 and 3, a watchdog that watches TPM consumption on Azure OpenAI and decides how urgent an alert should be. Both are useful on their own. Together, they still leave the first SRE question hanging in the air: when token consumption jumps out of nowhere, did somebody deploy something? In most teams that answer still lives in two browser tabs and one annoyed human.
 
 This post is about closing that last manual step with an orchestrator.
 
@@ -47,7 +47,7 @@ In post 3, when the watchdog classified an event as `urgent`, the `send_priority
         with cause hypothesis)
 ```
 
-Each sub-agent keeps exactly the scope it already had: the watchdog didn't gain access to the cluster, the AKS agent didn't gain access to quota. The orchestrator is the only new piece, and it only has read access to both, plus the same notification tool as always. No new capability to act was created by combining them. Only the capability to correlate what each one already knew on its own.
+Each sub-agent keeps the same scope it already had. The watchdog did not gain access to the cluster. The AKS agent did not gain access to quota. The orchestrator is the only new piece, and it still only gets read access plus the same notification tool as before. Combining them created correlation, not new authority.
 
 ## Correlation in practice
 
@@ -70,11 +70,11 @@ The result, instead of two disconnected alerts arriving in different channels, b
 
 This post does add a new risk dimension, because it isn't zero: a model correlating events by time proximity can produce a plausible and wrong narrative. Two events close in time aren't necessarily cause and effect; it could be coincidence, it could be a third factor that affected both. It's the classic "correlation isn't causation," except now stated by an agent with the confident tone of someone who knows what they're talking about.
 
-The mitigation isn't trying to make the model "more certain." It's never letting its output become a categorical claim. The `correlate_incident` tool was deliberately designed to return candidates with a confidence level, not a single cause, and the final Slack message has to preserve that: "candidate cause," not "the cause was." The person receiving the alert still decides whether the hypothesis makes sense. The agent saved the work of pulling the data together, not the final judgment on it.
+The mitigation is not to make the model sound more certain. It is to stop it from speaking in absolutes. The `correlate_incident` tool returns candidates with confidence levels, not a single blessed answer, and the final Slack message needs to keep that language intact: "candidate cause," not "case closed." The person receiving the alert still decides whether the hypothesis is any good. The agent saved the data gathering, not the judgment.
 
 ## What stays the same (and why it matters)
 
-A quick inventory of what didn't change, because it's easy, when introducing an orchestrator, to loosen guardrails out of convenience: none of the three agents (watchdog, AKS sub-agent, orchestrator) gained any tool to act on production. The orchestrator can't roll back the deploy it itself flagged as the candidate cause, can't bump quota, can't restart anything. It reads two already-existing read systems and writes to a single, already-existing notification tool. The composition didn't create a new attack surface. It just saved a human from manually juggling two tabs.
+A quick inventory of what did not change, because this is where teams get sloppy: none of the three agents gained a tool that acts on production. The orchestrator cannot roll back the deploy it just blamed, bump quota, or restart anything. It reads from two existing read systems and writes to one existing notification tool. The composition did not create a new attack surface. It just saved a human from juggling tabs.
 
 On orchestration itself: for this case, there's no need at all for an agent-to-agent protocol like A2A, which I mentioned in passing in post 1. The two sub-agents belong to the same team, the same system, and the orchestrator simply calls each one the way it would call a function. There's no negotiation between independent parties happening here. A2A makes sense when agents belong to different administrative domains; within your own SRE team, an orchestrator calling sub-agents already gets the job done, no extra complexity needed.
 
@@ -84,25 +84,9 @@ The layered design from the earlier posts matters here: the once-a-minute cron s
 
 Latency adds a few extra seconds before the final alert goes out, compared to an instant generic Slack ping. For a real incident, trading a few seconds for a ready-made cause hypothesis is a favorable trade, but it is a trade, and it's worth measuring, not assuming.
 
-## Up next in the series
+## The trade worth making
 
-1. ✅ MCP and agents: the 101
-2. ✅ The deterministic 429 watchdog
-3. ✅ Giving it decision autonomy with guardrails
-4. ✅ This post: an orchestrator correlating AKS and token consumption
-5. Baseline governance for Azure AI Foundry agents
-
-With four different agents running (watchdog, AKS sub-agent, orchestrator, and the post-1 agent that can still be called on its own), the question left over isn't technical anymore. It's governance: who knows these agents exist, who decides which tools each one gets, and how do you audit this six months from now when nobody remembers why the orchestrator was configured that way. That's exactly the subject of the next post.
-
----
-
-*This is post 4 of the series "MCP, Agents, and Agent Teams for Infrastructure Engineers":*
-
-1. [MCP and Agents 101](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
-2. [The Deterministic 429 Watchdog](/2026/07/08/deterministic-429-watchdog-azure-openai/)
-3. [From Script to Agent](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
-4. **Multi-Agent Orchestration**
-5. [Governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
+A few seconds of extra latency is a fine price to pay when the alert arrives with a plausible cause attached. Once you have several agents doing real work, the hard part stops being orchestration code and starts being governance. That is where the last post goes.
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
 

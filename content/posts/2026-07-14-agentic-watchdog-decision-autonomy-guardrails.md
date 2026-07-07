@@ -19,13 +19,13 @@ series:
 ---
 # Chapter 3: From Script to Agent
 
-In the previous post, the Azure OpenAI quota watchdog was a script with `if pct_of_tpm > 0.8: alert`. It works, but it has a problem anyone who's ever configured a monitoring alert knows by heart: a fixed threshold can't tell context apart. A batch job that always eats 90% of TPM for 10 minutes at month-end and returns to normal is, to the script, the same event as some agent loose in your environment looping and burning tokens nonstop. Both cross the same threshold; only one deserves to wake someone up.
+In the previous post, the Azure OpenAI quota watchdog was a script with `if pct_of_tpm > 0.8: alert`. That works, but it has the same flaw every blunt monitoring rule has: context does not exist. A batch job that predictably eats 90% of TPM for 10 minutes at month-end looks identical to an agent gone feral and burning tokens all afternoon. Both cross the threshold. Only one should wake somebody up.
 
 This post is about closing that gap: giving the watchdog a reasoning layer, without giving up any of the guardrails we've already set.
 
 ## What changes (and what doesn't)
 
-What does **not** change: the server still only reads telemetry and only writes to notification channels. No new tool to act on the resource. That boundary was right in post 2 and is still right now: giving autonomy over *how to alert* is one thing; giving autonomy to *act on the production resource* is something else entirely, and I wouldn't recommend the latter without a lot more operational maturity than two blog posts can guarantee.
+What does **not** change is the part that matters most: the server still only reads telemetry and only writes to notification channels. No new tool gets to act on the resource. Giving autonomy over *how to alert* is one thing. Giving autonomy to *change production* is a different class of problem, and two blog posts do not buy you that much operational maturity.
 
 What changes is what happens between detecting the threshold and deciding what to do. Two new tools join the server:
 
@@ -45,14 +45,15 @@ def get_token_usage_history(deployment_name: str, days_back: int = 30) -> dict:
     # aggregates by weekday-hour and returns avg/max per bucket
     ...
 
+import httpx
+from typing import Literal
+
 @mcp.tool()
-def send_priority_alert(channel: str, message: str, priority: Literal["info", "warning", "urgent"]) -> str:
-    """Sends an alert with a priority level: 'info' (normal channel, no
-    mention), 'warning' (normal channel, with context), or 'urgent'
-    (mentions the on-call group). The priority choice belongs to whoever
-    calls this tool, not to this function."""
+def send_priority_alert(message: str, priority: Literal["info", "warning", "urgent"]) -> str:
+    """Posts an alert with a priority level. The caller decides the priority;
+    this function only formats and sends the message."""
     prefix = {"info": "ℹ️", "warning": "⚠️", "urgent": "🚨 @oncall-ai"}[priority]
-    httpx.post(SLACK_WEBHOOK_URL, json={"channel": channel, "text": f"{prefix} {message}"}, timeout=10)
+    httpx.post(SLACK_WEBHOOK_URL, json={"text": f"{prefix} {message}"}, timeout=10).raise_for_status()
     return "sent"
 ```
 
@@ -62,7 +63,7 @@ The first one gives the agent a baseline for comparison: "has this happened befo
 
 ## Where the model comes in (and where it doesn't)
 
-One thing to get right in this design: **the model does not run every minute**. The deterministic script from post 2 stays the poller: it runs on the cron, once a minute, at zero LLM cost, and only triggers a model call once the threshold is crossed. Putting an LLM in the loop on every iteration of a monitoring cycle is wasting money on a path that, the overwhelming majority of the time, needs no reasoning at all. It's only worth paying the cost of a model call to decide the response level in the minutes the threshold actually gets crossed.
+One thing to get right here: **the model does not run every minute**. The deterministic script from post 2 stays the poller: it runs on the cron, once a minute, at zero LLM cost, and only triggers a model call once the threshold is crossed. Putting an LLM in the loop on every iteration of a monitoring cycle is wasting money on a path that, the overwhelming majority of the time, needs no reasoning at all. It's only worth paying the cost of a model call to decide the response level in the minutes the threshold actually gets crossed.
 
 ```
  cron (1x/min, zero LLM cost)
@@ -100,7 +101,7 @@ output is calling send_priority_alert exactly once.
 
 Notice the last line: it exists to reinforce, in the prompt itself, the limit that's already baked into the architecture. Intentional redundancy. The real guardrail is the absence of the tool; the prompt is just the second layer.
 
-**Where this actually runs**: the cron from post 2 and the conditional step of invoking the model fit comfortably in an Azure Container Apps Job with a once-a-minute schedule trigger. It spins up a Python container, runs `get_token_usage_trend`, decides whether to invoke the model, and exits. No server staying up the whole time, no VM to maintain. The job's managed identity (`azurerm_user_assigned_identity` + an `azurerm_role_assignment` for the `Monitoring Reader` role on the Cognitive Services account) is what replaces any fixed API key; the full Terraform is in the series companion repo.
+**Where this actually runs**: the schedule from post 2 and the conditional model invocation fit comfortably in an Azure Container Apps Job with a `*/1 * * * *` cron schedule. It starts a Python container, runs `get_token_usage_trend`, decides whether to invoke the model, and exits. No always-on server. No VM to babysit. The job's managed identity (`azurerm_user_assigned_identity` plus an `azurerm_role_assignment` for `Monitoring Reader` on the Cognitive Services account) replaces any fixed API key; the full Terraform is in the series companion repo.
 
 ## Two scenarios side by side
 
@@ -116,27 +117,11 @@ Giving decision autonomy, even just over an alert's level, opens a new risk cate
 
 First, a rate limit on the alert itself: at most N calls to `send_priority_alert` per hour, regardless of what the agent decides, to keep a once-a-minute reassessment from turning into a flood. Second, logging every decision along with the reasoning the model gave, not just the outcome. That's what lets you, in a retro after an incident, answer "why was this classified as info" without guessing. Third, periodic human review of decisions classified as `info`: not to approve each one in real time (that would defeat the point of automating it), but to audit in batches, weekly, whether the classification pattern still makes sense.
 
-Worth noting a difference from the risk in post 1: there, the data feeding the agent's reasoning came from outside (logs, which can be tampered with). Here, the input is numeric metrics from Azure Monitor itself. The prompt injection surface is practically nonexistent, because there's no arbitrary third-party text entering the context. Not every agent carries the same risk profile, and it's worth mapping that case by case instead of applying the same checklist to everything.
+One difference from the risk in post 1 matters here. There, the agent reasoned over outside text like logs, which can be tampered with. Here, the input is numeric telemetry from Azure Monitor. The prompt-injection surface is tiny because there is no arbitrary third-party text entering the context. Not every agent carries the same risk profile, so the checklist should change with the workload.
 
-## Up next in the series
+## What this step buys you
 
-1. ✅ MCP and agents: the 101
-2. ✅ The deterministic 429 watchdog
-3. ✅ This post: giving it decision autonomy with guardrails
-4. Multi-agent teams in practice: an orchestrator combining the AKS diagnostics from post 1 with this watchdog, to automatically correlate "token consumption spiked" with "recent deployment to the cluster"
-5. Baseline governance for Azure AI Foundry agents
-
-The natural next step is to stop treating these two agents as isolated projects and see what happens when an orchestrator has access to both at once, which is exactly where "agent team" stops being a slide concept and becomes a real debugging tool.
-
----
-
-*This is post 3 of the series "MCP, Agents, and Agent Teams for Infrastructure Engineers":*
-
-1. [MCP and Agents 101](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
-2. [The Deterministic 429 Watchdog](/2026/07/08/deterministic-429-watchdog-azure-openai/)
-3. **From Script to Agent**
-4. [Multi-Agent Orchestration](/2026/07/21/multi-agent-orchestration-aks-openai-correlation/)
-5. [Governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
+This is the point where the watchdog stops being a threshold alarm and starts being an operator aid. It still cannot fix anything, and that is the right call. In the next post, I wire it to the AKS diagnoser so the alert comes with a candidate cause instead of a shrug.
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
 

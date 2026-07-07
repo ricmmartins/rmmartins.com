@@ -19,7 +19,7 @@ series:
 ---
 # Chapter 2: The Deterministic 429 Watchdog
 
-In the previous post I explained what MCP is and how an agent decides the sequence of calls on its own from the tools available. Now let's build a real use case, scoped small enough to finish in a weekend: an MCP server that watches token consumption on your Azure OpenAI / AI Foundry deployment and warns you on Slack or email **before** the 429 happens, not after the client has already eaten the error in production.
+In the previous post I explained what MCP is and how an agent decides its next move from the tools available. Now for something you could actually ship over a weekend: an MCP server that watches token consumption on your Azure OpenAI or Foundry deployment and warns you on Slack or email **before** the 429 lands in production.
 
 ## Why this is subtler than it looks
 
@@ -55,14 +55,14 @@ resource "azurerm_monitor_metric_alert" "tpm_80pct" {
   description         = "TokenTransaction crossed 80% of configured TPM on the gpt-4o-prod deployment"
   severity            = 2
   frequency           = "PT1M"
-  window_size         = "PT5M"
+  window_size         = "PT1M"
 
   criteria {
     metric_namespace = "Microsoft.CognitiveServices/accounts"
     metric_name      = "TokenTransaction"
     aggregation      = "Total"
     operator         = "GreaterThan"
-    threshold        = 200000 # 80% of a 250k TPM deployment — adjust to yours
+    threshold        = 200000 # 80% of a 250k TPM deployment; adjust to your limit
 
     dimension {
       name     = "ModelDeploymentName"
@@ -79,7 +79,7 @@ resource "azurerm_monitor_metric_alert" "tpm_80pct" {
 
 That alone already covers the most common case, with no agent, no MCP, no code to maintain. The full Terraform, including the `azurerm_cognitive_account` and `azurerm_cognitive_deployment` referenced above, is in the series companion repo (link in post 5).
 
-The reason it's still worth building the MCP server on top of this is what that native alert **doesn't** do: it fires once when it crosses the threshold, but it doesn't see the slope of the curve (climbing fast vs. flattening out), doesn't compare against the historical pattern for the same time of day, and doesn't consolidate TPM, RPM, and error rate into a single message with context. For that, the tool needs to query the time series and compute trend. That's where code comes in.
+The reason to build the MCP server on top of that alert is what the native rule still does **not** do. It fires when the threshold is crossed, but it does not look at the slope of the curve, compare the spike with the usual pattern for that hour, or roll TPM, RPM, and error rate into one message with context. That part still needs code.
 
 ## The architecture
 
@@ -89,7 +89,7 @@ The server exposes a deliberately small set of tools, split into two groups that
  ┌─────────────────────────────┐
  │            HOST              │   Claude / agent runtime / simple cron
  └──────────────┬────────────────┘
-                 │ MCP (stdio or HTTP)
+                 │ MCP (stdio or Streamable HTTP)
                  ▼
  ┌─────────────────────────────┐
  │     MCP SERVER: watchdog429   │
@@ -105,7 +105,9 @@ The server exposes a deliberately small set of tools, split into two groups that
 The central tool is `get_token_usage_trend`. It queries the Azure Monitor metrics API for the Azure OpenAI resource via the official `azure-monitor-query` package (`MetricsQueryClient`), pulls `TokenTransaction` over a short window (say, the last 5 minutes in 1-minute buckets, filtered by `ModelDeploymentName`), and returns the percentage of configured TPM already consumed, along with the slope of the curve: not just "how much," but "how fast it's climbing."
 
 ```python
-# pip install mcp azure-monitor-query azure-identity
+# pip install mcp azure-monitor-query azure-identity httpx
+import os
+import httpx
 from datetime import timedelta
 from mcp.server.fastmcp import FastMCP
 from azure.monitor.query import MetricsQueryClient
@@ -113,15 +115,14 @@ from azure.identity import DefaultAzureCredential
 
 mcp = FastMCP("watchdog429")
 metrics_client = MetricsQueryClient(DefaultAzureCredential())
-
 OPENAI_RESOURCE_ID = os.environ["OPENAI_RESOURCE_ID"]
 
 @mcp.tool()
 def get_token_usage_trend(deployment_name: str, window_minutes: int = 5) -> dict:
-    """Returns the percentage of TPM consumed over the last N minutes for the
-    given deployment, plus the trend (rising/stable/falling). Uses the native
-    TokenTransaction Azure Monitor metric, filtered by the ModelDeploymentName
-    dimension. Performs no action on the deployment itself."""
+    """Returns the current 1-minute TPM usage for the deployment plus a simple
+    trend over the last N minutes. Uses the native TokenTransaction metric,
+    filtered by the ModelDeploymentName dimension. Performs no action on the
+    deployment itself."""
     response = metrics_client.query_resource(
         resource_uri=OPENAI_RESOURCE_ID,
         metric_names=["TokenTransaction"],
@@ -130,10 +131,33 @@ def get_token_usage_trend(deployment_name: str, window_minutes: int = 5) -> dict
         filter=f"ModelDeploymentName eq '{deployment_name}'",
     )
     series = [p.total or 0 for p in response.metrics[0].timeseries[0].data]
-    tpm_limit = get_configured_tpm(deployment_name)  # comes from your Terraform/inventory
-    pct_used = sum(series) / tpm_limit
-    trend = "rising" if series[-1] > series[0] else "stable"
-    return {"deployment_name": deployment_name, "pct_of_tpm": pct_used, "trend": trend, "window_minutes": window_minutes}
+    if not series:
+        return {
+            "deployment_name": deployment_name,
+            "current_tpm": 0,
+            "pct_of_tpm": 0,
+            "trend": "no_data",
+            "window_minutes": window_minutes,
+        }
+
+    tpm_limit = get_configured_tpm(deployment_name)  # from Terraform or inventory
+    current_tpm = series[-1]
+    previous_tpm = series[-2] if len(series) > 1 else series[-1]
+
+    if current_tpm > previous_tpm:
+        trend = "rising"
+    elif current_tpm < previous_tpm:
+        trend = "falling"
+    else:
+        trend = "stable"
+
+    return {
+        "deployment_name": deployment_name,
+        "current_tpm": current_tpm,
+        "pct_of_tpm": current_tpm / tpm_limit,
+        "trend": trend,
+        "window_minutes": window_minutes,
+    }
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
@@ -143,24 +167,24 @@ And the notification tool is deliberately dumb: it doesn't decide anything, it j
 
 ```python
 @mcp.tool()
-def send_slack_alert(channel: str, message: str) -> str:
-    """Sends a message to a Slack channel. Doesn't decide the content,
-    just transmits it. The decision to alert belongs to whoever calls this tool."""
-    httpx.post(SLACK_WEBHOOK_URL, json={"channel": channel, "text": message}, timeout=10)
+def send_slack_alert(message: str) -> str:
+    """Posts a message to the preconfigured Slack webhook. It does not decide
+    when to alert or what the message should say."""
+    httpx.post(SLACK_WEBHOOK_URL, json={"text": message}, timeout=10).raise_for_status()
     return "sent"
 ```
 
 ## The simplest version that already works
 
-For this post, the "agent" can start as a script on a one-minute cron, with no LLM in the loop at all: call `get_token_usage_trend`, and if `pct_of_tpm > 0.8`, call `send_slack_alert`. That already solves 80% of the practical problem, and it's what I'd recommend shipping first, before putting a model in charge of the decision, prove the telemetry and the alert actually work.
+For this post, the "agent" can start as a script on a one-minute schedule, with no LLM in the loop at all: call `get_token_usage_trend`, and if `pct_of_tpm > 0.8`, call `send_slack_alert`. That already solves most of the practical problem, and it is what I would ship first. Before you put a model in charge, prove that the telemetry and the alert path actually work.
 
 ```python
 trend = get_token_usage_trend("gpt-4o-prod", window_minutes=5)
 if trend["pct_of_tpm"] > 0.8 and trend["trend"] == "rising":
-    send_slack_alert("#oncall-ai", f"Deployment gpt-4o-prod at {trend['pct_of_tpm']:.0%} of TPM and rising")
+    send_slack_alert(f"Deployment gpt-4o-prod at {trend['pct_of_tpm']:.0%} of TPM and rising")
 ```
 
-Notice this doesn't even need a real MCP host; it's just a script calling the same functions the server exposes. The payoff from packaging it as MCP comes later, when you want a more general-purpose agent (the same one that already investigates the AKS cluster in the previous post) to also see this telemetry without you writing a new integration for every consumer.
+Notice that this does not even need a real MCP host yet. It is just a script calling the same functions the server exposes. Packaging it as MCP starts paying off later, when you want a broader operations agent, including the AKS one from the previous post, to consume the same telemetry without a fresh integration every time.
 
 ## Where this gets interesting (and where it gets dangerous)
 
@@ -170,25 +194,9 @@ That's where the next piece of the series comes in: giving the monitor a reasoni
 
 For now, the most important guardrail is already in the design: the server **only reads telemetry and only writes to notification channels**. It doesn't have, and shouldn't have, any tool capable of changing quota, redistributing traffic across regions, or restarting a deployment. Before this agent gets any power to act on the resource, it needs to first prove, in production, that it can tell noise from signal. That's post 3.
 
-## Up next in the series
+## What I would ship first
 
-1. ✅ MCP and agents: the 101 (with the AKS-MCP example)
-2. ✅ This post: the server that detects 429 trends before they happen
-3. From script to agent: giving the watchdog decision autonomy, with explicit guardrails against alert fatigue
-4. Multi-agent teams in practice: combining AKS diagnostics with the quota watchdog into a single orchestrator
-5. Baseline governance for Azure AI Foundry agents
-
-If you want to test the pure-script version before even touching MCP, it's literally the two functions above and a cron job. Start there.
-
----
-
-*This is post 2 of the series "MCP, Agents, and Agent Teams for Infrastructure Engineers":*
-
-1. [MCP and Agents 101](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
-2. **The Deterministic 429 Watchdog**
-3. [From Script to Agent](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
-4. [Multi-Agent Orchestration](/2026/07/21/multi-agent-orchestration-aks-openai-correlation/)
-5. [Governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
+If you want to test the pure-script version before you even touch MCP, it really is just the two functions above and a one-minute schedule. Start there. The next step is teaching the watchdog to tell a normal spike from a bad one without giving it the power to change anything in production.
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
 
