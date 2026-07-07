@@ -20,13 +20,13 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Ninth post in the series. In the [previous one](/2026/06/07/security-for-ai-threats-your-firewall-wont-catch/), we hardened the platform against prompt injection and data leakage. Now: how not to go bankrupt in the process.
+Ninth post in the series. In the [previous one](/2026/06/07/security-for-ai-threats-your-firewall-wont-catch/), we hardened the platform against prompt injection and data leakage. Now for the part Finance notices first: how not to go bankrupt in the process.
 
 ## The $127,000 Monday
 
-Monday morning. Coffee in hand, email from Finance in the subject line: "URGENT: Azure invoice $127,000, please explain." Forecast was $42,000. Two ND96isr_H100_v5 VMs, provisioned three weeks ago for a "quick experiment," never shut down. At ~$98/hour each, running 24/7 for three weeks: $33,000 in idle GPU compute. Nobody using them. Nobody remembered they existed.
+Monday morning. Coffee in hand, email from Finance with the subject line: "URGENT: Azure invoice $127,000, please explain." Forecast was $42,000. Two ND96isr_H100_v5 VMs, provisioned three weeks ago for a "quick experiment," never shut down. At about $98/hour each, running 24/7 for three weeks: roughly $99,000 in idle GPU compute. Nobody was using them. Nobody remembered they existed.
 
-This isn't hypothetical. Variations of this story happen every month in organizations worldwide. The ML engineer who provisioned them wasn't negligent; they were iterating fast (which is exactly what you want). The failure was systemic: no auto-shutdown policy, no budget alerts, no tags linking the VMs to a project or owner.
+This isn't hypothetical. Some version of this happens all the time. The ML engineer who provisioned them wasn't negligent. They were iterating fast, which is what you want. The failure was systemic: no auto-shutdown policy, no budget alerts, and no tags linking the VMs to a project or owner.
 
 ## Why cost engineering for AI is different
 
@@ -45,27 +45,27 @@ This isn't hypothetical. Variations of this story happen every month in organiza
 ### Training (GPU VMs)
 
 ```
-Training Cost = (GPU count × Hours × Price/GPU-hour) + Storage + Networking
+Training Cost = (VM count × Hours × Price/VM-hour) + Storage + Networking
 ```
 
-**Example: fine-tuning a 7B model**
+**Example: fine-tuning a 7B model with QLoRA**
 
 | Component | Calculation | Cost |
 |-----------|-------------|------|
-| Compute | 2× A100 × 18h × $3.67/h | $132 |
-| Storage | 500 GB Premium SSD × 18h | ~$2.50 |
+| Compute | 1× `NC24ads_A100_v4` × 18h × $9.90/h | ~$178 |
+| Storage | 500 GB Premium SSD × 18h | ~$3 |
 | Networking | Negligible (single VM) | ~$0 |
-| **Total** | | **~$135** |
+| **Total** | | **~$181** |
 
 **Example: pre-training a 70B model**
 
 | Component | Calculation | Cost |
 |-----------|-------------|------|
-| Compute | 8 VMs × 72h × $98/h (8× H100 each) | $56,448 |
+| Compute | 8× `ND96isr_H100_v5` × 72h × $98.32/h | ~$56,632 |
 | Storage | 10 TB × 72h | ~$85 |
-| **Total** | | **~$56,533** |
+| **Total** | | **~$56,717** |
 
-The difference illustrates why right-sizing matters. Provisioning H100s for a job that runs fine on A100s doesn't waste money; it wastes 3-4x the money.
+The difference illustrates why right-sizing matters. Provisioning H100s for a job that runs fine on A100s doesn't just waste money. It can blow the budget by an order of magnitude.
 
 ### Inference (Azure OpenAI, pay-per-token)
 
@@ -89,7 +89,7 @@ Inference Cost = Requests × Avg Tokens/Request × Price per 1K Tokens
 | Output tokens | 10,000 req × 400 tokens × $0.0006/1K | $2.40/day |
 | **Monthly** | $3.60/day × 30 | **~$108/month** |
 
-94% reduction. For many customer support scenarios, GPT-4o-mini delivers acceptable quality. The difference pays someone's salary.
+94% reduction. For many customer support scenarios, GPT-4o-mini is good enough. That price gap should force a design review, not a shrug.
 
 ## Purchasing models
 
@@ -124,8 +124,8 @@ Azure Spot VMs offer the same GPU hardware at a steep discount, but Azure can re
 
 | Scenario | Pay-as-you-go | Spot (70% discount) | Savings |
 |----------|--------------|---------------------|---------|
-| 8× A100, 72 hours | $1,958 | $587 | $1,371 |
-| 8× H100, 72 hours | $7,056 | $2,117 | $4,939 |
+| 8× `NC24ads_A100_v4` (8 A100 GPUs), 72 hours | ~$5,702 | ~$1,711 | ~$3,991 |
+| 1× `ND96isr_H100_v5` (8 H100 GPUs), 72 hours | ~$7,079 | ~$2,124 | ~$4,955 |
 
 > **Checkpoint frequency:** If training costs $50/hour, checkpointing every 15 minutes caps re-work at $12.50 per eviction. And the checkpoint must go to Blob Storage, not local disk (which is lost on eviction).
 
@@ -142,16 +142,17 @@ Azure Spot VMs offer the same GPU hardware at a steep discount, but Azure can re
 ### Auto-shutdown for dev/test (mandatory)
 
 ```bash
-# Check GPU VMs without auto-shutdown in dev subscriptions
-az vm auto-shutdown show \
-  --resource-group rg-ai-dev \
-  --name gpu-vm-experiment-01
-
-# Configure auto-shutdown at 7:00 PM local
+# Configure auto-shutdown for 19:00 UTC
 az vm auto-shutdown \
   --resource-group rg-ai-dev \
   --name gpu-vm-experiment-01 \
   --time 1900
+
+# Turn it off again if you need an overnight run
+az vm auto-shutdown \
+  --resource-group rg-ai-dev \
+  --name gpu-vm-experiment-01 \
+  --off
 ```
 
 An ND96isr_H100_v5 running from Friday evening to Monday morning: ~$4,700. Auto-shutdown eliminates that entirely.
@@ -189,10 +190,10 @@ Every AI resource needs at minimum:
 | `expected-end-date` | When to decommission | `expected-end-date:2026-06-15` |
 
 ```bash
-# Find GPU VMs missing mandatory tags
+# Find GPU VMs missing the owner tag
 az resource list \
   --resource-type Microsoft.Compute/virtualMachines \
-  --query "[?contains(properties.hardwareProfile.vmSize, 'Standard_N') && !contains(keys(tags), 'owner')].[name, resourceGroup]" \
+  --query "[?starts_with(properties.hardwareProfile.vmSize, 'Standard_N') && tags.owner == null].[name, resourceGroup, properties.hardwareProfile.vmSize]" \
   --output table
 ```
 
@@ -203,16 +204,30 @@ az resource list \
 az consumption budget create \
   --budget-name "ai-gpu-monthly" \
   --amount 50000 \
-  --category Cost \
-  --time-grain Monthly \
+  --category cost \
+  --time-grain monthly \
   --start-date 2026-01-01 \
   --end-date 2026-12-31 \
-  --resource-group rg-ai-prod
+  --resource-group rg-ai-prod \
+  --notifications '{
+    "Actual_GreaterThan_80": {
+      "enabled": true,
+      "operator": "GreaterThan",
+      "threshold": 80,
+      "contactEmails": ["finops@contoso.com"]
+    },
+    "Actual_GreaterThan_100": {
+      "enabled": true,
+      "operator": "GreaterThan",
+      "threshold": 100,
+      "contactEmails": ["finops@contoso.com", "platform-oncall@contoso.com"]
+    }
+  }'
 ```
 
 ## In the next post
 
-Money under control. Next up, we'll talk about **platform ops**: how to move from "GPU provisioner on demand" to building a self-service AI platform with multi-tenancy, quotas, GPU queues, and governance.
+Once the cost controls are in place, the next problem is platform sprawl. The next post covers **platform ops**: how to move from "GPU provisioner on demand" to building a self-service AI platform with multi-tenancy, quotas, GPU queues, and governance.
 
 ---
 

@@ -20,7 +20,7 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Tenth post in the series. In the [previous one](/2026/06/11/cost-engineering-for-ai-when-idle-gpus-cost-more-than-your-car/), we controlled costs with Spot VMs, right-sizing, and FinOps. Now: how to stop being a human help desk for GPU.
+Tenth post in the series. In the [previous one](/2026/06/11/cost-engineering-for-ai-when-idle-gpus-cost-more-than-your-car/), we controlled costs with Spot VMs, right-sizing, and FinOps. Now for the next problem: how to stop being a human help desk for GPU access.
 
 ## The Slack channel that ate your calendar
 
@@ -28,11 +28,11 @@ Six months ago, you provisioned a single GPU VM for the ML team. Configured driv
 
 Today, you have four teams, three AKS clusters, dozens of GPU node pools, and a growing collection of Azure OpenAI endpoints. Each team wants their own resources, their own quotas, and their own SLAs. Your DMs have turned into a help desk: "Can we get more GPUs?" "Why is my training job Pending?" "Who's using all the A100s?"
 
-This is the inflection point. You've gone from "supporting AI projects" to "being the bottleneck of an AI platform." The solution isn't working harder; it's building the systems, policies, and automation that let teams self-serve while you maintain control.
+This is the inflection point. You're no longer "supporting AI projects." You are the bottleneck of an AI platform. The fix isn't working harder. It's building the systems, policies, and automation that let teams self-serve without turning the place into chaos.
 
 ## From AI project to AI platform
 
-Platform engineering isn't new. You've been doing it for years with web apps, databases, and CI/CD. The core: reusable, self-service infrastructure that teams consume without filing tickets. Golden paths, opinionated and tested workflows, from code to production.
+Platform engineering isn't new. You've been doing it for years with web apps, databases, and CI/CD. It means reusable, self-service infrastructure that teams can consume without filing tickets. Golden paths. Opinionated workflows that are tested end to end.
 
 AI infra follows the same principle. Instead of provisioning GPU VMs ad hoc, you build templates. Instead of creating namespaces manually, you offer a self-service portal. Instead of answering "how do I deploy a model?", you offer a pipeline that does it.
 
@@ -135,7 +135,7 @@ Pods within the namespace talk to each other; traffic from other namespaces is b
 
 ### The fundamental problem
 
-GPU is finite and expensive. A single A100 node costs ~$3/hour. With 20 nodes and 4 teams, first-come-first-served scheduling creates constant friction. Training jobs monopolize GPUs for hours. Inference gets starved. Scientists submit 10 jobs at once and wonder why only 2 are running.
+GPU is finite and expensive. A single A100 node can run about $10/hour on Azure. With 20 nodes and 4 teams, first-come-first-served scheduling creates friction fast. Training jobs monopolize GPUs for hours. Inference gets starved. Scientists submit 10 jobs at once and wonder why only 2 are running.
 
 ### Priority classes
 
@@ -289,16 +289,16 @@ You pay for reserved capacity whether you're using it or not, but it guarantees 
 ### Quota monitoring
 
 ```bash
-# Check GPU quota usage in the region
+# Check N-series quota usage in the region
 az vm list-usage \
   --location eastus \
-  --query "[?contains(localName, 'NCv') || contains(localName, 'NDv')].{Name:localName, Used:currentValue, Limit:limit}" \
+  --query "[?contains(name.value, 'standardN')].{Family:localName, Used:currentValue, Limit:limit}" \
   --output table
 ```
 
 ## In the next post
 
-Platform running with self-service, quotas, and smart scheduling. Next, we dive into **Azure OpenAI in production**: deployments, rate limiting, multi-region failover, content filtering, and production-readiness patterns.
+Once the platform is self-service, the next failure mode moves up the stack. Next, we dive into **Azure OpenAI in production**: deployments, rate limiting, multi-region failover, content filtering, and production-readiness patterns.
 
 ---
 

@@ -28,7 +28,7 @@ Your Azure OpenAI endpoint returns 200 OK on every request. Latency is normal, P
 
 But the support tickets keep coming. Users report the chatbot "gives worse answers." Fluent but factually incorrect responses. Hallucinations are up, summarizations miss key points, code suggestions introduce subtle bugs.
 
-You pull up the monitoring stack. Azure Monitor: green. Application Insights: green. Grafana: all green. A wall of healthy metrics while the system is actively failing its users.
+You open the monitoring stack. Azure Monitor: green. Application Insights: green. Grafana: green. Every dashboard says "healthy" while the users are telling you the opposite.
 
 The problem? **Model drift**. A recent fine-tuning introduced a quality regression. Outputs degraded gradually over two weeks, but no alert fired because you're monitoring **infrastructure** metrics, not **AI** metrics. Your observability stack was built for traditional workloads where "the server is up and responding" = "the system is working." In AI, a model can be running perfectly and still be **wrong**.
 
@@ -45,7 +45,7 @@ Traditional monitoring covers compute, network, and storage. Necessary but insuf
 | 5 | **Network** | InfiniBand health, cross-node latency, throughput | P2 |
 | 6 | **Data** | Pipeline freshness, quality, ingestion failures | P2 |
 
-**Infra ↔ AI translation:** Monitoring a web server means tracking CPU, memory, disk, and network. Monitoring an AI workload is like monitoring a web server, a database, a billing system, and a QA department simultaneously. The model doesn't just consume resources; it produces outputs that have a dimension of **correctness** that traditional infra doesn't have.
+**Infra ↔ AI translation:** Monitoring a web server means tracking CPU, memory, disk, and network. Monitoring an AI workload means doing that and watching output quality, spend, and abuse patterns at the same time. The model doesn't just consume resources. It can be wrong while every host metric looks fine.
 
 ## GPU monitoring: the foundation
 
@@ -67,7 +67,7 @@ helm install dcgm-exporter nvidia/dcgm-exporter \
 
 ### Azure Managed Prometheus
 
-Eliminates the need to run your own Prometheus server:
+This gives you the managed backend. It does not scrape every custom exporter you install.
 
 ```bash
 # Enable Azure Monitor managed Prometheus
@@ -83,7 +83,25 @@ az aks show \
   --query "azureMonitorProfile.metrics.enabled"
 ```
 
-Managed Prometheus automatically discovers and scrapes DCGM Exporter pods via Kubernetes service discovery. No manual scrape target configuration needed.
+For custom exporters such as DCGM, add a `PodMonitor` or `ServiceMonitor` so Azure Monitor knows what to scrape:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: dcgm-exporter
+  namespace: gpu-monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dcgm-exporter
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+```
+
+Adjust the selector to match the labels your Helm release actually uses.
 
 ### GPU metrics and alert thresholds
 
@@ -94,7 +112,7 @@ Managed Prometheus automatically discovers and scrapes DCGM Exporter pods via Ku
 | GPU Temperature | `DCGM_FI_DEV_GPU_TEMP` | > 78°C | > 83°C | Thermal throttling |
 | ECC Errors | `DCGM_FI_DEV_ECC_DBE_VOL_TOTAL` | > 0 | > 0 | Degrading hardware |
 
-> **Nuance:** Low GPU utilization isn't always a problem. Latency-sensitive inference workloads intentionally keep utilization low to maintain fast responses. Check whether the workload optimizes for throughput (training — high utilization expected) or latency (inference — moderate is OK).
+> **Nuance:** Low GPU utilization isn't always a problem. Latency-sensitive inference workloads intentionally keep utilization low to maintain fast responses. Check whether the workload optimizes for throughput (training: high utilization expected) or latency (inference: moderate is OK).
 
 ## Azure OpenAI monitoring
 
@@ -178,7 +196,7 @@ class StructuredFormatter(logging.Formatter):
         return json.dumps(log_entry)
 ```
 
-Always log model version and deployment name with every trace and metric. When you deploy a new version and latency spikes 40%, you need to be able to correlate.
+Always log model version and deployment name with every trace and metric. When latency spikes 40% after a rollout, you need that correlation immediately.
 
 ## In the next post
 

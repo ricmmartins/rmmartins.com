@@ -19,13 +19,13 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Thirteenth post in the series. In the [previous one](/2026/06/23/troubleshooting-playbook-incidents-that-will-wake-you-at-2am/), we diagnosed the incidents that wake you up at 2 AM. Now something different: how to use AI to improve the infrastructure work itself.
+Thirteenth post in the series. In the [previous one](/2026/06/23/troubleshooting-playbook-incidents-that-will-wake-you-at-2am/), we dealt with the incidents that wake you up at 2 AM. This time the angle flips: using AI to make the infrastructure work itself less miserable.
 
 ## Flipping the perspective
 
-Over the past 12 posts, you've been building infra for AI: GPUs, clusters, pipelines, security, monitoring, cost management. You've become an expert at providing compute for data scientists.
+Over the past 12 posts, you've been building infra for AI: GPUs, clusters, pipelines, security, monitoring, cost management. You know how to keep the runway paved for data scientists.
 
-But what about using AI for **your** work? Log analysis, anomaly detection, capacity planning, IaC generation, automated incident response. AIOps isn't a new buzzword; it's the practical application of what you already understand (models, inference, tokens) to your day-to-day operations.
+But what about using AI for **your** work? Log analysis, anomaly detection, capacity planning, IaC generation, assisted incident response. AIOps is not magic and it is not new. It is just applying the same model and inference patterns to day-to-day operations.
 
 ## Use case 1: log analysis with LLMs
 
@@ -47,7 +47,7 @@ client = AzureOpenAI(
 
 def analyze_logs(log_block):
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-prod",
         messages=[
             {"role": "system", "content": """You are an SRE analyzing Kubernetes logs.
 Given a block of logs, identify:
@@ -75,7 +75,7 @@ Be specific about timestamps and service names."""},
 - Compliance and auditing: needs reproducible structured queries (KQL)
 - Very high volume: sending all logs to an LLM is expensive and slow
 
-> **Cost:** A 5,000-token block of logs (prompt + analysis) costs ~$0.015 with GPT-4o. Reasonable for on-demand incident response. Not reasonable for processing every log entry automatically.
+> **Cost:** Pricing moves, but a 5,000-token log investigation with GPT-4o is still measured in cents. Fine for on-demand incident response. Silly for every log line.
 
 ## Use case 2: anomaly detection in metrics
 
@@ -85,20 +85,22 @@ Static-threshold alerts generate fatigue. CPU > 80%? Could be normal during a de
 
 ### The solution
 
-Azure Monitor has native anomaly detection using ML:
+Azure Monitor has native anomaly detection using dynamic thresholds:
 
 ```bash
 # Alert rule with dynamic thresholds
 az monitor metrics alert create \
-  --name "gpu-util-anomaly" \
+  --name "gpu-host-cpu-anomaly" \
   --resource-group rg-ai-prod \
   --scopes "/subscriptions/{sub}/resourceGroups/rg-ai-prod/providers/Microsoft.Compute/virtualMachines/gpu-vm-01" \
-  --condition "avg DCGM_FI_DEV_GPU_UTIL > dynamic medium of 3 violations out of 5 aggregated points" \
-  --action-group ag-oncall \
-  --description "GPU utilization anomaly detected"
+  --condition "avg Percentage CPU > dynamic medium 3 of 5" \
+  --action ag-oncall \
+  --window-size 5m \
+  --evaluation-frequency 1m \
+  --description "Unexpected CPU anomaly on a GPU host"
 ```
 
-Dynamic thresholds learn the workload's seasonal pattern (peak hours, nightly batch jobs, quiet weekends) and alert when behavior deviates from what's expected, not when it crosses an arbitrary number.
+Dynamic thresholds learn the workload's seasonal pattern and alert when behavior deviates from what is normal, not when it crosses a number somebody guessed six months ago. If you are working with DCGM metrics through Managed Prometheus, use the same idea there, but through Prometheus recording and alerting rules rather than Azure metric alerts.
 
 ### Good metrics for anomaly detection
 
@@ -117,26 +119,27 @@ Traditional capacity planning: look at current usage, project linear growth, add
 
 ### The solution
 
-Use historical consumption data with time series forecasting to predict when you'll hit quotas or capacity limits:
+Use historical consumption data with time series forecasting to predict when you will hit quotas or capacity limits:
 
 ```kusto
-// KQL: project GPU quota consumption for the next 4 weeks
+// KQL: project Azure OpenAI token consumption for the next 4 weeks
 let forecast_window = 28d;
 AzureMetrics
-| where ResourceProvider == "MICROSOFT.COMPUTE"
-| where MetricName == "Percentage CPU" // proxy for GPU utilization
+| where ResourceProvider == "MICROSOFT.COGNITIVESERVICES"
+| where MetricName == "TokenTransaction"
 | where TimeGenerated > ago(90d)
-| summarize AvgUsage = avg(Average) by bin(TimeGenerated, 1d)
-| make-series Usage = avg(AvgUsage) default=0 on TimeGenerated step 1d
-| extend forecast = series_decompose_forecast(Usage, toint(forecast_window / 1d))
-| project TimeGenerated, Usage, forecast
+| summarize DailyTokens = sum(Total) by bin(TimeGenerated, 1d)
+| make-series DailyTokens = avg(DailyTokens) default=0
+    on TimeGenerated from startofday(ago(90d)) to startofday(now()) step 1d
+| extend forecast = series_decompose_forecast(DailyTokens, toint(forecast_window / 1d))
+| project TimeGenerated, DailyTokens, forecast
 ```
 
 ### Combining with Azure OpenAI for narrative
 
-A numeric forecast is useful but not actionable without context. Use an LLM to generate a readable recommendation:
+A numeric forecast is useful, but operations teams still need the plain-English version. Use an LLM to generate a readable recommendation:
 
-"Based on current GPU consumption trends (+12% week-over-week), you'll exceed the NC24ads_A100_v4 quota in East US within 18 days. Recommended actions: (1) request quota increase now (takes 3-5 business days), (2) evaluate moving batch workloads to West US where utilization is 40% lower."
+"Based on current token consumption trends (+12% week-over-week), you'll run out of your East US `gpt-4o` quota buffer in about 18 days. Recommended actions: request more quota now, trim the system prompt, or spill overflow traffic into a second region."
 
 ## Use case 4: IaC generation and review
 
@@ -154,10 +157,10 @@ GitHub Copilot in the editor or Azure OpenAI for template generation:
 
 ### Validation is still on you
 
-AI generates, but you validate. Never apply AI-generated IaC without:
+AI generates. You validate. Never apply AI-generated IaC without:
 1. Reading the output and understanding what each resource does
 2. Validating against official documentation (Azure CLI reference, Bicep docs)
-3. Running `az deployment group what-if` before any apply
+3. Running `az deployment group what-if` for Bicep or `terraform plan` for Terraform before any apply
 4. Code review by another engineer
 
 ## Use case 5: assisted incident response
@@ -168,7 +171,7 @@ At 2 AM, running on adrenaline and sleep deprivation, you need to diagnose fast.
 
 ### The solution
 
-Interactive runbooks with AI as co-pilot:
+Interactive runbooks with AI as a copilot:
 
 1. Alert fires → webhook calls Logic App
 2. Logic App collects context: recent logs, metrics, recent changes
@@ -190,11 +193,11 @@ It doesn't replace the engineer. It reduces diagnosis time when you're operating
 | Capacity forecasting | ✅ (for narrative) | ✅ (for numbers, KQL) |
 | Anomaly detection | ✅ (dynamic thresholds) | ✅ (if static threshold suffices) |
 
-The rule: AI excels at tasks requiring interpretation of unstructured text, complex pattern detection, and draft generation. Traditional tools are better for enforcement, auditing, and deterministic actions.
+The rule is simple: AI helps when the job involves messy text, pattern recognition, or drafting. Traditional tooling wins when the job is enforcement, auditing, or any action that has to be deterministic.
 
 ## In the next post
 
-Practical use cases covered. Next, we go up a level: the **AI adoption framework** for organizations. How to go from "let's use AI" to a governed, scalable, and cost-effective platform, phase by phase.
+That is the practical layer. Next comes the **AI adoption framework** for organizations: how to get from "let's use AI" to a platform that is governed, scalable, and not quietly setting money on fire.
 
 ---
 

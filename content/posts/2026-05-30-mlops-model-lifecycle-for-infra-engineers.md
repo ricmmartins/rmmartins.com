@@ -20,7 +20,7 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Sixth post in the series. In the [previous one](/2026/05/26/infrastructure-as-code-for-ai-automating-gpu-clusters/), we automated GPU cluster provisioning. Now let's talk about what happens **after** the hardware is ready: how a model goes from "works on my notebook" to "running in production with an SLA."
+Sixth post in the series. In the [previous one](/2026/05/26/infrastructure-as-code-for-ai-automating-gpu-clusters/), we automated GPU cluster provisioning. Next comes what happens **after** the hardware is ready: how a model goes from "works on my notebook" to "running in production with an SLA."
 
 ## The model with no birth certificate
 
@@ -30,7 +30,7 @@ You open the folder and find a single file: `model_final_v2_FIXED.pt`.
 
 You start asking questions. Which version? Trained on what data? Rollback plan if predictions go wrong? Latency and throughput SLAs? Framework and CUDA version? The answers are vague. *"It's the latest one. Works on my machine. Just put it behind an API."*
 
-You've seen this movie before — just with different actors. Developers used to hand you a compiled binary and say "deploy this." That chaos drove the industry to build container registries, CI/CD pipelines, semantic versioning, and automated rollback. Models are no different. They're artifacts: large, versioned, environment-dependent. They deserve the same lifecycle management.
+You've seen this movie before, just with different actors. Developers used to hand you a compiled binary and say "deploy this." That chaos gave us container registries, CI/CD pipelines, semantic versioning, and automated rollback. Models are no different. They are artifacts: large, versioned, and environment-dependent. They need the same lifecycle management.
 
 ## Models are artifacts: treat them like it
 
@@ -72,13 +72,14 @@ az ml model list \
   --workspace-name ml-prod-ws \
   --output table
 
-# View lineage: which run produced this model
+# View the job that registered this model
 az ml model show \
   --name sentiment-classifier \
   --version 3 \
   --resource-group ml-prod-rg \
   --workspace-name ml-prod-ws \
-  --query "jobs"
+  --query "{job_name:job_name, created_at:creation_context.created_at}" \
+  --output json
 ```
 
 ### MLflow (open-source, multi-framework)
@@ -163,6 +164,8 @@ az acr repository show-tags \
 
 ### GitHub Actions workflow for model deployment
 
+Azure ML online deployments are YAML-driven, so the workflow below assumes the deployment specs live in the repo and the pipeline only swaps in the model version and instance sizing.
+
 ```yaml
 name: Model Deployment Pipeline
 
@@ -207,14 +210,19 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy to staging endpoint
         run: |
           az ml online-deployment create \
+            --file deployments/staging.yml \
             --name staging-${{ inputs.model_version }} \
             --endpoint-name sentiment-staging \
-            --model azureml:${{ inputs.model_name }}:${{ inputs.model_version }} \
-            --instance-type Standard_NC4as_T4_v3 \
-            --instance-count 1 \
+            --set model=azureml:${{ inputs.model_name }}:${{ inputs.model_version }} \
+                  instance_type=Standard_NC4as_T4_v3 \
+                  instance_count=1 \
             --resource-group ${{ env.AZURE_RG }} \
             --workspace-name ${{ env.AZURE_ML_WS }}
 
@@ -223,14 +231,19 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy canary (10% traffic)
         run: |
           az ml online-deployment create \
+            --file deployments/production.yml \
             --name prod-${{ inputs.model_version }} \
             --endpoint-name sentiment-prod \
-            --model azureml:${{ inputs.model_name }}:${{ inputs.model_version }} \
-            --instance-type Standard_NC4as_T4_v3 \
-            --instance-count 2 \
+            --set model=azureml:${{ inputs.model_name }}:${{ inputs.model_version }} \
+                  instance_type=Standard_NC4as_T4_v3 \
+                  instance_count=2 \
             --resource-group ${{ env.AZURE_RG }} \
             --workspace-name ${{ env.AZURE_ML_WS }}
 
@@ -241,7 +254,7 @@ jobs:
             --workspace-name ${{ env.AZURE_ML_WS }}
 ```
 
-**Infra ↔ AI translation:** This is your blue/green pipeline, but for model weights instead of container images. The `--traffic` flag works exactly like weighted routing in Azure Front Door: you shift a percentage of requests to the new model while the old one keeps serving.
+**Infra ↔ AI translation:** This is the same blue/green habit you already use for app releases, except the thing you shift is model traffic. The `--traffic` flag does weighted routing while the old deployment keeps serving.
 
 ## Your responsibilities at each stage
 
@@ -274,7 +287,7 @@ az ml online-endpoint update \
 
 ## In the next post
 
-Now that models are deployed and serving traffic, how do you know they're healthy? Next up: **monitoring and observability for AI**, including model drift, GPU metrics, and how to detect degradation before users notice.
+Models are deployed and serving traffic. The next post covers **monitoring and observability for AI**, including model drift, GPU metrics, and how to detect degradation before users notice.
 
 ---
 

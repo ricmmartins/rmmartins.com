@@ -18,7 +18,7 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Fourth post in the series. In the [previous one](/2026/05/18/compute-for-ai-choosing-the-right-hardware/), you learned which GPU VMs to provision and how to connect them. Now we're going to look **inside** the GPU to understand what happens at the silicon level. Not to write CUDA kernels, but to be a better troubleshooter and have informed conversations with the ML team.
+Fourth post in the series. In the [previous one](/2026/05/18/compute-for-ai-choosing-the-right-hardware/), you learned which GPU VMs to provision and how to connect them. This time we look **inside** the GPU so you can troubleshoot better and talk to the ML team without guessing.
 
 ## The 2 AM ticket
 
@@ -30,7 +30,7 @@ CUDA out of memory. Tried to allocate 2.00 GiB
 
 The data science lead is frustrated: *"The model has 7 billion parameters in FP16. That's only 14 GB. The A100 has 40 GB of memory. There should be 26 GB to spare. What's going on?"*
 
-You SSH in, run `nvidia-smi`, and see memory usage at 100%. But the math doesn't add up: 14 GB of weights don't fill 40 GB. Unless something else is consuming the rest. And it is. Model parameters are just **one piece** of the memory puzzle. Gradients, optimizer states, and activations each claim their own slice. A "14 GB model" needs 90+ GB to train with full-precision Adam.
+You SSH in, run `nvidia-smi`, and see memory usage at 100%. But the math doesn't add up: 14 GB of weights do not fill 40 GB. Unless something else is eating the rest. And it is. Model parameters are just **one piece** of the memory puzzle. Gradients, optimizer states, and activations each claim their own slice. A "14 GB model" needs 90+ GB to train with full-precision Adam.
 
 This post gives you the knowledge to answer that question and dozens like it.
 
@@ -73,7 +73,7 @@ If it shows `PIX` or `PHB` between GPUs instead of `NV#`, you're on PCIe, not NV
 
 ## GPU memory: the resource you'll manage most
 
-If you remember one section from this post, make it this one. GPU memory — specifically running out of it — is the #1 problem you'll troubleshoot in AI infrastructure.
+If you remember one section from this post, make it this one. GPU memory, and specifically running out of it, is the #1 problem you'll troubleshoot in AI infrastructure.
 
 ### Memory hierarchy
 
@@ -84,7 +84,7 @@ If you remember one section from this post, make it this one. GPU memory — spe
 | **Shared Memory / L1** | Up to 164 KB per SM | Up to 256 KB per SM | CPU L1/L2 cache |
 | **Registers** | 256 KB per SM | 256 KB per SM | CPU registers |
 
-**HBM** is what `nvidia-smi` reports. It's the GPU's "main memory" — where model weights, training data, and intermediate results live.
+**HBM** is what `nvidia-smi` reports. It's the GPU's "main memory", where model weights, training data, and intermediate results live.
 
 ### What fills memory during training
 
@@ -120,7 +120,7 @@ For the 7B model from the ticket:
 
 A "14 GB model" needs 90+ GB to train. An A100-40GB never stood a chance. Even an A100-80GB is tight.
 
-> **Rule of thumb:** when an ML engineer says "the model is X gigabytes," they almost always mean the parameter size (the checkpoint file). Training memory is **4-8× larger**. Multiply by at least 4× for a quick estimate with Adam.
+> **Rule of thumb:** when an ML engineer says "the model is X gigabytes," they almost always mean the parameter size (the checkpoint file). Training memory is usually **4x to 8x larger**. Multiply by at least 4x for a quick estimate with Adam.
 
 **Gradient checkpointing** (activation recomputation) trades compute for memory: instead of saving all activations during the forward pass, it saves only some and recomputes the rest during backpropagation. Reduces training speed by ~20-30% but cuts activation memory by 60-80%.
 
@@ -155,11 +155,11 @@ Catch: each GPU needs to hold the entire model + gradients + optimizer states.
 
 | Stage | What's partitioned | Savings per GPU | Communication overhead |
 |-------|-------------------|-----------------|----------------------|
-| **ZeRO-1** | Optimizer states | ~4× reduction in optimizer memory | Minimal |
-| **ZeRO-2** | Optimizer states + Gradients | Additional gradient savings | Moderate |
-| **ZeRO-3** | Optimizer + Gradients + Parameters | Everything sharded, maximum savings | Higher |
+| **ZeRO-1** | Optimizer states | Optimizer memory is sharded across GPUs | Minimal |
+| **ZeRO-2** | Optimizer states + Gradients | Adds gradient sharding on top of ZeRO-1 | Moderate |
+| **ZeRO-3** | Optimizer + Gradients + Parameters | Full sharding, maximum memory savings | Higher |
 
-Back to the 7B example: training with Adam on one GPU = ~92 GB. With 8 GPUs and ZeRO-3, each GPU holds only ⅛ of everything: ~11-13 GB per GPU, plus activations. The model that couldn't fit on an A100-80GB now trains comfortably on eight A100-40GBs.
+Back to the 7B example: training with Adam on one GPU = ~92 GB. With 8 GPUs and ZeRO-3, each GPU holds only about one-eighth of the sharded states, plus activations. That brings the per-GPU footprint down enough that the model that would not fit on one A100-80GB can train across eight A100-40GBs.
 
 ### FSDP (Fully Sharded Data Parallel)
 
@@ -171,7 +171,7 @@ Divides the model's layers sequentially across GPUs: GPU 0 = layers 1-10, GPU 1 
 
 ### Tensor Parallelism (TP)
 
-The most granular: splits individual layers across GPUs. **Requires NVLink, mandatory.** Running TP over PCIe is technically possible but practically useless.
+The most granular approach splits individual layers across GPUs. It really wants NVLink. Running TP over PCIe is technically possible, but usually not worth the pain.
 
 ### 3D Parallelism (100B+ models)
 
@@ -180,7 +180,7 @@ Combines all three:
 - **PP** across a few nodes
 - **DP** (with ZeRO) across many nodes
 
-This is how GPT-4 and LLaMA 3 are trained.
+This is the standard pattern for training very large models.
 
 | Model Size | Strategy | GPUs | Network required |
 |-----------|----------|------|-----------------|
@@ -347,7 +347,7 @@ Each generation doubles HBM bandwidth and introduces new precision formats: Ampe
 
 ## Next up
 
-Now that you understand what happens inside the GPU (architecture, memory, software stack, debugging), it's time to automate everything around it. Next post: **Infrastructure as Code for AI** — how to template GPU clusters, inference endpoints, and training pipelines in a reproducible, versioned, and auditable way.
+Now that you understand what happens inside the GPU (architecture, memory, software stack, debugging), it's time to automate everything around it. Next post: **Infrastructure as Code for AI**, how to template GPU clusters, inference endpoints, and training pipelines in a reproducible, versioned, and auditable way.
 
 ---
 

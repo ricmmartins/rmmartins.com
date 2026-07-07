@@ -19,19 +19,19 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Third post in the series where I translate AI into the language of those who live and breathe infrastructure. In the [previous post](/2026/05/14/data-and-storage-for-ai-workloads/), we talked about the hidden storage bottleneck. Today we're going to what everyone thinks is the main topic of AI: **compute**.
+Third post in the series where I translate AI into the language of people who live and breathe infrastructure. In the [previous post](/2026/05/14/data-and-storage-for-ai-workloads/), we talked about the storage bottleneck nobody notices until it hurts. This one is about **compute**.
 
-Spoiler: it's not just about having the most expensive GPU. It's about having the **right** GPU, connected the **right way**.
+Spoiler: it is not enough to buy the most expensive GPU. You need the **right** GPU, connected the **right way**.
 
 ## The story you don't want to live
 
-The ML team asks for "a GPU cluster for training." You do what any infra engineer would: provision eight `Standard_D16s_v5` VMs. Sixty-four vCPUs each, 128 GiB of RAM, premium SSD. On paper, plenty of power.
+The ML team asks for "a GPU cluster for training." You do what any infra engineer would do under time pressure: provision eight `Standard_D64s_v5` VMs. Sixty-four vCPUs each, 256 GiB of RAM, Premium SSD. On paper, it looks respectable.
 
-The team launches the training script. Progress bar: estimated completion in **47 hours**. CPUs at 100%, network barely registers traffic, and nobody looks happy.
+The team launches the training script. Progress bar: estimated completion in **47 hours**. CPUs pinned at 100%, network barely registering traffic, and nobody looks happy.
 
-Then a colleague suggests two `Standard_ND96asr_v4` nodes, each with eight A100 GPUs connected via 200 Gb/s InfiniBand. Same training job, same dataset, same code. The job finishes in **90 minutes**.
+Then a colleague suggests two `Standard_ND96asr_v4` nodes, each with eight A100 GPUs and 200 Gb/s InfiniBand. Same training job, same dataset, same code. The job finishes in **90 minutes**.
 
-The difference isn't just the GPUs. It's how they talk to each other inside the node (NVLink), how they synchronize gradients across nodes (InfiniBand), and how data flows without the CPU becoming a bottleneck. Compute for AI isn't about raw horsepower. It's about the **right kind** of power, connected the **right way**.
+The difference is not just the GPUs. It is how they talk to each other inside the node with NVLink, how they synchronize gradients across nodes with InfiniBand, and how data moves without the CPU becoming the choke point. Compute for AI is not raw horsepower. It is the **right kind** of power, wired the **right way**.
 
 ## Training vs. inference: two different worlds
 
@@ -47,7 +47,7 @@ Before choosing any SKU, you need to know which workload will run. Training and 
 | **Failure impact** | Restart from last checkpoint, hours lost | Lost request, retry in milliseconds |
 | **Network sensitivity** | Extreme: gradient sync every few seconds | Moderate: small payloads |
 
-**Infra ↔ AI translation:** Think of **training** as a massive batch job — like re-indexing a petabyte data warehouse. Think of **inference** as a high-traffic API endpoint — like your authentication service handling thousands of logins per second. The infra patterns you already know apply directly.
+**Infra to AI translation:** Think of **training** as a massive batch job, like re-indexing a petabyte data warehouse. Think of **inference** as a high-traffic API endpoint, like your authentication service handling thousands of logins per second. The infra patterns you already know apply directly.
 
 ### When CPU is enough
 
@@ -59,7 +59,7 @@ Not every AI workload needs a GPU. Lightweight inference scenarios (small classi
 
 A modern server CPU has 32 to 128 cores optimized for complex logic with branching. A GPU like the NVIDIA H100 has **16,896 CUDA cores** and **528 Tensor Cores**, all designed to do one thing extremely well: multiply matrices in parallel.
 
-AI workloads are fundamentally matrix multiplication. Every layer of a neural network multiplies an input matrix by a weight matrix, adds a bias, and applies an activation function. The CPU processes this sequentially across a few dozen cores. The GPU processes thousands of these operations simultaneously.
+AI workloads are mostly matrix multiplication. Every layer of a neural network multiplies an input matrix by a weight matrix, adds a bias, and applies an activation function. The CPU processes this sequentially across a few dozen cores. The GPU processes thousands of these operations simultaneously.
 
 **Infra ↔ AI translation:** Think of the GPU like a SmartNIC that offloads packet processing from the CPU. Just as a SmartNIC handles millions of packets per second without overloading the host, the GPU offloads millions of matrix operations. The CPU orchestrates; the GPU does the heavy math.
 
@@ -84,7 +84,7 @@ Choosing the right GPU VM family is the highest-impact decision you'll make for 
 | **ND H100 v5** | `Standard_ND96isr_H100_v5` | 8× H100 80GB | 640 GiB | InfiniBand 400 Gb/s | Flagship training, LLMs, NCCL-optimized | $98.32 |
 | **NV A10 v5** | `Standard_NV36ads_A10_v5` | 1× A10 (full) | 24 GiB | Ethernet | Visualization, light AI, dev/test | $1.80 |
 | **NV A10 v5** | `Standard_NV6ads_A10_v5` | ⅙× A10 | 4 GiB | Ethernet | Fractional GPU for small workloads | $0.45 |
-| **D/E/F series** | `Standard_D16s_v5` | None | — | Accel. Networking | Preprocessing, data pipelines, CPU inference | $0.77 |
+| **D/E/F series** | `Standard_D16s_v5` | None | N/A | Accel. Networking | Preprocessing, data pipelines, CPU inference | $0.77 |
 
 *Approximate pay-as-you-go prices, East US. Always verify on the [Azure Pricing Calculator](https://azure.microsoft.com/pricing/calculator/).*
 
@@ -152,21 +152,21 @@ spec:
         nvidia.com/gpu: 1
 ```
 
-The NVIDIA device plugin (DaemonSet, current version v0.18.0) runs on GPU nodes and exposes `nvidia.com/gpu` as a schedulable resource to Kubernetes. Without it, Kubernetes doesn't even know GPUs exist on the node.
+The NVIDIA device plugin runs as a DaemonSet on GPU nodes and exposes `nvidia.com/gpu` as a schedulable resource to Kubernetes. Without it, Kubernetes does not even know GPUs exist on the node.
 
 > **Warning:** The GPU taint in AKS is `sku=gpu:NoSchedule`, **not** `nvidia.com/gpu`. Many tutorials use the wrong key, which leaves your pods stuck in `Pending` forever.
 
 ## Networking: the hidden multiplier
 
-A fact that surprises most infra engineers when they first encounter AI workloads: **the network is often the bottleneck, not the GPU**. In distributed training, GPUs need to synchronize gradients after each forward-backward pass. With eight GPUs per node and multiple nodes, this synchronization generates tens of gigabytes of network traffic every few seconds. If the network can't keep up, GPUs sit idle waiting for data, and you're paying for expensive silicon that's doing nothing.
+A fact that surprises most infra engineers the first time they run into AI workloads: **the network is often the bottleneck, not the GPU**. In distributed training, GPUs synchronize gradients after each forward and backward pass. With eight GPUs per node and multiple nodes, that creates tens of gigabytes of traffic every few seconds. If the network cannot keep up, the GPUs wait, and you keep paying for expensive silicon that is doing nothing.
 
 ### InfiniBand and RDMA
 
-**InfiniBand** enables **RDMA (Remote Direct Memory Access)**: one machine reads from or writes to another machine's GPU memory *without involving any CPU*. Gradient synchronization happens directly between GPUs across nodes, completely bypassing the operating system's network stack.
+**InfiniBand** enables **RDMA (Remote Direct Memory Access)**. With GPUDirect RDMA, one node can move data between the NIC and GPU memory without bouncing it through host CPU memory first. That is why gradient synchronization gets dramatically faster on the right hardware.
 
 On Azure, InfiniBand is available on:
-- `Standard_ND96asr_v4` — 200 Gb/s InfiniBand (HDR)
-- `Standard_ND96isr_H100_v5` — 400 Gb/s InfiniBand (NDR)
+- `Standard_ND96asr_v4`: 200 Gb/s InfiniBand (HDR)
+- `Standard_ND96isr_H100_v5`: 400 Gb/s InfiniBand (NDR)
 
 For distributed training with NCCL (NVIDIA Collective Communications Library), InfiniBand delivers **10× or more throughput** compared to TCP/IP over Ethernet. NCCL detects and uses InfiniBand automatically when available.
 
@@ -210,7 +210,7 @@ az vmss create \
 
 ## Hands-on: create your first GPU VM
 
-Time to get your hands dirty. We'll provision a GPU VM, install NVIDIA drivers, and validate the GPU is operational. We'll use `Standard_NC4as_T4_v3` — the cheapest option and perfect for learning.
+Time to get your hands dirty. We'll provision a GPU VM, install NVIDIA drivers, and validate that the GPU is operational. We'll use `Standard_NC4as_T4_v3`, the cheapest option and a good lab box.
 
 ### Step 0: define variables
 
@@ -268,8 +268,7 @@ az vm extension set \
   --resource-group $RESOURCE_GROUP \
   --vm-name $VM_NAME \
   --name NvidiaGpuDriverLinux \
-  --publisher Microsoft.HpcCompute \
-  --version 1.6
+  --publisher Microsoft.HpcCompute
 ```
 
 Monitor progress (takes 5-10 minutes):
@@ -279,8 +278,8 @@ az vm extension show \
   --resource-group $RESOURCE_GROUP \
   --vm-name $VM_NAME \
   --name NvidiaGpuDriverLinux \
-  --query "{Status:provisioningState, Message:instanceView.statuses[0].message}" \
-  -o table
+  --query provisioningState \
+  -o tsv
 ```
 
 ### Step 5: validate the GPU
@@ -329,7 +328,7 @@ GPU infrastructure needs specific observability. Traditional CPU metrics (load a
 
 ## Next up
 
-Now that you know which VMs to provision and how to connect them, it's time to look **inside** the GPU. In the next post, we'll do a deep dive into GPU architecture: CUDA memory hierarchy, multi-GPU strategies, the driver ecosystem, and how to read `nvidia-smi` output like a pro. You don't need to write CUDA kernels, but understanding what happens inside the silicon will make you a better troubleshooter and a more efficient capacity planner.
+Now that you know which VMs to provision and how to connect them, it's time to look **inside** the GPU. In the next post, we'll do a deep dive into GPU architecture: CUDA memory hierarchy, multi-GPU strategies, the driver ecosystem, and how to read `nvidia-smi` output like a pro. You do not need to write CUDA kernels, but understanding what happens inside the silicon will make you a better troubleshooter and a better capacity planner.
 
 ---
 
@@ -350,4 +349,3 @@ Now that you know which VMs to provision and how to connect them, it's time to l
 13. [AI Use Cases for Infra Teams](/2026/06/27/ai-use-cases-for-infra-teams-aiops-and-beyond/)
 14. [AI Adoption Framework](/2026/07/01/ai-adoption-framework-from-enthusiasm-to-governance/)
 15. [Visual Glossary: Your Rosetta Stone](/2026/07/05/visual-glossary-infra-ai-your-rosetta-stone/)
-

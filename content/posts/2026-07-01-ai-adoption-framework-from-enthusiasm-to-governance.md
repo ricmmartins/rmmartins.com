@@ -19,19 +19,19 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Fourteenth post in the series. In the [previous one](/2026/06/27/ai-use-cases-for-infra-teams-aiops-and-beyond/), we used AI for our own infrastructure work. Now: how to take an entire organization from "let's use AI" to a governed, scalable platform.
+Fourteenth post in the series. In the [previous one](/2026/06/27/ai-use-cases-for-infra-teams-aiops-and-beyond/), we used AI for our own infrastructure work. This time the scope is bigger: how to take an entire organization from "let's use AI" to a governed platform that can survive contact with finance, security, and production support.
 
 ## Best intentions, worst outcomes
 
-Your CTO walks into the all-hands and says: "We're going all-in on AI." The room buzzes. Teams brainstorm use cases before the meeting ends. Within two weeks, Slack is full of threads about GPU availability.
+Your CTO walks into the all-hands and says: "We're going all-in on AI." The room buzzes. Teams start brainstorming use cases before the meeting ends. Within two weeks, Slack is full of threads about GPU availability.
 
-Fast-forward three months. Five teams provisioned GPU VMs independently across four subscriptions. Nobody can tell which models are in production versus a weekend experiment. Two teams are paying reserved instances on clusters that sit idle 80% of the time. Security hasn't reviewed a single deployment. The CFO wants to know why the Azure bill went up 40%.
+Three months later, five teams have provisioned GPU VMs independently across four subscriptions. Nobody can tell which models are in production versus a weekend experiment. Two teams are paying for reserved capacity on clusters that sit idle 80% of the time. Security has not reviewed a single deployment. The CFO wants to know why the Azure bill went up 40%.
 
 The enthusiasm was there. The framework wasn't.
 
 ## The 6-phase model
 
-Inspired by Microsoft's Cloud Adoption Framework, but rebuilt specifically for infra teams. Each phase has concrete deliverables and clear exit criteria.
+This borrows the discipline of Microsoft's Cloud Adoption Framework, but it is rebuilt for infra teams. Each phase has deliverables and an exit test. If you cannot tell whether you are ready to move on, you are not ready.
 
 ```
 Assessment → Enablement → Infra Preparation → Experimentation → Scale & Governance → Continuous Adoption
@@ -41,7 +41,7 @@ Think of it as the infrastructure lifecycle applied to AI: assess, build, valida
 
 ## Phase 1: assessment (where are we today?)
 
-Before building anything, an honest assessment. The question: if a team needed to deploy a model to production tomorrow, would your infrastructure support it securely?
+Before building anything, do the honest assessment. If a team needed to deploy a model to production tomorrow, would your infrastructure support it securely?
 
 ### Readiness scorecard
 
@@ -64,7 +64,7 @@ The audit everyone skips and everyone needs. Look for: teams running models in p
 
 ## Phase 2: enablement (building the foundation)
 
-Close the gaps from Assessment. Investment in people, processes, and foundational tooling.
+Close the gaps from Assessment. This is where you spend money on people, process, and tooling before you spend much more cleaning up the alternative.
 
 ### Team upskilling
 
@@ -85,7 +85,7 @@ Document these as **policies**, not suggestions.
 
 ## Phase 3: infrastructure preparation (building the platform)
 
-This is where your IaC skills become a superpower. Turn the baseline into a repeatable self-service platform. Everything codified; if it can't be deployed from a git commit, it shouldn't exist.
+This is where IaC stops being background plumbing and becomes the platform. Turn the baseline into a repeatable self-service system. Codify everything. If it cannot be deployed from a git commit, it should not exist.
 
 ### Templates for common patterns
 
@@ -110,7 +110,7 @@ Budgets per team, alerts at 50%/75%/90%, mandatory tagging, GPU quota governance
 
 ## Phase 4: experimentation (controlled exploration)
 
-Platform ready, teams can experiment with guardrails.
+Once the platform is ready, teams can experiment with guardrails.
 
 ### Sandbox environments
 
@@ -130,7 +130,7 @@ Experiments without success criteria aren't experiments; they're hobbies.
 
 ## Phase 5: scale & governance (going to production)
 
-The transition from "works in the sandbox" to "runs with SLAs reliably."
+This is the jump from "works in the sandbox" to "runs with SLAs and pages people when it does not."
 
 ### Multi-tenancy and isolation
 
@@ -151,7 +151,7 @@ Document procedures for: scaling during traffic spikes, zero-downtime model vers
 
 ## Phase 6: continuous adoption (never ends)
 
-AI infra isn't a project with an end date. It's a capability that evolves continuously.
+AI infra is not a project with an end date. It is an operating capability. Treat it like one.
 
 ### Quarterly cadence
 
@@ -180,11 +180,11 @@ Categorize tools and services as:
 | **Security Afterthought** | "We'll add security later" | Templates with managed identity and private endpoints by default |
 | **Build Everything** | Custom framework when a managed service exists | Default to managed services |
 
-These anti-patterns compound. Big Bang causes Shadow AI (teams won't wait). Shadow AI creates Security Afterthought (deployments skip review). Recognizing the pattern is the first step.
+These anti-patterns stack on top of each other. Big Bang causes Shadow AI because teams will not wait. Shadow AI creates Security Afterthought because deployments skip review. By the time finance notices, you are already arguing about cleanup instead of building anything useful.
 
 ## In the next post
 
-Adoption framework complete. In the final post of the series, the **visual glossary**: your infra ↔ AI Rosetta Stone. Every AI term mapped to an infrastructure concept you already know.
+That is the framework. The final post is the **visual glossary**: an infra ↔ AI translation sheet for the terms people keep throwing around as if everybody was born knowing them.
 
 ---
 

@@ -19,9 +19,9 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Twelfth post in the series. In the [previous one](/2026/06/19/azure-openai-in-production-tokens-throughput-and-high-availability/), we operated Azure OpenAI with HA and correct retry patterns. Now: when things break (and they will break).
+Twelfth post in the series. In the [previous one](/2026/06/19/azure-openai-in-production-tokens-throughput-and-high-availability/), we ran Azure OpenAI with HA and sane retry patterns. This one is for when the nice diagram meets real life.
 
-This post is organized as real-world failure scenarios. Each follows: **Symptoms → Diagnosis → Root Cause → Resolution → Prevention**. Read it once for pattern recognition. Then bookmark it; you'll be back.
+This post is organized as real-world failure scenarios. Each follows: **Symptoms → Diagnosis → Root Cause → Resolution → Prevention**. Read it once for pattern recognition. Then bookmark it. You will need it again.
 
 ## Scenario 1: NVIDIA driver crash after kernel update
 
@@ -40,26 +40,26 @@ GPU containers won't start. Training jobs dead. The VM itself is fine, CPU workl
 ### Diagnosis
 
 ```bash
-# Check kernel messages
-dmesg | grep -i nvidia
-# [    4.212] NIST: module nvidia not found in modules.dep
+# Check whether the driver module exists for the running kernel
+modinfo nvidia
+# modinfo: ERROR: Module nvidia not found.
 
 # Current kernel
 uname -r
 # 6.5.0-44-generic
 
-# Installed driver
-dpkg -l | grep nvidia-driver
-# nvidia-driver-535    535.183.01
+# Check DKMS build status
+dkms status | grep nvidia
+# nvidia/535.183.01: added
 
 # What happened
-cat /var/log/apt/history.log | grep -A 5 "linux-image"
+grep -A 5 "linux-image" /var/log/apt/history.log
 # unattended-upgrade installed new kernel
 ```
 
 ### Root cause
 
-Ubuntu's `unattended-upgrades` installed a new kernel automatically. The NVIDIA kernel module is compiled against a specific version. When the VM rebooted into the new kernel, there was no matching NVIDIA module.
+Ubuntu's `unattended-upgrades` installed a new kernel automatically. The NVIDIA kernel module has to exist for the running kernel version. If DKMS or the driver extension does not rebuild cleanly, the VM comes back on the new kernel without a matching NVIDIA module.
 
 ### Resolution
 
@@ -142,7 +142,7 @@ training_args = TrainingArguments(
     gradient_accumulation_steps=4,        # Maintains effective batch = 8
 )
 
-# Better fix: gradient checkpointing (trades 20-30% speed for 60-80% less memory)
+# Better fix: gradient checkpointing (trades extra compute for lower activation memory)
 model.gradient_checkpointing_enable()
 
 # For larger models: LoRA (trains <1% of parameters)
@@ -226,10 +226,13 @@ spec:
 If quota is the issue:
 
 ```bash
-az quota create \
-  --resource-name "StandardNDSv2Family" \
+az extension add --name quota
+
+az quota create-or-update \
   --scope "/subscriptions/{sub-id}/providers/Microsoft.Compute/locations/eastus" \
-  --limit-object value=48 limit-object-type=LimitValue
+  --resource-name "standardNDSv2Family" \
+  --limit 48 \
+  --unit Count
 ```
 
 ### Prevention
@@ -261,10 +264,12 @@ Check the `Retry-After` header:
 - `Retry-After: 1` = slightly over the limit
 - `Retry-After: 30` = dramatically above the limit
 
+Some SDKs expose the same signal as `retry-after-ms`. Use either one. They are telling you the same thing: back off.
+
 ```bash
 az monitor metrics list \
   --resource "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.CognitiveServices/accounts/{account}" \
-  --metric "TokenTransaction" \
+  --metrics "TokenTransaction" \
   --interval PT1M \
   --aggregation Total \
   --filter "ModelDeploymentName eq 'gpt-4o-prod'"
@@ -309,12 +314,14 @@ kubectl logs model-serve-abc -n inference | grep -i "model loaded\|loading model
 # [2024-07-15 08:14:47] Model loaded in 164.2 seconds
 ```
 
-164 seconds of model loading = almost 3 minutes of latency hole on every restart.
+164 seconds of model loading is not a latency blip. It is a restart wearing a latency costume.
+
+If `Last State` shows `OOMKilled`, the restart is probably your root cause. If the pod falls into `CrashLoopBackOff`, Kubernetes is telling you the container keeps dying faster than the platform can stabilize it.
 
 ### Root cause (usually a combination)
 
 1. **Container cold start:** Pod evicted (OOM, node drain, spot reclaim), model reloading from Blob Storage (14+ GB over network)
-2. **GPU thermal throttling:** Sustained 100% utilization → temperature > 83°C → automatic clock reduction
+2. **GPU thermal throttling:** Sustained 100% utilization pushes the card toward its thermal limit, clocks drop, latency follows
 3. **Noisy neighbor:** Another pod on the same node consuming CPU/memory/network needed for pre/post-processing
 
 ### Resolution
@@ -334,7 +341,7 @@ kubectl logs model-serve-abc -n inference | grep -i "model loaded\|loading model
 
 ## In the next post
 
-Troubleshooting covered. Next, we step out of the operational and into something broader: **AI use cases for infra teams**. How to use AI to improve your own infrastructure work, from AIOps to log analysis and predictive capacity planning.
+That covers the failure modes that ruin a quiet night. Next up: **AI use cases for infra teams**. Not AI as the workload this time, but AI as a tool for your own operations, from AIOps to log analysis and capacity planning.
 
 ---
 

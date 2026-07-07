@@ -20,15 +20,15 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Fifth post in the series. In the [previous one](/2026/05/22/gpu-deep-dive-what-happens-inside-the-silicon/), we dove inside the GPU. Now let's automate everything around it. Because understanding GPUs is half the battle; provisioning them consistently and at scale is where infrastructure engineering actually meets AI.
+Fifth post in the series. In the [previous one](/2026/05/22/gpu-deep-dive-what-happens-inside-the-silicon/), we went inside the GPU. This time we automate everything around it. Understanding GPUs is useful. Provisioning them consistently and at scale is where infrastructure engineering actually meets AI.
 
 ## The $4,000 typo
 
-I started the week with a win. Manually provisioned a GPU cluster in East US 2 for an ML experiment: AKS with a `Standard_NC6s_v3` node pool, accelerated networking, NVIDIA drivers, correct taints. Took almost a full day, but it worked.
+I started the week with a win. I manually provisioned a GPU cluster in East US 2 for an ML experiment: AKS with a `Standard_NC6s_v3` node pool, accelerated networking, GPU drivers, correct taints. It took most of a day, but it worked.
 
-Three weeks later, the same team needs the identical setup in West US 3. No problem, I thought. Opened the portal, referencing a Slack thread for the SKU, a wiki page for the network config, and my memory for the rest.
+Three weeks later, the same team needed the setup in West US 3. I figured it would be quick. I opened the portal, glanced at a Slack thread for the SKU, a wiki page for the network config, and trusted my memory for the rest.
 
-Someone fat-fingered the SKU. Instead of `Standard_NC6s_v3` (a GPU VM at ~$3.80/hr), the node pool ended up running `Standard_D16s_v5` — a CPU VM with zero GPUs. The training job launched, couldn't find a CUDA device, fell back to CPU. Nobody noticed for three days because the job didn't fail — it just ran slow. By the time someone checked, the cluster had burned **$4,000** in compute that couldn't even do what it was supposed to.
+Someone fat-fingered the SKU. Instead of `Standard_NC6s_v3`, the autoscaling node pool template pointed at `Standard_D64s_v5`. The training job launched, could not find a CUDA device, and fell back to CPU. Because throughput collapsed, the cluster autoscaler kept adding nodes. Nobody noticed for three days because the job never failed. It just crawled. By the time someone checked, the cluster had burned **about $4,000** on CPU nodes that could not do the job.
 
 That was the last time I provisioned AI infra manually.
 
@@ -39,11 +39,11 @@ Traditional web application infra is forgiving. A misconfigured App Service cost
 | Reason | Why it matters for AI |
 |--------|----------------------|
 | **Complexity** | GPU quotas per region, driver versions, taints, InfiniBand, NVMe ephemeral storage, private endpoints. No human can keep all that in their head |
-| **Cost** | ND A100 4-nodes = ~$350/day. Every minute of misconfiguration is money burning |
+| **Cost** | One ND A100 node is roughly $650/day. Four nodes are about $2,600/day. Every minute of misconfiguration is money burning |
 | **Reproducibility** | ML experiments need to be repeatable. Same SKU, driver, network topology |
 | **Compliance** | Who changed what, when, why. Git gives you an audit trail for free |
 
-**Infra ↔ AI translation:** When the ML engineer says "I need the same environment from last week," they want infrastructure reproducibility. When compliance asks "what changed," they want an audit trail. IaC answers both with the same artifact: a versioned configuration file.
+When the ML engineer says "I need the same environment from last week," they are asking for infrastructure reproducibility. When compliance asks "what changed," they want an audit trail. IaC answers both with the same artifact: a versioned configuration file.
 
 ## The IaC landscape for AI
 
@@ -136,7 +136,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "gpu" {
 }
 ```
 
-The `sku=gpu:NoSchedule` taint is essential. Without it, Kubernetes schedules monitoring DaemonSets and log collectors on your $3.80/hr GPU nodes.
+The `sku=gpu:NoSchedule` taint is essential. Without it, Kubernetes schedules monitoring DaemonSets and log collectors onto your expensive GPU nodes.
 
 ### Remote state (mandatory)
 
@@ -166,7 +166,8 @@ az storage account create \
 
 az storage container create \
   --name tfstate \
-  --account-name stterraformstate
+  --account-name stterraformstate \
+  --auth-mode login
 ```
 
 ## Bicep for AI infrastructure
@@ -183,31 +184,52 @@ Bicep's advantage: no state file, no backend, no locking. ARM manages everything
   'Standard_NC48ads_A100_v4'
   'Standard_NC96ads_A100_v4'
 ])
-@description('GPU VM size — must be an N-series SKU')
+@description('GPU VM size: must be an N-series SKU')
 param vmSize string = 'Standard_NC6s_v3'
 
 param vmName string = 'vm-gpu-ai'
 param location string = resourceGroup().location
 param adminUsername string = 'azureuser'
-
-@secure()
 param sshPublicKey string
+param subnetId string
+
+resource nic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
+  name: '${vmName}-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          subnet: {
+            id: subnetId
+          }
+        }
+      }
+    ]
+  }
+}
 
 resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
   name: vmName
   location: location
   properties: {
-    hardwareProfile: { vmSize: vmSize }
+    hardwareProfile: {
+      vmSize: vmSize
+    }
     osProfile: {
       computerName: vmName
       adminUsername: adminUsername
       linuxConfiguration: {
         disablePasswordAuthentication: true
         ssh: {
-          publicKeys: [{
-            path: '/home/${adminUsername}/.ssh/authorized_keys'
-            keyData: sshPublicKey
-          }]
+          publicKeys: [
+            {
+              path: '/home/${adminUsername}/.ssh/authorized_keys'
+              keyData: sshPublicKey
+            }
+          ]
         }
       }
     }
@@ -220,12 +242,18 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
       }
       osDisk: {
         createOption: 'FromImage'
-        managedDisk: { storageAccountType: 'Premium_LRS' }
+        managedDisk: {
+          storageAccountType: 'Premium_LRS'
+        }
         diskSizeGB: 256
       }
     }
     networkProfile: {
-      networkInterfaces: [{ id: nic.id }]
+      networkInterfaces: [
+        {
+          id: nic.id
+        }
+      ]
     }
   }
 }
@@ -243,7 +271,7 @@ resource nvidiaExtension 'Microsoft.Compute/virtualMachines/extensions@2024-07-0
 }
 ```
 
-The `@allowed` decorator serves the same purpose as Terraform's `validation`: it prevents non-GPU SKUs from ever making it into a deployment.
+The `@allowed` decorator does the same job as Terraform's `validation`: it keeps non-GPU SKUs out of the deployment before ARM touches anything.
 
 ### Modular structure for production
 
@@ -271,7 +299,7 @@ AI infrastructure changes should never be applied from a laptop. The pipeline pr
 ### GitHub Actions with OIDC
 
 ```yaml
-name: "AI Infrastructure — Plan & Apply"
+name: "AI Infrastructure: Plan and Apply"
 
 on:
   push:
@@ -284,7 +312,6 @@ on:
 permissions:
   id-token: write
   contents: read
-  pull-requests: write
 
 env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -310,6 +337,11 @@ jobs:
         working-directory: infra
       - run: terraform plan -out=tfplan -input=false
         working-directory: infra
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: infra/tfplan
+          retention-days: 1
 
   apply:
     name: "Terraform Apply"
@@ -328,13 +360,17 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: infra
       - run: terraform init
         working-directory: infra
       - run: terraform apply -auto-approve tfplan
         working-directory: infra
 ```
 
-The flow: PR = `plan` only (shows what will change). Merge to main = `apply` with environment protection rule (reviewer must approve). The plan artifact is what executes — no drift between review and execution.
+The flow is simple: PRs run `plan` only. Merges to main run `apply` behind an environment protection rule. Because the pipeline uploads `tfplan` and then downloads that exact file in the apply job, review and execution stay aligned.
 
 **Always pin action versions.** `@v4`, `@v3`, `@v2`. Using `@latest` in production pipelines means an upstream breaking change can take down your deploy when you need it most.
 

@@ -19,19 +19,19 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Eleventh post in the series. In the [previous one](/2026/06/15/platform-ops-building-a-self-service-ai-platform/), we built the self-service AI platform with multi-tenancy and scheduling. Now: the service everyone wants to consume, Azure OpenAI, and how to operate it without getting 429'd in the face.
+Eleventh post in the series. In the [previous one](/2026/06/15/platform-ops-building-a-self-service-ai-platform/), we built the self-service AI platform with multi-tenancy and scheduling. This time it's the service everybody wants to consume: Azure OpenAI, and how to run it without getting slapped by 429s.
 
 ## The 429 that changed everything
 
-Your team launched an internal GPT-4o chatbot on Monday. Day 1: smooth sailing, demos for leadership, Slack full of praise. Day 3: "the bot is slow." Day 5: 30% of requests return HTTP 429. You open Azure Monitor and discover you're hitting the 80K TPM ceiling.
+Your team launched an internal GPT-4o chatbot on Monday. Day 1 was demos for leadership and Slack praise. Day 3 brought "the bot is slow." Day 5 brought HTTP 429 on 30% of requests. You open Azure Monitor and find the 80K TPM ceiling waiting for you.
 
-The data science team's response? "Increase the limit." But it's not that simple. Quota increases aren't instantaneous, and throwing more TPM at the problem doesn't fix the underlying design. Some requests consume 4,000 tokens for a question that could fit in 200. The system prompt is 1,800 tokens, copied from a blog post and never trimmed. Retry logic hammers the endpoint without backoff, turning throttling into a cascading failure.
+The data science team's response is predictable: "Increase the limit." Sometimes that is the answer. Often it isn't. Quota changes are not instant, and more TPM does nothing for a bad prompt, a bloated system message, or retry code that hammers the same endpoint until throttling turns into a pileup.
 
-What you need isn't a bigger pipe. You need to understand how Azure OpenAI measures, limits, and charges for capacity.
+Before you ask for more capacity, understand how Azure OpenAI measures it, limits it, and bills it.
 
-## Tokens: the fundamental unit
+## Tokens: the unit that matters
 
-A token is a chunk of a word. LLMs don't process text character by character; they break it into subwords. In English, 1 token ≈ 4 characters ≈ 0.75 words.
+A token is a chunk of a word. LLMs do not process text character by character. They break it into subwords. In English, 1 token is roughly 4 characters or 0.75 words.
 
 **Everything in Azure OpenAI is measured in tokens:** billing, throughput limits, context windows, rate limiting.
 
@@ -41,7 +41,7 @@ Total Tokens = System Prompt + User Input + Output (completion)
 
 Typical chatbot: 500 tokens (system) + 300 (user) + 800 (response) = 1,600 tokens/request. Multiply by concurrent users and requests per minute: that's your throughput requirement.
 
-**Infra ↔ AI translation:** Tokens are the payload packets of the AI world. TPM is your bandwidth ceiling (throughput per minute). RPM is your packets-per-second limit. Same diagnostic reasoning, different units.
+**Infra ↔ AI translation:** Tokens are the payload packets of the AI world. TPM is your bandwidth ceiling. RPM is your request rate cap. Same diagnostic reasoning, different units.
 
 ### Context windows
 
@@ -65,11 +65,13 @@ A large context window doesn't mean you should fill it. A 100K-token request con
 | **Throttling** | 429 when quota exceeded | 429 when quota exceeded | No throttling within capacity |
 | **Best for** | Dev/test, variable workloads | Global apps, no residency restrictions | Production, apps with SLAs |
 
+Data Zone Standard sits between Standard and Global Standard. It is still pay-per-token and quota-limited, but requests stay within the selected geography instead of roaming globally.
+
 ### When to use each
 
 1. **Variable, low volume, experimental?** → Standard or Global Standard
 2. **Need higher quotas, no data residency restriction?** → Global Standard
-3. **Data residency within a geography (US, EU)?** → Data Zone
+3. **Data residency within a geography (US, EU)?** → Data Zone Standard
 4. **Production with SLA, consistently high volume?** → Provisioned (PTU)
 5. **Mission-critical production with overflow?** → PTU primary + Standard overflow
 
@@ -112,12 +114,13 @@ You can hit TPM with a few large requests (RAG with long documents) or RPM with 
 ### Checking deployment rate limits
 
 ```bash
-az cognitiveservices account deployment show \
+az cognitiveservices account list-usage \
   --name aoai-prod \
   --resource-group rg-ai-prod \
-  --deployment-name gpt-4o-prod \
-  --query "properties.rateLimits"
+  --output table
 ```
+
+Quota is assigned per subscription, per region, and per model or deployment type. You split that pool across deployments. Live 429 responses and their headers tell you more about real pressure than any static control-plane view.
 
 ## The correct retry pattern (and the wrong one)
 
@@ -132,18 +135,27 @@ def call_with_backoff(client, messages, max_retries=5):
     for attempt in range(max_retries):
         try:
             return client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-prod",
                 messages=messages
             )
         except openai.RateLimitError as e:
             if attempt == max_retries - 1:
                 raise
-            retry_after = int(e.response.headers.get("Retry-After", 1))
-            wait = retry_after + random.uniform(0, 1)
+            headers = e.response.headers
+            retry_after_ms = headers.get("retry-after-ms")
+            if retry_after_ms is not None:
+                wait = float(retry_after_ms) / 1000
+            else:
+                wait = float(headers.get("Retry-After", 1))
+            wait += random.uniform(0, 1)
             time.sleep(wait)
 ```
 
-**Always respect the `Retry-After` header** and add random jitter to avoid thundering herd (all clients retrying at the same instant).
+**Always respect the `Retry-After` or `retry-after-ms` header** and add random jitter to avoid thundering herd (all clients retrying at the same instant).
+
+### Content filtering still spends capacity
+
+Content filtering is separate from rate limiting, but it shows up in the same operational picture. A blocked prompt can return `400` with `content_filter`. A generated answer can stop with `finish_reason=content_filter`. Either way, the request still consumed work up to the point where filtering happened, so track filtered calls next to 429s instead of treating them as some unrelated product quirk.
 
 ## High availability: multi-deployment
 
@@ -153,11 +165,11 @@ For production, never depend on a single deployment in a single region.
 
 Azure API Management in front of multiple Azure OpenAI deployments:
 
-1. **Primary:** PTU deployment in East US (guaranteed capacity, no 429s)
+1. **Primary:** PTU deployment in East US (guaranteed capacity, no 429s while traffic stays within purchased capacity)
 2. **Secondary:** Standard deployment in West US (overflow, pay-per-token)
 3. **Tertiary:** Global Standard (catch-all when primaries are under pressure)
 
-APIM handles routing based on availability and rate limit headers. If primary returns 429, it redirects to secondary automatically.
+APIM can handle that routing, but only if you write the policy. Treat 429 and 5xx handling as explicit gateway logic, not magic failover.
 
 ### Capacity monitoring
 
@@ -165,7 +177,7 @@ APIM handles routing based on availability and rate limit headers. If primary re
 # Token transaction metrics
 az monitor metrics list \
   --resource "/subscriptions/{sub}/resourceGroups/rg-ai-prod/providers/Microsoft.CognitiveServices/accounts/aoai-prod" \
-  --metric "TokenTransaction" \
+  --metrics "TokenTransaction" \
   --interval PT1M \
   --aggregation Total \
   --filter "ModelDeploymentName eq 'gpt-4o-prod'"
@@ -184,7 +196,7 @@ az monitor metrics list \
 
 ### Prompt caching
 
-Azure OpenAI supports automatic caching for repeated prefixes. If your system prompt is identical across all requests (and it should be), cached tokens are charged at a reduced price. Structure prompts with the static part first.
+On models that support prompt caching, repeated prefixes are billed at a reduced rate. If your system prompt is stable, put the static part first and keep it identical between requests.
 
 ### Multi-model routing
 
@@ -197,11 +209,11 @@ Not every request needs the most capable (and most expensive) model. Route accor
 | Complex reasoning | GPT-4o | Needs the full model |
 | Code generation | GPT-4o | Accuracy matters more than cost |
 
-A simple router (based on input length, keyword presence, or quick classification) can cut inference costs by 50-80%.
+A simple router based on input length, intent, or a cheap first-pass classifier can take a real bite out of inference costs.
 
 ## In the next post
 
-Azure OpenAI running with HA, correct retry, and multi-model routing. Next: the **troubleshooting playbook**. The real scenarios that generate pages at 2 AM: NVIDIA driver crash, CUDA OOM, pods stuck in Pending, and inference latency spikes.
+Azure OpenAI is running with HA, sane retries, and model routing that does not burn money for sport. Next comes the **troubleshooting playbook**: NVIDIA driver crashes, CUDA OOM, pods stuck in Pending, and latency spikes that look mysterious until you dig.
 
 ---
 

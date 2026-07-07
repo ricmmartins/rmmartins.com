@@ -21,11 +21,11 @@ series:
 
 This is the second post in the series where I translate AI into the language of infrastructure engineers. In the [first post](/2026/05/10/ai-for-infrastructure-engineers-why-ai-needs-you/), I showed that AI is just another workload and that your infra skills already prepare you more than you think.
 
-Now let's talk about the bottleneck that **everyone ignores** — the hidden villain behind performance issues in virtually every AI project I've seen: **storage**.
+Now for the bottleneck **everyone ignores**: storage. It is the hidden villain behind performance problems in almost every AI project I've seen.
 
 ## The midnight call
 
-You did everything right. The ML team asked for a GPU cluster and you delivered: eight NVIDIA A100s across two nodes, high-bandwidth networking, CUDA drivers up to date. Flawless deployment. The team kicked off their first training job Friday at 6 PM and you went home feeling good.
+You did everything right. The ML team asked for a GPU cluster and you delivered: eight NVIDIA A100s across two nodes, high-bandwidth networking, CUDA drivers up to date. Clean deployment. The team kicked off their first training job Friday at 6 PM and you went home feeling good.
 
 Your phone rings at midnight. The data science lead is frustrated: *"The GPUs aren't working. The training that was supposed to take four hours hasn't even finished the first epoch."*
 
@@ -35,9 +35,9 @@ You remote in and pull the metrics:
 - **GPU memory**: one-third of total
 - **Disk I/O**: 100%, read throughput crawling at 60 MB/s
 
-The team stored 2 TB of training images on Blob Storage with Standard HDD, mounted via a basic SMB share. Your storage architecture is **starving** the most expensive hardware in the rack.
+The team stored 2 TB of training images on an Azure Files Standard HDD share, mounted over SMB. Your storage design is **starving** the most expensive hardware in the rack.
 
-This story plays out at organizations every week. Teams invest fortunes in GPUs only to discover that the data pipeline — the part that **we** in infra own — is the real bottleneck.
+This story plays out at organizations every week. Teams spend serious money on GPUs and then discover that the data pipeline, the part **we** in infra own, is the real bottleneck.
 
 ## Why everything starts with data
 
@@ -45,7 +45,7 @@ Every AI system, from a simple classifier to a trillion-parameter LLM, depends o
 
 **Data + Model + Compute = AI**
 
-Remove any of the three and you have nothing. But the insight most of us miss early on is: of the three components, **data is the one that touches infrastructure at every stage**. The model is code. Compute is provisioned and sits there running. But data needs to be ingested, stored, prepared, served for training, and delivered at inference — and **each of those stages is an infrastructure problem**.
+Remove any of the three and you have nothing. But the insight most of us miss early on is this: of the three components, **data is the one that touches infrastructure at every stage**. The model is code. Compute is provisioned and sits there running. Data has to be ingested, stored, prepared, served for training, and delivered at inference, and **each of those stages is an infrastructure problem**.
 
 | Infra Concept | AI Equivalent | Why it matters |
 |---------------|---------------|----------------|
@@ -60,7 +60,7 @@ If you already manage storage, networking, and access control, you understand **
 
 ## Data starvation: the invisible bottleneck
 
-Here's the counterintuitive truth about AI infrastructure: **the most common cause of low GPU utilization isn't a GPU problem — it's a storage problem**.
+The counterintuitive truth about AI infrastructure is simple: **the most common cause of low GPU utilization isn't a GPU problem. It's a storage problem**.
 
 When the data loader can't feed batches to the GPU fast enough, the GPU sits idle waiting for data. This is called *data starvation*, and it turns your $50,000/month GPU cluster into an expensive space heater.
 
@@ -89,7 +89,7 @@ The diagnostic pattern is simple:
 
 | GPU Util | CPU Util | Disk I/O | Diagnosis |
 |----------|----------|----------|-----------|
-| Low | Low | High | **Data starvation** — storage can't feed data fast enough |
+| Low | Low | High | **Data starvation**: storage can't feed data fast enough |
 | Low | High | Low | CPU preprocessing is the bottleneck (heavy data augmentation) |
 | High | High | High | Everything working well, balanced system |
 | Low | Low | Low | Problem in model code or wrong batch size |
@@ -104,16 +104,16 @@ This is the highest-impact decision you'll make for AI workload performance. Her
 |---------|----------|------------|---------|------|----------------|
 | **Blob Storage** | Datasets, artifacts, checkpoints | Up to 60 Gbps/account | Moderate (ms) | Low (~$0.018/GB/month) | You need native POSIX without a mount |
 | **Data Lake Gen2** | Analytical pipelines, versioned datasets | Up to 60 Gbps/account | Moderate (ms) | Low | Simple workload that doesn't need granular ACLs |
-| **Local NVMe** | Training scratch, data loader cache | 3-7 GB/s per disk | Ultra-low (μs) | Included with the VM | You need persistence — data lost on deallocation |
+| **Local NVMe** | Training scratch, data loader cache | 3-7 GB/s per disk | Ultra-low (μs) | Included with the VM | You need persistence (data is lost on deallocation) |
 | **Azure Files (NFS)** | Shared datasets across nodes | Up to 10 Gbps (premium) | Low-moderate | Moderate | Single-node workload where local NVMe is enough |
 | **Azure Files (SMB)** | Legacy compatibility, Windows | Up to 4 Gbps (premium) | Moderate | Moderate | High-performance Linux training |
 | **Cosmos DB** | Feature stores, real-time inference | N/A (request-based) | Single-digit ms | Higher | Storing raw training datasets |
 
-The most common production pattern is a **two-tier approach**: store raw datasets in Blob Storage or Data Lake Gen2 for durability and cost, then stage active data to local NVMe for performance.
+The most common production pattern is a **two-tier approach**: store raw datasets in Blob Storage or Data Lake Gen2 for durability and cost, then stage the active working set to local NVMe for performance.
 
 **Blob is your warehouse. NVMe is your workbench.**
 
-> ⚠️ **Never use Standard HDD for training.** The IOPS and throughput limits are orders of magnitude below what GPUs need. A single A100 can consume data faster than a Standard HDD storage account can serve it.
+> ⚠️ **Never use Standard HDD for training.** The IOPS and throughput limits are orders of magnitude below what GPUs need. A single A100 can consume data faster than Standard HDD-backed storage can serve it.
 
 ## The recommended pattern: Blob + NVMe + BlobFuse2
 
@@ -121,10 +121,12 @@ Most ML frameworks (PyTorch, TensorFlow) expect training data accessible through
 
 BlobFuse2 has two caching modes, and choosing the right one matters:
 
-- **File cache**: Downloads entire files to a local cache before serving reads. **Use for training** — datasets are read repeatedly across multiple epochs.
+- **File cache**: Downloads entire files to a local cache before serving reads. **Use for training** because datasets are read repeatedly across multiple epochs.
 - **Block cache (streaming)**: Streams in chunks without downloading the complete file. Use for preprocessing or inference on large media files.
 
 ### Mount with file cache for training
+
+Assume `config.yaml` already points at the target storage account and uses managed identity.
 
 ```bash
 # Create cache directory on fast local storage (NVMe temp disk)
@@ -143,14 +145,14 @@ sudo blobfuse2 mount /mnt/training-data \
 ### Preload: data ready before training starts
 
 ```bash
-# Mount with preload — downloads data to cache at mount time
+# Mount with preload: downloads data to cache at mount time
 sudo blobfuse2 mount /mnt/training-data \
   --config-file=./config.yaml \
   --tmp-path=/mnt/resource/blobfuse2cache \
   --preload
 ```
 
-> 💡 **Always** point `--tmp-path` to the VM's local NVMe disk (`/mnt/resource` on Azure VMs) — not to the OS disk. This gives the BlobFuse2 cache the lowest possible latency. On ND-series GPU VMs, the local temp disk delivers 3-7 GB/s read throughput.
+> 💡 **Always** point `--tmp-path` to the VM's local NVMe disk (`/mnt/resource` on Azure VMs), not the OS disk. That gives the BlobFuse2 cache the lowest possible latency. On ND-series GPU VMs, the local temp disk can deliver 3-7 GB/s of read throughput.
 
 ### AzCopy for bulk data ingestion
 
@@ -202,7 +204,7 @@ Data scientists frequently copy data to local machines, shared drives, or unmana
 
 ## Hands-on: end-to-end optimized storage for AI
 
-Let's build a complete flow: provision, transfer, mount, and validate. All commands use `--auth-mode login` — no storage keys.
+Here is a complete flow: provision, transfer, mount, and validate. The Azure CLI commands use `--auth-mode login`, and BlobFuse2 uses managed identity in `config.yaml`. No storage keys anywhere.
 
 ### 1. Create the storage account with Data Lake Gen2
 
@@ -229,10 +231,14 @@ az storage account create \
 ### 2. Configure RBAC (no keys!)
 
 ```bash
-az ad signed-in-user show --query id -o tsv | az role assignment create \
+USER_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
+SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+az role assignment create \
   --role "Storage Blob Data Contributor" \
-  --assignee @- \
-  --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT"
+  --assignee-object-id $USER_OBJECT_ID \
+  --assignee-principal-type User \
+  --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT"
 ```
 
 > Role assignments take 1-2 minutes to propagate. Wait before proceeding.
@@ -282,7 +288,7 @@ If `nvidia-smi` shows GPU util above 80% and `iostat` isn't pegged at 100%, your
 
 Before handing off storage for an AI workload:
 
-- [ ] Storage is **Premium SSD or NVMe** (never Standard HDD for training)
+- [ ] Active training data is staged on **premium or local storage** (Premium Files or local NVMe), never Standard HDD
 - [ ] BlobFuse2 cache points to **local NVMe** (`/mnt/resource`), not the OS disk
 - [ ] Access via **managed identity + RBAC**, no storage keys
 - [ ] Data classified **before** entering the pipeline
@@ -292,7 +298,7 @@ Before handing off storage for an AI workload:
 
 ## Next up
 
-Now that you understand how data flows through AI systems and why your storage decisions directly determine training performance, it's time to look at the compute that consumes all that data. I'll talk about **GPUs, VM families, and cluster architecture** — and why a well-tuned storage layer is only half the equation.
+Now that you understand how data flows through AI systems and why your storage decisions determine training performance, it's time to look at the compute that consumes all that data. I'll talk about **GPUs, VM families, and cluster architecture**, and why a well-tuned storage layer is only half the equation.
 
 The full book is available for free at [ai4infra.com](https://ai4infra.com).
 
@@ -319,4 +325,3 @@ The full book is available for free at [ai4infra.com](https://ai4infra.com).
 13. [AI Use Cases for Infra Teams](/2026/06/27/ai-use-cases-for-infra-teams-aiops-and-beyond/)
 14. [AI Adoption Framework](/2026/07/01/ai-adoption-framework-from-enthusiasm-to-governance/)
 15. [Visual Glossary: Your Rosetta Stone](/2026/07/05/visual-glossary-infra-ai-your-rosetta-stone/)
-
