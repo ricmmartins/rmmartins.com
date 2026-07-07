@@ -12,7 +12,6 @@ tags:
   - infrastructure
   - azure
   - troubleshooting
-  - nvidia
   - kubernetes
   - gpu
   - azure-openai
@@ -20,7 +19,7 @@ series:
   - "AI for Infrastructure Engineers"
 ---
 
-Twelfth post in the series. In the [previous one](/azure-openai-in-production-tokens-throughput-and-high-availability/), we operated Azure OpenAI with HA and correct retry patterns. Now: when things break (and they will break).
+Twelfth post in the series. In the [previous one](/2026/06/19/azure-openai-in-production-tokens-throughput-and-high-availability/), we operated Azure OpenAI with HA and correct retry patterns. Now: when things break (and they will break).
 
 This post is organized as real-world failure scenarios. Each follows: **Symptoms → Diagnosis → Root Cause → Resolution → Prevention**. Read it once for pattern recognition. Then bookmark it; you'll be back.
 
@@ -336,3 +335,24 @@ kubectl logs model-serve-abc -n inference | grep -i "model loaded\|loading model
 ## In the next post
 
 Troubleshooting covered. Next, we step out of the operational and into something broader: **AI use cases for infra teams**. How to use AI to improve your own infrastructure work, from AIOps to log analysis and predictive capacity planning.
+
+---
+
+*This is post 12 of the series "AI for Infrastructure Engineers", based on the book [AI for Infrastructure Professionals](https://ai4infra.com):*
+
+1. [Why AI Needs You](/2026/05/10/ai-for-infrastructure-engineers-why-ai-needs-you/)
+2. [Data and Storage](/2026/05/14/data-and-storage-for-ai-workloads/)
+3. [Compute: Choosing the Right Hardware](/2026/05/18/compute-for-ai-choosing-the-right-hardware/)
+4. [GPU Deep Dive](/2026/05/22/gpu-deep-dive-what-happens-inside-the-silicon/)
+5. [Infrastructure as Code for AI](/2026/05/26/infrastructure-as-code-for-ai-automating-gpu-clusters/)
+6. [MLOps: Model Lifecycle](/2026/05/30/mlops-model-lifecycle-for-infra-engineers/)
+7. [Monitoring and Observability](/2026/06/03/monitoring-and-observability-for-ai/)
+8. [Security for AI](/2026/06/07/security-for-ai-threats-your-firewall-wont-catch/)
+9. [Cost Engineering for AI](/2026/06/11/cost-engineering-for-ai-when-idle-gpus-cost-more-than-your-car/)
+10. [Platform Ops: Self-Service AI Platform](/2026/06/15/platform-ops-building-a-self-service-ai-platform/)
+11. [Azure OpenAI in Production](/2026/06/19/azure-openai-in-production-tokens-throughput-and-high-availability/)
+12. **Troubleshooting Playbook**
+13. [AI Use Cases for Infra Teams](/2026/06/27/ai-use-cases-for-infra-teams-aiops-and-beyond/)
+14. [AI Adoption Framework](/2026/07/01/ai-adoption-framework-from-enthusiasm-to-governance/)
+15. [Visual Glossary: Your Rosetta Stone](/2026/07/05/visual-glossary-infra-ai-your-rosetta-stone/)
+

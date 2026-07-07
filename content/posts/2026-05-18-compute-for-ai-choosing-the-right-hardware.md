@@ -15,12 +15,11 @@ tags:
   - compute
   - aks
   - infiniband
-  - nvidia
 series:
   - "AI for Infrastructure Engineers"
 ---
 
-Third post in the series where I translate AI into the language of those who live and breathe infrastructure. In the [previous post](/posts/data-and-storage-for-ai-workloads/), we talked about the hidden storage bottleneck. Today we're going to what everyone thinks is the main topic of AI: **compute**.
+Third post in the series where I translate AI into the language of those who live and breathe infrastructure. In the [previous post](/2026/05/14/data-and-storage-for-ai-workloads/), we talked about the hidden storage bottleneck. Today we're going to what everyone thinks is the main topic of AI: **compute**.
 
 Spoiler: it's not just about having the most expensive GPU. It's about having the **right** GPU, connected the **right way**.
 
@@ -331,3 +330,24 @@ GPU infrastructure needs specific observability. Traditional CPU metrics (load a
 ## Next up
 
 Now that you know which VMs to provision and how to connect them, it's time to look **inside** the GPU. In the next post, we'll do a deep dive into GPU architecture: CUDA memory hierarchy, multi-GPU strategies, the driver ecosystem, and how to read `nvidia-smi` output like a pro. You don't need to write CUDA kernels, but understanding what happens inside the silicon will make you a better troubleshooter and a more efficient capacity planner.
+
+---
+
+*This is post 3 of the series "AI for Infrastructure Engineers", based on the book [AI for Infrastructure Professionals](https://ai4infra.com):*
+
+1. [Why AI Needs You](/2026/05/10/ai-for-infrastructure-engineers-why-ai-needs-you/)
+2. [Data and Storage](/2026/05/14/data-and-storage-for-ai-workloads/)
+3. **Compute: Choosing the Right Hardware**
+4. [GPU Deep Dive](/2026/05/22/gpu-deep-dive-what-happens-inside-the-silicon/)
+5. [Infrastructure as Code for AI](/2026/05/26/infrastructure-as-code-for-ai-automating-gpu-clusters/)
+6. [MLOps: Model Lifecycle](/2026/05/30/mlops-model-lifecycle-for-infra-engineers/)
+7. [Monitoring and Observability](/2026/06/03/monitoring-and-observability-for-ai/)
+8. [Security for AI](/2026/06/07/security-for-ai-threats-your-firewall-wont-catch/)
+9. [Cost Engineering for AI](/2026/06/11/cost-engineering-for-ai-when-idle-gpus-cost-more-than-your-car/)
+10. [Platform Ops: Self-Service AI Platform](/2026/06/15/platform-ops-building-a-self-service-ai-platform/)
+11. [Azure OpenAI in Production](/2026/06/19/azure-openai-in-production-tokens-throughput-and-high-availability/)
+12. [Troubleshooting Playbook](/2026/06/23/troubleshooting-playbook-incidents-that-will-wake-you-at-2am/)
+13. [AI Use Cases for Infra Teams](/2026/06/27/ai-use-cases-for-infra-teams-aiops-and-beyond/)
+14. [AI Adoption Framework](/2026/07/01/ai-adoption-framework-from-enthusiasm-to-governance/)
+15. [Visual Glossary: Your Rosetta Stone](/2026/07/05/visual-glossary-infra-ai-your-rosetta-stone/)
+
