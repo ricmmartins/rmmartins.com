@@ -9,7 +9,6 @@ tags:
   - Azure
   - ARO
   - GPU
-  - Nvidia
   - Machine Learning
 aliases:
   - "/2024/08/08/aro-with-nvidia-gpu-workloads/"
