@@ -1,5 +1,7 @@
 ---
 slug: "monitoring-and-observability-for-ai"
+aliases:
+  - "/2026/06/03/monitoring-and-observability-for-ai/"
 translationKey: "monitoramento-e-observabilidade-para-ai"
 title: "Monitoring and observability for AI: when the green dashboard lies"
 description: "Healthy infra doesn't mean a working model. Model drift, GPU metrics, Azure OpenAI throttling, and the 6 dimensions of observability you need to cover."

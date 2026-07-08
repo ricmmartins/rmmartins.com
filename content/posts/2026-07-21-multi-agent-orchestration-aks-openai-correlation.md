@@ -1,5 +1,7 @@
 ---
 slug: "multi-agent-orchestration-aks-openai-correlation"
+aliases:
+  - "/2026/07/21/multi-agent-orchestration-aks-openai-correlation/"
 translationKey: "orquestracao-multi-agentes-aks-openai-correlacao"
 title: "Multi-Agent Orchestration: Correlating AKS and Azure OpenAI"
 description: "An orchestrator that combines the AKS diagnostics agent with the token watchdog to answer 'did someone deploy something?' automatically."

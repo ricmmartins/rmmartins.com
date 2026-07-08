@@ -1,5 +1,7 @@
 ---
 slug: "how-mcp-works-the-protocol-connecting-agents-to-the-world"
+aliases:
+  - "/2026/07/29/how-mcp-works-the-protocol-connecting-agents-to-the-world/"
 translationKey: "como-mcp-funciona-o-protocolo-que-conecta-agents-ao-mundo"
 title: "How MCP works: the protocol connecting agents to the world"
 description: "A deep dive into MCP's wire format, JSON-RPC messages, transport layers, capability negotiation, and security model — explained for infrastructure engineers who want to understand what's actually on the wire."

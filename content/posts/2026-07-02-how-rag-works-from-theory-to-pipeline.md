@@ -1,5 +1,7 @@
 ---
 slug: "how-rag-works-from-theory-to-pipeline"
+aliases:
+  - "/2026/07/02/how-rag-works-from-theory-to-pipeline/"
 translationKey: "como-rag-funciona-da-teoria-ao-pipeline"
 title: "How RAG works: from theory to pipeline"
 description: "RAG is search plus an LLM. Here’s how retrieval, chunking, embeddings, hybrid search, and Azure AI Search fit together in a practical production pipeline."

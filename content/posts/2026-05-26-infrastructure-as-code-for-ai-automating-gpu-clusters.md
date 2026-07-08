@@ -1,5 +1,7 @@
 ---
 slug: "infrastructure-as-code-for-ai-automating-gpu-clusters"
+aliases:
+  - "/2026/05/26/infrastructure-as-code-for-ai-automating-gpu-clusters/"
 translationKey: "infrastructure-as-code-para-ai-automatizando-gpu-clusters"
 title: "Infrastructure as Code for AI: automating GPU clusters"
 description: "A typo in a VM SKU cost $4,000 in three days. IaC isn't nice-to-have for AI infra. It's survival. Terraform, Bicep, and CI/CD for GPU clusters."

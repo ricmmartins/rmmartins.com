@@ -1,5 +1,7 @@
 ---
 slug: "security-for-ai-threats-your-firewall-wont-catch"
+aliases:
+  - "/2026/06/07/security-for-ai-threats-your-firewall-wont-catch/"
 translationKey: "seguranca-para-ai-ameacas-que-seu-firewall-nao-pega"
 title: "Security for AI: threats your firewall won't catch"
 description: "Prompt injection is the SQL injection of the AI world. Managed identities, private endpoints, Key Vault, RBAC, and the defenses you need beyond a traditional WAF."

@@ -1,5 +1,7 @@
 ---
 slug: "context-engineering-the-art-of-feeding-llms"
+aliases:
+  - "/2026/07/05/context-engineering-the-art-of-feeding-llms/"
 translationKey: "context-engineering-a-arte-de-alimentar-llms"
 title: "Context engineering: the art of feeding LLMs"
 description: "Most of an LLM application's quality comes from how you assemble the input. Here's how to design context, prompts, tools, and token budgets like an infrastructure engineer."

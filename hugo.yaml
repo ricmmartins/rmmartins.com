@@ -189,4 +189,4 @@ markup:
     style: monokai
 
 permalinks:
-  posts: "/:year/:month/:day/:slug/"
+  posts: "/:slug/"

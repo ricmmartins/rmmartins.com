@@ -1,5 +1,7 @@
 ---
 slug: "deterministic-429-watchdog-azure-openai"
+aliases:
+  - "/2026/07/08/deterministic-429-watchdog-azure-openai/"
 translationKey: "watchdog-429-deterministico-azure-openai"
 title: "Building a Deterministic 429 Watchdog for Azure OpenAI"
 description: "An MCP server that detects token consumption trends before the 429 happens — no LLM required, just metrics and a cron job."
@@ -85,22 +87,7 @@ The reason to build the MCP server on top of that alert is what the native rule 
 
 The server exposes a deliberately small set of tools, split into two groups that don't mix: telemetry reads and notifications. No tool with the power to act on the resource itself: nothing that bumps quota or redistributes traffic on its own. That's intentional, and I'll explain why further down.
 
-```
- ┌─────────────────────────────┐
- │            HOST              │   Claude / agent runtime / simple cron
- └──────────────┬────────────────┘
-                 │ MCP (stdio or Streamable HTTP)
-                 ▼
- ┌─────────────────────────────┐
- │     MCP SERVER: watchdog429   │
- │  get_token_usage_trend        │
- │  get_token_usage_history      │
- │  send_slack_alert             │
- │  send_priority_alert          │
- └──────────────┬────────────────┘
-                 ▼
-   Azure Monitor (TokenTransaction, AzureOpenAIRequests)
-```
+![watchdog429 architecture](/img/watchdog429-architecture.svg)
 
 The central tool is `get_token_usage_trend`. It queries the Azure Monitor metrics API for the Azure OpenAI resource via the official `azure-monitor-query` package (`MetricsQueryClient`), pulls `TokenTransaction` over a short window (say, the last 5 minutes in 1-minute buckets, filtered by `ModelDeploymentName`), and returns the percentage of configured TPM already consumed, along with the slope of the curve: not just "how much," but "how fast it's climbing."
 

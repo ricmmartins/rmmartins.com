@@ -1,5 +1,7 @@
 ---
 slug: "from-prompt-engineering-to-frontier-company"
+aliases:
+  - "/2026/07/02/from-prompt-engineering-to-frontier-company/"
 translationKey: "da-prompt-engineering-a-frontier-company"
 title: "From prompt engineering to frontier company: why the model is no longer the differentiator"
 description: "Models became a commodity. The real differentiator is the system around them: harness engineering, context engineering, governance. How the conversation evolved in 3 years and where we are today."

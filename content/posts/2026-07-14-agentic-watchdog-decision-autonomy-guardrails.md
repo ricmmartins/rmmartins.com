@@ -1,5 +1,7 @@
 ---
 slug: "agentic-watchdog-decision-autonomy-guardrails"
+aliases:
+  - "/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/"
 translationKey: "watchdog-agente-autonomia-decisao-guardrails"
 title: "From Script to Agent: Giving the Watchdog Decision Autonomy"
 description: "Adding a reasoning layer to the 429 watchdog so it can tell a benign batch spike from a runaway agent — with explicit guardrails."

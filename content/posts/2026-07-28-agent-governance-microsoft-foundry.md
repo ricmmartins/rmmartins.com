@@ -1,5 +1,7 @@
 ---
 slug: "agent-governance-microsoft-foundry"
+aliases:
+  - "/2026/07/28/agent-governance-microsoft-foundry/"
 translationKey: "governanca-agentes-microsoft-foundry"
 title: "Agent Governance on Microsoft Foundry"
 description: "How Microsoft Foundry handles identity, RBAC, tool catalogs, and policy enforcement for AI agents at organizational scale."

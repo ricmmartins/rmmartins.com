@@ -1,5 +1,7 @@
 ---
 slug: "azure-openai-in-production-tokens-throughput-and-high-availability"
+aliases:
+  - "/2026/06/19/azure-openai-in-production-tokens-throughput-and-high-availability/"
 translationKey: "azure-openai-em-producao-tokens-throughput-e-alta-disponibilidade"
 title: "Azure OpenAI in production: tokens, throughput, and high availability"
 description: "HTTP 429 isn't a bug, it's bad capacity planning. Deployment types, PTU vs Standard, multi-region, retry patterns, and how not to take down your chatbot on launch day."

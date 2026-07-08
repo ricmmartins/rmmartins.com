@@ -1,5 +1,7 @@
 ---
 slug: "ai-adoption-framework-from-enthusiasm-to-governance"
+aliases:
+  - "/2026/07/01/ai-adoption-framework-from-enthusiasm-to-governance/"
 translationKey: "framework-de-adocao-ai-do-entusiasmo-a-governanca"
 title: "AI adoption framework: from enthusiasm to governance"
 description: "Enthusiasm without a framework is expensive chaos. The 6 adoption phases, readiness scorecard, anti-patterns that kill AI projects, and how not to become another company with shadow AI."

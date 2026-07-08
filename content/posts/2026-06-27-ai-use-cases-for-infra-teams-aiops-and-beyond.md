@@ -1,5 +1,7 @@
 ---
 slug: "ai-use-cases-for-infra-teams-aiops-and-beyond"
+aliases:
+  - "/2026/06/27/ai-use-cases-for-infra-teams-aiops-and-beyond/"
 translationKey: "ai-use-cases-pra-infra-teams-aiops-e-alem"
 title: "AI use cases for infra teams: AIOps and beyond"
 description: "AI isn't just for data scientists. Log analysis with LLMs, anomaly detection, predictive capacity planning, IaC generation, and how to use AI to improve your own infra work."

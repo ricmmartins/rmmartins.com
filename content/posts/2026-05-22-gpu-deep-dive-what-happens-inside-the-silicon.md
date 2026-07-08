@@ -1,5 +1,7 @@
 ---
 slug: "gpu-deep-dive-what-happens-inside-the-silicon"
+aliases:
+  - "/2026/05/22/gpu-deep-dive-what-happens-inside-the-silicon/"
 translationKey: "gpu-deep-dive-o-que-acontece-dentro-do-silicio"
 title: "GPU deep dive: what happens inside the silicon"
 description: "Why doesn't a 14 GB model fit on a 40 GB GPU? How to read nvidia-smi like a pro? Understand GPU architecture, memory hierarchy, multi-GPU strategies, and troubleshooting."

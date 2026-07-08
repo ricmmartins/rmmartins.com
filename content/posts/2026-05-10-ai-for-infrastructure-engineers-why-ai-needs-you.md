@@ -1,5 +1,7 @@
 ---
 slug: "ai-for-infrastructure-engineers-why-ai-needs-you"
+aliases:
+  - "/2026/05/10/ai-for-infrastructure-engineers-why-ai-needs-you/"
 translationKey: "ai-para-engenheiros-de-infraestrutura-por-que-ai-precisa-de-voce"
 title: "AI for infrastructure engineers: why AI needs you"
 description: "You don't need to become a data scientist to work with AI. Your infrastructure skills already prepare you more than you think for the age of artificial intelligence."

@@ -1,5 +1,7 @@
 ---
 slug: "mcp-and-agents-101-for-infra-engineers"
+aliases:
+  - "/2026/07/01/mcp-and-agents-101-for-infra-engineers/"
 translationKey: "mcp-e-agentes-101-para-engenheiros-de-infra"
 title: "MCP and AI Agents 101 for Infrastructure Engineers"
 description: "What MCP is, how AI agents work, and what changes operationally — explained for infra/SRE engineers with a real AKS example."

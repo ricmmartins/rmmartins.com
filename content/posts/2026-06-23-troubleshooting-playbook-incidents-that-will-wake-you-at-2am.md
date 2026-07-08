@@ -1,5 +1,7 @@
 ---
 slug: "troubleshooting-playbook-incidents-that-will-wake-you-at-2am"
+aliases:
+  - "/2026/06/23/troubleshooting-playbook-incidents-that-will-wake-you-at-2am/"
 translationKey: "troubleshooting-playbook-os-incidentes-que-vao-te-acordar-as-2am"
 title: "Troubleshooting playbook: incidents that will wake you at 2AM"
 description: "NVIDIA driver crash, CUDA OOM, pods stuck in Pending, 429 storm, and latency spikes. Symptoms, diagnosis, root cause, and prevention for each real-world scenario."
