@@ -1,0 +1,30 @@
+.ad-container {
+  margin: 2rem auto;
+  padding: 0.5rem 0;
+  max-width: 100%;
+  overflow: hidden;
+  clear: both;
+  text-align: center;
+}
+
+.ad-post-top {
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.ad-post-middle {
+  margin: 2.5rem auto;
+}
+
+.ad-in-article {
+  margin: 2rem auto;
+}
+
+.ad-post-bottom {
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.ad-container ins {
+  max-width: 100%;
+}
