@@ -3,7 +3,7 @@ slug: "platform-engineering-azure-internal-developer-platform-part-1"
 aliases:
   - "/2026/07/13/platform-engineering-azure-internal-developer-platform-part-1/"
 translationKey: "platform-engineering-azure-internal-developer-platform-parte-1"
-title: "Platform Engineering on Azure: building an Internal Developer Platform with AKS and Bicep — Part 1"
+title: "Platform Engineering on Azure: building an Internal Developer Platform with AKS and Bicep (Part 1)"
 description: "Build an IDP on Azure with Dev Center, Deployment Environments, multi-tenant AKS, and Bicep. Self-service provisioning for developers with security and governance."
 date: 2026-07-13T11:00:00-04:00
 categories:

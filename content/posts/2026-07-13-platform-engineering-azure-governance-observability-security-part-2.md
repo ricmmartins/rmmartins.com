@@ -3,7 +3,7 @@ slug: "platform-engineering-azure-governance-observability-security-part-2"
 aliases:
   - "/2026/07/13/platform-engineering-azure-governance-observability-security-part-2/"
 translationKey: "platform-engineering-azure-governanca-observabilidade-seguranca-parte-2"
-title: "Platform Engineering on Azure: governance, observability and security for your IDP — Part 2"
+title: "Platform Engineering on Azure: governance, observability and security for your IDP (Part 2)"
 description: "Azure Policy as guardrails, out-of-the-box observability with Managed Grafana, Workload Identity for zero secrets, and golden paths with GitHub Actions."
 date: 2026-07-13T11:30:00-04:00
 categories:

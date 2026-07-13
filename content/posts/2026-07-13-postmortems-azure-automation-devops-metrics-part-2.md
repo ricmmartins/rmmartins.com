@@ -3,7 +3,7 @@ slug: "postmortems-azure-automation-devops-metrics-part-2"
 aliases:
   - "/2026/07/13/postmortems-azure-automation-devops-metrics-part-2/"
 translationKey: "postmortems-no-azure-automacao-devops-metricas-parte-2"
-title: "Postmortems on Azure: automation with Azure DevOps and learning metrics — Part 2"
+title: "Postmortems on Azure: automation with Azure DevOps and learning metrics (Part 2)"
 description: "Integrate postmortems with Azure DevOps, measure effectiveness with MTTD/MTTR metrics, build Workbooks dashboards, and connect to the complete SRE cycle."
 date: 2026-07-13T10:30:00-04:00
 categories:
