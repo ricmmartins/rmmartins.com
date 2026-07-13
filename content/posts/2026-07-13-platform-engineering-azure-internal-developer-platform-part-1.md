@@ -87,32 +87,7 @@ That is the shift from “please provision this for me” to “here is the appr
 
 ## Reference architecture
 
-```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         DEVELOPER EXPERIENCE                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐     │
-│  │  Dev Portal  │  │   az CLI     │  │  IDE Extensions         │     │
-│  └──────┬───────┘  └──────┬───────┘  └──────────────┬───────────┘     │
-│         │                  │                          │                │
-├─────────┴──────────────────┴──────────────────────────┴────────────────┤
-│                          PLATFORM LAYER                                │
-│  ┌────────────────┐  ┌─────────────────┐  ┌────────────────────────┐  │
-│  │   Dev Center   │  │ Deployment Env  │  │  Azure Policy Engine   │  │
-│  │ (Control Plane)│  │  (Provisioning) │  │    (Guardrails)        │  │
-│  └────────┬───────┘  └────────┬────────┘  └────────────┬───────────┘  │
-│           │                    │                         │              │
-├───────────┴────────────────────┴─────────────────────────┴─────────────┤
-│                       INFRASTRUCTURE LAYER                             │
-│  ┌──────────┐  ┌──────────────┐  ┌──────────┐  ┌───────────────────┐ │
-│  │   AKS    │  │ PostgreSQL   │  │  Redis   │  │  Service Bus      │ │
-│  │ Clusters │  │ Flexible     │  │  Cache   │  │  / Event Hubs     │ │
-│  └──────────┘  └──────────────┘  └──────────┘  └───────────────────┘ │
-│  ┌──────────┐  ┌──────────────┐  ┌──────────┐  ┌───────────────────┐ │
-│  │Key Vault │  │ Managed      │  │ Container│  │ Log Analytics     │ │
-│  │          │  │ Identity     │  │ Registry │  │ + Grafana         │ │
-│  └──────────┘  └──────────────┘  └──────────┘  └───────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+![IDP Reference Architecture on Azure](/img/idp-architecture.svg)
 
 The important design idea is that the developer interacts with a small number of platform concepts, while the platform owns the messy details underneath.
 
