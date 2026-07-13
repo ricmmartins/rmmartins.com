@@ -245,14 +245,14 @@ Postmortem -> Root cause: timeout in dependency X
 
 ### Automated postmortem draft with an SRE agent
 
-If your organization uses an internal SRE assistant or Azure-focused troubleshooting agent, the biggest win is draft acceleration:
+If your organization uses an internal SRE assistant or Azure-focused troubleshooting agent, the most useful automation is getting the first draft on the page:
 
 1. Rebuild the timeline from Azure Monitor, Activity Logs, and Resource Health.
 2. Correlate recent changes with the first signs of degradation.
 3. Suggest candidate action items based on recurring gaps.
 4. Produce a draft that the facilitator reviews before the meeting.
 
-The key boundary is simple: use automation for **collection and synthesis**, not for assigning blame or declaring root cause with false certainty.
+The boundary is simple: use automation for **collection and synthesis**, not for assigning blame or declaring root cause with false certainty.
 
 ### Cross-cloud postmortems
 
@@ -284,7 +284,7 @@ az monitor metrics alert create \
 
 ## Running the review meeting well
 
-The meeting is where incident memory becomes organizational learning.
+The meeting is where an incident stops being a Slack story and becomes shared engineering learning.
 
 ### Before the meeting
 
@@ -329,7 +329,7 @@ Action item: Require peer review for database migrations,
 - Never allow “Person X should have...” to stay unchallenged.
 - If someone becomes defensive, acknowledge complexity and redirect to the system.
 - Park side topics instead of letting the meeting drift.
-- Pull in quieter participants explicitly; they often hold key observations.
+- Pull in quieter participants explicitly; they often have the observations everyone else missed.
 - Keep the cadence efficient. If the process feels wasteful, teams will stop taking it seriously.
 
 ## Common mistakes and how to avoid them
@@ -347,7 +347,7 @@ Action item: Require peer review for database migrations,
 
 ## Conclusion and implementation checklist
 
-A blameless Azure postmortem process is not complete when the document is approved. It is complete when the learning changes the system.
+A blameless Azure postmortem process is not done when the document is approved. It is done when the system changes.
 
 ### Implementation checklist
 
@@ -359,7 +359,7 @@ A blameless Azure postmortem process is not complete when the document is approv
 6. Feed gaps back into alerts, runbooks, SLOs, and chaos scenarios.
 7. Run quarterly trend reviews across all postmortems.
 
-If Part 1 gives you the mechanics, Part 2 gives you the operating model. Together they turn Azure incidents into a repeatable learning system instead of a cycle of institutional amnesia.
+Part 1 covers the mechanics. Part 2 covers the operating model. Put together, they turn Azure incidents into a repeatable learning system instead of a cycle of institutional amnesia.
 
 ## References
 

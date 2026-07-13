@@ -26,7 +26,7 @@ First post in a two-part series on Platform Engineering on Azure. If your develo
 
 Platform Engineering is how you fix that. The goal is not to hide infrastructure from developers. The goal is to package infrastructure, security, and observability into a self-service product developers can trust. On Azure, that means combining Microsoft Dev Center, Azure Deployment Environments, Bicep, and a shared runtime such as AKS.
 
-In this article, we will build the foundation of an Internal Developer Platform (IDP): self-service environment provisioning, reusable Bicep templates, a reference architecture, and a multi-tenant AKS runtime. In [Part 2](/platform-engineering-azure-governance-observability-security-part-2/), we will add governance, observability, and zero-secret security patterns.
+This post covers the foundation of an Internal Developer Platform (IDP): self-service environment provisioning, reusable Bicep templates, a reference architecture, and a multi-tenant AKS runtime. In [Part 2](/platform-engineering-azure-governance-observability-security-part-2/), the focus shifts to governance, observability, and zero-secret security patterns.
 
 ## What Platform Engineering is, and why it matters now
 
@@ -40,7 +40,7 @@ That trade-off does not scale.
 | **Pure DevOps** | Each product team | Each product team | High cognitive load, duplicated patterns, inconsistent quality |
 | **Platform Engineering** | Self-service platform | Product teams plus platform automation | Developer autonomy with guardrails |
 
-Industry data keeps pointing the same way: mature internal platforms reduce onboarding time, increase deployment frequency, and make operational quality less dependent on who happens to be on the team that week.
+The pattern is easy to see: teams with a real internal platform onboard faster, deploy more often, and rely less on whoever happens to be the local expert that week.
 
 ### The four pillars of a practical IDP
 
@@ -546,4 +546,4 @@ This gives you a strong default: every new environment arrives in AKS with enfor
 
 At this point, you have the essential mechanics of an Internal Developer Platform on Azure: Dev Center as the control plane, Azure Deployment Environments as the self-service engine, Bicep as the provisioning layer, and AKS as the shared runtime.
 
-That is enough to get developers provisioning useful environments in minutes instead of waiting days. In [Part 2](/platform-engineering-azure-governance-observability-security-part-2/), we will add the next layers that separate a demo from a durable platform: Azure Policy guardrails, built-in observability, GitHub Actions golden paths, and Workload Identity for zero secrets.
+That is enough to get developers provisioning useful environments in minutes instead of waiting days. In [Part 2](/platform-engineering-azure-governance-observability-security-part-2/), the focus shifts to the parts that make it hold up in real life: Azure Policy guardrails, built-in observability, GitHub Actions golden paths, and Workload Identity for zero secrets.

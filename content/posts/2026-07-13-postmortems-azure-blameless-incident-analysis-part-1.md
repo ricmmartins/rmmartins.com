@@ -26,7 +26,7 @@ First post in a two-part series on Azure postmortems. Incidents are inevitable. 
 
 A lot of teams say they do postmortems, but what they really have is a short meeting, a vague document, and a backlog item nobody revisits. A good Azure postmortem is different: it is blameless, evidence-based, and tightly connected to telemetry. If you already use Azure Monitor, Application Insights, Log Analytics, and Azure Activity Logs, you already have most of the raw material you need.
 
-In this article, I will show how to build a blameless postmortem process on Azure, including a reusable template, KQL queries for timeline reconstruction, and Logic Apps automation to generate a first draft automatically. In [Part 2](/postmortems-azure-automation-devops-metrics-part-2/), we will connect this process to Azure DevOps, incident metrics, and the broader SRE feedback loop.
+This post walks through a blameless postmortem process on Azure: a reusable template, KQL queries to rebuild the timeline, and a Logic Apps flow that creates the first draft. In [Part 2](/postmortems-azure-automation-devops-metrics-part-2/), the focus shifts to Azure DevOps, incident metrics, and the broader SRE feedback loop.
 
 ## Why postmortems fail in most organizations
 
@@ -165,7 +165,7 @@ Severity should change the level of rigor, the deadline, and the required audien
 
 ## Collecting postmortem evidence with Azure Monitor and KQL
 
-Timeline reconstruction is where most postmortems become slow and painful. This is also where Azure shines. If you already send application telemetry, dependency telemetry, platform events, and management activity into Azure Monitor, the postmortem author should spend time analyzing the data, not hunting for it.
+Timeline reconstruction is where most postmortems get slow. It is also where Azure already helps. If you send application telemetry, dependency telemetry, platform events, and management activity into Azure Monitor, the postmortem author should spend time analyzing data, not hunting for it.
 
 ### Reconstructing the timeline with Application Insights
 
@@ -525,6 +525,6 @@ az monitor log-analytics query \
 
 ## Final thoughts
 
-Blameless postmortems become valuable when three things are true at the same time: the culture is safe, the evidence is concrete, and the follow-up is disciplined. Azure Monitor gives you the data. KQL gives you the reconstruction layer. Logic Apps gives you the automation hook.
+Blameless postmortems work when people can speak plainly, the evidence is concrete, and follow-up actually happens. Azure Monitor gives you the data. KQL helps reconstruct the sequence. Logic Apps wires the draft together.
 
-That is the foundation. In [Part 2](/postmortems-azure-automation-devops-metrics-part-2/), we will connect postmortems to Azure DevOps, MTTD and MTTR metrics, Workbooks dashboards, and the rest of the SRE improvement loop.
+That is the foundation. In [Part 2](/postmortems-azure-automation-devops-metrics-part-2/), the focus shifts to Azure DevOps, MTTD and MTTR metrics, Workbook dashboards, and the rest of the SRE improvement loop.

@@ -186,7 +186,7 @@ output connectionString string = appInsights.properties.ConnectionString
 output dashboardUrl string = 'https://grafana-platform.eastus.grafana.azure.com/d/${serviceName}'
 ```
 
-This module gives developers an opinionated baseline: telemetry retention, latency monitoring, and error monitoring without requiring them to memorize Azure Monitor internals.
+This module gives developers a default setup: telemetry retention, latency monitoring, and error monitoring without making them memorize Azure Monitor internals.
 
 ## Pre-configured Grafana dashboards
 
@@ -208,11 +208,11 @@ az grafana dashboard import \
   --overwrite true
 ```
 
-The ideal default dashboard exposes the four golden signals immediately: latency, traffic, errors, and saturation. Developers should land in an environment and know where to look before they need help.
+A default dashboard should show the four golden signals right away: latency, traffic, errors, and saturation. When developers land in a new environment, they should know where to look before something breaks.
 
 ## Advanced scenario: Golden Path with GitHub Actions
 
-Provisioning alone is not enough. The strongest platform experience is end-to-end: create the environment, get the pipeline, ship safely.
+Provisioning alone is not enough. The strongest platform experience goes end to end: create the environment, get the pipeline, ship safely.
 
 ### `deploy.yml`
 
@@ -272,7 +272,7 @@ jobs:
             --timeout=300s
 ```
 
-This is what a golden path should feel like: a platform-approved path that is easier than inventing a bespoke one.
+That is what a golden path should feel like: the approved path is easier than inventing your own.
 
 ## Security: Workload Identity and zero secrets in code
 
@@ -315,7 +315,7 @@ metadata:
     azure.workload.identity/use: "true"
 ```
 
-No secret mounted into the pod. No credential committed into Git. No rotation ceremony spread across app teams.
+That removes the usual mess: no secret mounted into the pod, no credential committed into Git, and no rotation ceremony pushed onto every app team.
 
 ## Troubleshooting common issues
 
@@ -449,9 +449,9 @@ Introduce platform-aware assistants for incident triage, dependency mapping, and
 
 ## Conclusion
 
-The first half of Platform Engineering is self-service. The second half is trust. Azure Policy gives you trust through guardrails. Built-in observability gives you trust through visibility. Workload Identity gives you trust through sane security. GitHub Actions golden paths give you trust through repeatability.
+The first half of Platform Engineering is self-service. The second half is trust. Guardrails, visibility, sane identity, and repeatable delivery are how you earn it. Azure Policy, built-in observability, Workload Identity, and GitHub Actions help put those pieces in place.
 
-When those pieces are combined, the Internal Developer Platform stops being a provisioning shortcut and becomes part of the delivery system itself.
+When those pieces are wired together, the Internal Developer Platform stops being a provisioning shortcut and becomes part of how the organization ships software.
 
 ## References
 
