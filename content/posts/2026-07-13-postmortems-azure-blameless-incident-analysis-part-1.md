@@ -324,15 +324,11 @@ let changes = AzureActivity
 | extend EventType = "EnvironmentChange",
          Detail = strcat(Caller, " executed ", OperationNameValue, " on ", tostring(split(_ResourceId, "/")[-1]));
 //
-// 4. Fired alerts
-let alerts = AlertsManagementResources
-| extend EventType = "AlertFired", Detail = "Alert fired";
-//
+// Alert data requires Azure Resource Graph - query separately if needed
 // Consolidation
 requestFailures
 | union exceptions
 | union changes
-| union alerts
 | project TimeGenerated, EventType, Detail
 | order by TimeGenerated asc
 ```
@@ -407,10 +403,11 @@ The Logic App below receives the alert payload, queries Log Analytics, and creat
           "method": "post",
           "path": "/queryData",
           "body": {
+            "workspaceId": "<log-analytics-workspace-id>",
             "query": "AppRequests | where TimeGenerated between (datetime('@{triggerBody()?['data']?['essentials']?['firedDateTime']}') .. datetime('@{triggerBody()?['data']?['essentials']?['resolvedDateTime']}')) | where Success == false | summarize failedCount=count(), avgDuration=avg(DurationMs) by bin(TimeGenerated, 5m), Name | order by TimeGenerated asc",
-            "timerange": {
-              "start": "@triggerBody()?['data']?['essentials']?['firedDateTime']",
-              "end": "@triggerBody()?['data']?['essentials']?['resolvedDateTime']"
+            "timeRange": {
+              "from": "@{triggerBody()?['data']?['essentials']?['firedDateTime']}",
+              "to": "@{triggerBody()?['data']?['essentials']?['resolvedDateTime']}"
             }
           }
         }
@@ -424,13 +421,20 @@ The Logic App below receives the alert payload, queries Log Analytics, and creat
               "name": "@parameters('$connections')['visualstudioteamservices']['connectionId']"
             }
           },
-          "method": "patch",
-          "path": "/{project}/_apis/wit/workitems/$Bug",
-          "body": {
-            "title": "Postmortem: @{triggerBody()?['data']?['essentials']?['alertRule']}",
-            "description": "Automatically generated postmortem draft...",
-            "tags": "postmortem;incident-review"
-          }
+          "method": "post",
+          "path": "/MyProject/_apis/wit/workitems/$Bug?api-version=7.1",
+          "body": [
+            {
+              "op": "add",
+              "path": "/fields/System.Title",
+              "value": "Postmortem: @{triggerBody()?['data']?['essentials']?['alertRule']}"
+            },
+            {
+              "op": "add",
+              "path": "/fields/System.Tags",
+              "value": "postmortem;incident-review"
+            }
+          ]
         }
       }
     }

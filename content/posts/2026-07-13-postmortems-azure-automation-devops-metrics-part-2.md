@@ -67,7 +67,7 @@ az boards work-item create \
 
 ```wiql
 SELECT [System.Id], [System.Title], [System.State],
-       [System.AssignedTo], [Microsoft.VSTS.Scheduling.DueDate],
+       [System.AssignedTo], [Microsoft.VSTS.Scheduling.TargetDate],
        [System.Tags]
 FROM WorkItems
 WHERE [System.TeamProject] = @project
@@ -75,7 +75,7 @@ WHERE [System.TeamProject] = @project
   AND [System.State] <> "Closed"
   AND [System.State] <> "Done"
 ORDER BY [Microsoft.VSTS.Common.Priority] ASC,
-         [Microsoft.VSTS.Scheduling.DueDate] ASC
+         [Microsoft.VSTS.Scheduling.TargetDate] ASC
 ```
 
 ### Useful Azure DevOps dashboard widgets
@@ -163,7 +163,8 @@ Use this output during quarterly reliability reviews. High recurrence almost alw
 
 Azure Workbooks are ideal for turning postmortem data into something leaders and engineers can both consume.
 
-```json
+```jsonc
+// Pseudocode - adapt to actual Workbook ARM schema
 {
   "version": "Notebook/1.0",
   "items": [
@@ -274,11 +275,11 @@ az monitor metrics alert create \
   --resource-group rg-monitoring \
   --name "error-budget-critical" \
   --scopes "/subscriptions/{sub}/resourceGroups/rg-app/providers/Microsoft.Insights/components/app-production" \
-  --condition "avg requests/failed > 15" \
+  --condition "total requests/failed > 50" \
   --window-size 1h \
   --evaluation-frequency 5m \
   --action ag-postmortem-trigger \
-  --description "Error Budget below 20% - review of pending postmortems is now mandatory" \
+  --description "Failed request count above threshold - investigate Error Budget impact" \
   --severity 1
 ```
 

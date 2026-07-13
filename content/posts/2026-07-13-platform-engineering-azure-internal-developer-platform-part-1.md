@@ -199,7 +199,7 @@ The heart of the IDP is the catalog itself. A good starting point is a reusable 
 name: microservice-standard
 version: 1.0.0
 summary: "Standard microservice environment with database, cache, and observability"
-description: "Provisions a namespace in shared AKS, PostgreSQL Flexible Server, Redis Cache, and Grafana-ready outputs"
+description: "Provisions a namespace in shared AKS, PostgreSQL Flexible Server, a Redis integration point, and Grafana-ready outputs"
 runner: Bicep
 templatePath: main.bicep
 parameters:
@@ -213,13 +213,13 @@ parameters:
     description: "Resource tier (dev = basic, prod = highly available)"
     type: string
     required: true
-    allowed:
+    allowedValues:
       - dev
       - staging
       - prod
   - id: enableRedis
     name: "Enable Redis"
-    description: "Provision Azure Cache for Redis"
+    description: "Provision the Redis layer (prefer Azure Managed Redis for new deployments)"
     type: boolean
     default: true
 ```
@@ -239,6 +239,8 @@ param tier string
 @description('Enable Redis Cache')
 param enableRedis bool = true
 
+param dateTag string = utcNow('yyyy-MM-dd')
+
 param location string = resourceGroup().location
 
 // Standard platform tags
@@ -247,7 +249,7 @@ var commonTags = {
   service: serviceName
   tier: tier
   managedBy: 'deployment-environments'
-  createdAt: utcNow('yyyy-MM-dd')
+  createdAt: dateTag
 }
 
 // Configuration by tier
@@ -280,6 +282,8 @@ var tierConfig = {
 
 var config = tierConfig[tier]
 
+// For net-new 2026 deployments, implement the cache module with Azure Managed Redis rather than legacy Azure Cache for Redis SKUs.
+
 // PostgreSQL Flexible Server
 module database 'modules/database.bicep' = {
   name: 'deploy-db-${serviceName}'
@@ -293,7 +297,7 @@ module database 'modules/database.bicep' = {
   }
 }
 
-// Redis Cache (conditional)
+// Redis layer (conditional) - prefer Azure Managed Redis for new deployments
 module cache 'modules/cache.bicep' = if (enableRedis) {
   name: 'deploy-cache-${serviceName}'
   params: {
@@ -338,7 +342,7 @@ param tags object
 param administratorLogin string = 'platformadmin'
 
 @secure()
-param administratorPassword string = newGuid()
+param administratorPassword string
 
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = {
   name: serverName
@@ -419,8 +423,8 @@ Now the platform becomes real. The developer does not need to know Bicep, ARM, o
 # Developer login
 az login
 
-# List available catalog items
-az devcenter dev catalog-item list \
+# List available environment definitions
+az devcenter dev environment-definition list \
   --project-name "proj-payments-team" \
   --dev-center-name $DEVCENTER_NAME
 
@@ -430,7 +434,8 @@ az devcenter dev environment create \
   --project-name "proj-payments-team" \
   --dev-center-name $DEVCENTER_NAME \
   --environment-type "dev" \
-  --catalog-item-name "microservice-standard" \
+  --catalog-name "infra-templates" \
+  --environment-definition-name "microservice-standard" \
   --parameters '{"serviceName": "payment-svc", "tier": "dev", "enableRedis": true}'
 ```
 
@@ -480,16 +485,24 @@ param teamName string
 param cpuLimit string = '4'
 param memoryLimit string = '8Gi'
 param maxPods int = 20
+param deploymentScriptIdentityResourceId string
 
 // This module would run through a deployment script or AKS extension
 resource deploymentScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   name: 'configure-namespace-${namespaceName}'
   location: resourceGroup().location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${deploymentScriptIdentityResourceId}': {}
+    }
+  }
   kind: 'AzureCLI'
   properties: {
     azCliVersion: '2.60.0'
     retentionInterval: 'P1D'
     scriptContent: '''
+      az aks install-cli
       az aks get-credentials --resource-group ${RG} --name ${AKS}
 
       # Create namespace

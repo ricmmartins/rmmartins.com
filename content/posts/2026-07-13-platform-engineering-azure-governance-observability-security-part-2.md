@@ -36,7 +36,7 @@ Guardrails are one of the biggest differences between a real platform and a loos
 # 1. Require mandatory tags on all resources
 az policy assignment create \
   --name "require-platform-tags" \
-  --policy "/providers/Microsoft.Authorization/policyDefinitions/871b6d14-10aa-478d-b590-94f262ecfa99" \
+  --policy "/providers/Microsoft.Authorization/policyDefinitions/1e30110a-5ceb-460c-a204-c1c3969c6d62" \
   --params '{"tagName": {"value": "managedBy"}, "tagValue": {"value": "deployment-environments"}}' \
   --scope "/subscriptions/<sub-id>"
 
@@ -60,8 +60,17 @@ Those three alone eliminate a surprising amount of drift: missing tags, cost sur
 
 The most common platform cost leak is not bad architecture. It is abandoned environments. A simple custom policy can tag old dev environments for cleanup.
 
-```json
+```jsonc
 {
+  // Azure Policy does not support utcNow() in policyRule; for rolling expiration, pass a cutoff date from scheduled automation (Function/Logic App).
+  "parameters": {
+    "expirationCutoff": {
+      "type": "String",
+      "metadata": {
+        "description": "ISO 8601 cutoff date injected by scheduled automation."
+      }
+    }
+  },
   "mode": "All",
   "policyRule": {
     "if": {
@@ -75,8 +84,8 @@ The most common platform cost leak is not bad architecture. It is abandoned envi
           "equals": "dev"
         },
         {
-          "value": "[utcNow()]",
-          "greater": "[addDays(field('tags.createdAt'), 14)]"
+          "field": "tags['createdAt']",
+          "less": "[parameters('expirationCutoff')]"
         }
       ]
     },
@@ -144,8 +153,10 @@ resource latencyAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
       'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
       allOf: [
         {
+          criterionType: 'StaticThresholdCriterion'
           name: 'high-latency'
           metricName: 'requests/duration'
+          metricNamespace: 'microsoft.insights/components'
           operator: 'GreaterThan'
           threshold: tier == 'prod' ? 500 : 2000
           timeAggregation: 'Average'
@@ -170,11 +181,13 @@ resource errorAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
       'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
       allOf: [
         {
+          criterionType: 'StaticThresholdCriterion'
           name: 'high-error-rate'
           metricName: 'requests/failed'
+          metricNamespace: 'microsoft.insights/components'
           operator: 'GreaterThan'
           threshold: 5
-          timeAggregation: 'Average'
+          timeAggregation: 'Total'
         }
       ]
     }
@@ -183,7 +196,8 @@ resource errorAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
 
 output instrumentationKey string = appInsights.properties.InstrumentationKey
 output connectionString string = appInsights.properties.ConnectionString
-output dashboardUrl string = 'https://grafana-platform.eastus.grafana.azure.com/d/${serviceName}'
+// The final dashboard URL depends on the actual Managed Grafana endpoint and the imported dashboard UID.
+output dashboardUrl string = 'Resolve from the Managed Grafana endpoint and imported dashboard UID'
 ```
 
 This module gives developers a default setup: telemetry retention, latency monitoring, and error monitoring without making them memorize Azure Monitor internals.
@@ -294,11 +308,20 @@ az identity federated-credential create \
   --subject "system:serviceaccount:payment-svc:payment-svc-sa" \
   --audiences "api://AzureADTokenExchange"
 
-# Grant access to PostgreSQL
-az role assignment create \
-  --assignee "$(az identity show -n id-payment-svc -g $RESOURCE_GROUP --query principalId -o tsv)" \
-  --role "Contributor" \
-  --scope "/subscriptions/<sub-id>/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-payment-svc-dev"
+# Grant PostgreSQL access via Entra Authentication
+# 1. Enable Entra auth on PostgreSQL Flexible Server
+az postgres flexible-server update \
+  --name "psql-payment-svc-dev" \
+  --resource-group $RESOURCE_GROUP \
+  --active-directory-auth Enabled
+
+# 2. Add Managed Identity as Entra administrator
+az postgres flexible-server ad-admin create \
+  --server-name "psql-payment-svc-dev" \
+  --resource-group $RESOURCE_GROUP \
+  --display-name "id-payment-svc" \
+  --object-id "$(az identity show -n id-payment-svc -g $RESOURCE_GROUP --query principalId -o tsv)" \
+  --type ServicePrincipal
 ```
 
 And the Kubernetes service account becomes:
@@ -311,8 +334,11 @@ metadata:
   namespace: payment-svc
   annotations:
     azure.workload.identity/client-id: "<managed-identity-client-id>"
-  labels:
-    azure.workload.identity/use: "true"
+---
+# In your Deployment, add to the pod template:
+# spec.template.metadata.labels:
+#   azure.workload.identity/use: "true"
+# spec.template.spec.serviceAccountName: payment-svc-sa
 ```
 
 That removes the usual mess: no secret mounted into the pod, no credential committed into Git, and no rotation ceremony pushed onto every app team.
@@ -391,11 +417,10 @@ AzureActivity
 Combine that with Cost Management:
 
 ```bash
-az costmanagement query \
-  --type ActualCost \
-  --timeframe MonthToDate \
-  --dataset-filter "{\"tags\": {\"name\": \"tier\", \"values\": [\"dev\"]}}" \
-  --scope "/subscriptions/<dev-sub-id>"
+# Query costs via REST API
+az rest --method post \
+  --url "https://management.azure.com/subscriptions/<dev-sub-id>/providers/Microsoft.CostManagement/query?api-version=2023-11-01" \
+  --body '{"type":"ActualCost","timeframe":"MonthToDate","dataset":{"granularity":"None","filter":{"tags":{"name":"tier","operator":"In","values":["dev"]}}}}'
 ```
 
 ## IDP success metrics
@@ -456,7 +481,7 @@ When those pieces are wired together, the Internal Developer Platform stops bein
 ## References
 
 - [Azure Deployment Environments documentation](https://learn.microsoft.com/en-us/azure/deployment-environments/)
-- [Microsoft Dev Center](https://learn.microsoft.com/en-us/azure/deployment-environments/overview-what-is-azure-deployment-environments)
+- [Microsoft Dev Center](https://learn.microsoft.com/en-us/azure/dev-box/how-to-manage-dev-center)
 - [Platform Engineering on Azure](https://learn.microsoft.com/en-us/platform-engineering/)
 - [AKS Workload Identity overview](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview)
 - [Azure Managed Grafana overview](https://learn.microsoft.com/en-us/azure/managed-grafana/overview)
