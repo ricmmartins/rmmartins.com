@@ -26,6 +26,12 @@ Second post in the Azure postmortem series. In [Part 1](/postmortems-azure-blame
 
 A mature postmortem process should leave traces in the engineering system: linked work items, measurable trends, dashboards, and visible feedback into reliability practices such as SLOs, alert tuning, and chaos experiments. If a postmortem ends as a document nobody operationalizes, the process failed.
 
+## tl;dr
+
+- The postmortem is only useful when it changes the system.
+- Track follow-up in Azure DevOps and measure learning with MTTD, MTTR, and recurrence.
+- Feed the results back into SLOs, alerts, runbooks, and chaos tests.
+
 ## Integrating postmortems with Azure DevOps
 
 Azure DevOps is the natural place to track remediation work, especially when incident improvements compete with feature work. The point is not to “store the document in DevOps.” The point is to make the learning executable.
@@ -267,19 +273,19 @@ Many modern incidents span Azure plus another provider or SaaS boundary. In thos
 | **Per-cloud evidence** | Separates Azure Monitor data from CloudWatch or other telemetry sources |
 | **Observability recommendations** | Captures missing correlation IDs or tracing gaps |
 
-### Error Budget-triggered review workflows
+### Failed-request-count review workflows
 
 ```bash
-# Example alert based on Error Budget burn that forces a review
+# Example alert based on failed request count that forces a review
 az monitor metrics alert create \
   --resource-group rg-monitoring \
-  --name "error-budget-critical" \
+  --name "failed-requests-critical" \
   --scopes "/subscriptions/{sub}/resourceGroups/rg-app/providers/Microsoft.Insights/components/app-production" \
   --condition "total requests/failed > 50" \
   --window-size 1h \
   --evaluation-frequency 5m \
   --action ag-postmortem-trigger \
-  --description "Failed request count above threshold - investigate Error Budget impact" \
+  --description "Failed request count above threshold - investigate service reliability impact" \
   --severity 1
 ```
 
@@ -362,7 +368,7 @@ A blameless Azure postmortem process is not done when the document is approved. 
 
 Part 1 covers the mechanics. Part 2 covers the operating model. Put together, they turn Azure incidents into a repeatable learning system instead of a cycle of institutional amnesia.
 
-## References
+## Further reading
 
 - [Azure Well-Architected Framework - Incident response](https://learn.microsoft.com/azure/well-architected/operational-excellence/incident-response)
 - [Azure Monitor overview](https://learn.microsoft.com/azure/azure-monitor/overview)

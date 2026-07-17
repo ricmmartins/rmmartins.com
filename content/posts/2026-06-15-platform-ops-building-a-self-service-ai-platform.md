@@ -24,6 +24,11 @@ series:
 
 Tenth post in the series. In the [previous one](/2026/06/11/cost-engineering-for-ai-when-idle-gpus-cost-more-than-your-car/), we controlled costs with Spot VMs, right-sizing, and FinOps. Now for the next problem: how to stop being a human help desk for GPU access.
 
+**tl;dr**
+
+- Self-service AI platforms need isolation, quotas, and scheduling together.
+- The goal is fewer tickets, not faster manual provisioning.
+
 ## The Slack channel that ate your calendar
 
 Six months ago, you provisioned a single GPU VM for the ML team. Configured drivers, mounted storage, closed the ticket. Felt like any other infrastructure request.
@@ -126,12 +131,16 @@ spec:
   podSelector: {}
   policyTypes:
     - Ingress
+    - Egress
   ingress:
     - from:
         - podSelector: {}
+  egress:
+    - to:
+        - podSelector: {}
 ```
 
-Pods within the namespace talk to each other; traffic from other namespaces is blocked. Add explicit rules for shared services (model registries, monitoring).
+Pods within the namespace can talk to each other, and this policy now restricts both ingress and egress to the same namespace. Add explicit rules for DNS and shared services such as model registries and monitoring before using it in production.
 
 ## GPU scheduling and queues
 
@@ -297,6 +306,14 @@ az vm list-usage \
   --query "[?contains(name.value, 'standardN')].{Family:localName, Used:currentValue, Limit:limit}" \
   --output table
 ```
+
+## Further reading
+
+- [Use network policies in AKS](https://learn.microsoft.com/azure/aks/use-network-policies)
+- [Kueue overview for AKS](https://learn.microsoft.com/azure/aks/kueue-overview)
+- [Deploy batch jobs with Kueue on AKS](https://learn.microsoft.com/azure/aks/deploy-batch-jobs-with-kueue)
+- [AKS quotas, SKU availability, and regions](https://learn.microsoft.com/azure/aks/quotas-skus-regions)
+- [Scale an AKS cluster](https://learn.microsoft.com/azure/aks/scale-cluster)
 
 ## In the next post
 

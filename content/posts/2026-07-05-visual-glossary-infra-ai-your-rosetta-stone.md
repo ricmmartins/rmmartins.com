@@ -22,6 +22,11 @@ Final post in the series. In the [previous one](/2026/07/01/ai-adoption-framewor
 
 You already speak infrastructure fluently. AI is not a foreign language. It is infrastructure with worse naming and more hype. This glossary maps each AI term to something you already understand.
 
+**tl;dr**
+- This glossary maps AI jargon to infra concepts so you can reason about AI systems without switching mental models.
+- Use it as a translation sheet for conversations about models, data, compute, serving, and ops.
+- When a term drives architecture or cost, check the underlying docs before repeating exact numbers.
+
 ## How to use this
 
 Every entry has: the **AI term**, the **infra analogy** in parentheses, a **concise definition**, and **when you'll encounter it** in your work. It is split into 6 categories so you can find things fast instead of pretending you remember all of it.
@@ -58,7 +63,7 @@ Every entry has: the **AI term**, the **infra analogy** in parentheses, a **conc
 |---------|---------------|------------|-----------------|
 | **GPU** | Coprocessor | Processor designed for massive parallel computation, offloading matrix math from the CPU. | Everywhere in AI infra: provisioning VM SKUs, monitoring utilization, managing costs |
 | **CUDA** | GPU instruction set / SDK | NVIDIA's parallel computing platform that enables code to execute on GPUs. | Installing drivers, configuring GPU containers, troubleshooting "CUDA out of memory" |
-| **HBM** | GPU RAM | High-bandwidth memory stacked on the GPU die. A100 has 80 GB HBM2e. | Selecting GPU SKUs: HBM capacity determines the maximum model size a GPU can support |
+| **HBM** | GPU RAM | High-bandwidth memory stacked on the GPU die. GPU memory size varies by SKU and generation. | Selecting GPU SKUs: HBM capacity determines the maximum model size a GPU can support |
 | **InfiniBand** | High-speed node-to-node networking | Ultra-low-latency, high-bandwidth interconnect for distributed training. Much faster than Ethernet. | Provisioning multi-node GPU clusters (ND-series VMs) for large training jobs |
 | **NVLink** | GPU-to-GPU interconnect | High-speed link connecting GPUs within a single node. It provides much more bandwidth than plain PCIe, though the exact ratio depends on the generation. | Sizing multi-GPU VMs: GPUs with NVLink exchange data fast enough to matter for model parallel workloads |
 | **Tensor Core** | Specialized matrix math unit | Dedicated hardware in NVIDIA GPUs optimized for matrix multiply-and-accumulate operations that dominate AI. | Evaluating GPU generations: Tensor Cores are why A100 is dramatically faster for AI than gaming GPUs |
@@ -93,8 +98,8 @@ Every entry has: the **AI term**, the **infra analogy** in parentheses, a **conc
 | **Data Parallelism** | Sharding data across GPUs | Strategy where the dataset is split across GPUs, each processing a different batch with a full model copy. | Scaling training to multiple GPUs. The simplest approach to distributed training |
 | **Model Parallelism** | Sharding model across GPUs | Splitting a model across multiple GPUs when it doesn't fit in one GPU's memory. Each GPU holds part of the layers. | Deploying very large models (70B+ parameters) that exceed a single GPU's HBM |
 | **LoRA** | Lightweight fine-tuning | Technique that trains a small set of adapter weights instead of the entire model, often a tiny fraction of the total parameters. | When teams want to customize a foundation model without the cost of full fine-tuning |
-| **Mixed Precision** | Variable data type optimization | Training with a mix of FP32 and BF16/FP16, using lower precision where possible to reduce memory and increase throughput. | Optimizing training jobs: mixed precision can nearly double throughput on modern GPUs |
-| **Quantization** | Compression | Reducing model precision (FP32 → INT8 or INT4) to shrink size and speed up inference. Trades small accuracy for large efficiency. | Deploying models with cost or latency constraints: quantization can cut memory usage by 4x+ |
+| **Mixed Precision** | Variable data type optimization | Training with a mix of FP32 and BF16/FP16, using lower precision where possible to reduce memory and increase throughput. | Optimizing training jobs: mixed precision often improves throughput on modern GPUs |
+| **Quantization** | Compression | Reducing model precision (FP32 → INT8 or INT4) to shrink size and speed up inference. Trades small accuracy for large efficiency. | Deploying models with cost or latency constraints: quantization can materially reduce memory usage, depending on the model and format |
 | **Prompt Injection** | SQL injection for AI | Attack where untrusted input is crafted to override model instructions, causing unintended behavior. | Securing AI endpoints exposed to user input. One of the first security problems you have to deal with in LLM applications |
 | **ZeRO** | Memory optimization for distributed training | Zero Redundancy Optimizer. A family of techniques that partitions optimizer states, gradients, and parameters across GPUs to eliminate redundancy. | Training large models that do not fit in GPU memory even with data parallelism. A standard DeepSpeed approach |
 
@@ -123,7 +128,7 @@ Pin this card. You will need it.
 | 17 | **LoRA** | Adapter-based fine-tuning with a tiny parameter slice |
 | 18 | **MLOps** | DevOps applied to model lifecycle |
 | 19 | **Data Drift** | Input distribution shifted, model degrades |
-| 20 | **Quantization** | Model compression (4x less memory) |
+| 20 | **Quantization** | Model compression (lower memory use) |
 
 ## Series wrap-up
 
@@ -132,3 +137,11 @@ Pin this card. You will need it.
 The full book, in English, is available for free at [ai4infra.com](https://www.ai4infra.com). If this series saved you a few hours, send it to another infra engineer who is getting dragged into AI projects.
 
 AI does not replace what you know. It leans on it. Networking, storage, compute, security, automation, cost control, and ugly incident response at bad hours are still the job. Now you have the vocabulary to map those instincts onto AI systems.
+
+## Further reading
+
+- [AI adoption framework: from enthusiasm to governance](/2026/07/01/ai-adoption-framework-from-enthusiasm-to-governance/)
+- [How RAG works: from theory to pipeline](/2026/07/02/how-rag-works-from-theory-to-pipeline/)
+- [Context engineering: the art of feeding LLMs](/2026/07/05/context-engineering-the-art-of-feeding-llms/)
+- [Vector Search Overview - Azure AI Search](https://learn.microsoft.com/en-us/azure/search/vector-search-overview)
+- [Work with chat completion models - Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt)

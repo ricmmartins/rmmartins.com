@@ -24,6 +24,11 @@ series:
 
 Seventh post in the series. In the [previous one](/2026/05/30/mlops-model-lifecycle-for-infra-engineers/), we put models into production with CI/CD pipelines. Now: how do you know they're actually healthy?
 
+**tl;dr**
+
+- Infra health is not model health.
+- Track GPU, token, application, and answer-quality signals together or you will miss regressions while every dashboard stays green.
+
 ## The silent failure
 
 Your Azure OpenAI endpoint returns 200 OK on every request. Latency is normal, P95 under 800ms. CPU and memory within thresholds. Kubernetes shows healthy pods, no restarts. By every infra metric you trust, the system is perfect.
@@ -140,7 +145,7 @@ az monitor diagnostic-settings create \
   --metrics '[{"category":"AllMetrics","enabled":true}]'
 ```
 
-> **Watch the volume:** A deployment processing 1,000 RPM generates ~1.4 million log entries per day. Configure retention policies in Log Analytics: 30 days for operational debugging, longer for compliance.
+> **Watch the volume:** High-request deployments can generate a lot of logs fast. Estimate volume from your own request rate, enabled diagnostic categories, and retention window before turning on RequestResponse logging broadly.
 
 ## Application-level observability
 
@@ -199,6 +204,13 @@ class StructuredFormatter(logging.Formatter):
 ```
 
 Always log model version and deployment name with every trace and metric. When latency spikes 40% after a rollout, you need that correlation immediately.
+
+## Further reading
+
+- [Enable managed Prometheus and Container insights for AKS](https://learn.microsoft.com/azure/azure-monitor/containers/kubernetes-monitoring-enable?tabs=azure-cli)
+- [Prometheus metrics in Azure Monitor](https://learn.microsoft.com/azure/azure-monitor/containers/container-insights-prometheus-integration)
+- [Azure Monitor diagnostic settings](https://learn.microsoft.com/azure/azure-monitor/essentials/diagnostic-settings)
+- [Enable Azure Monitor OpenTelemetry for Python](https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-enable?tabs=python)
 
 ## In the next post
 

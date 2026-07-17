@@ -25,6 +25,11 @@ Twelfth post in the series. In the [previous one](/2026/06/19/azure-openai-in-pr
 
 This post is organized as real-world failure scenarios. Each follows: **Symptoms → Diagnosis → Root Cause → Resolution → Prevention**. Read it once for pattern recognition. Then bookmark it. You will need it again.
 
+**tl;dr**
+
+- Most late-night AI infra incidents come down to driver drift, memory pressure, scheduler mismatch, throttling, or cold starts.
+- Start with the first check that rules out the biggest class of failure.
+
 ## Scenario 1: NVIDIA driver crash after kernel update
 
 ### Symptoms
@@ -340,6 +345,13 @@ If `Last State` shows `OOMKilled`, the restart is probably your root cause. If t
 - Model cache on local NVMe (not downloading from Blob on every start)
 - GPU temperature monitoring with proactive alerts
 - Inference pods on dedicated nodes without sharing
+
+## Further reading
+
+- [Install NVIDIA GPU drivers on N-series VMs](https://learn.microsoft.com/azure/virtual-machines/linux/n-series-driver-setup)
+- [Use NVIDIA GPUs on AKS](https://learn.microsoft.com/azure/aks/use-nvidia-gpu)
+- [Azure OpenAI quotas and limits](https://learn.microsoft.com/azure/ai-foundry/openai/quotas-limits)
+- [Monitor Azure OpenAI](https://learn.microsoft.com/azure/ai-foundry/openai/how-to/monitor-openai)
 
 ## In the next post
 

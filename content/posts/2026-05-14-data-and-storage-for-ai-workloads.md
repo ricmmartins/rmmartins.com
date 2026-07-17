@@ -25,6 +25,12 @@ This is the second post in the series where I translate AI into the language of 
 
 Now for the bottleneck **everyone ignores**: storage. It is the hidden villain behind performance problems in almost every AI project I've seen.
 
+**tl;dr**
+
+- Storage is usually the first bottleneck in AI training.
+- Keep durable data in Blob or Data Lake, but cache the active working set on local NVMe.
+- Check GPU, disk, and network metrics together before blaming the model or the GPUs.
+
 ## The midnight call
 
 You did everything right. The ML team asked for a GPU cluster and you delivered: eight NVIDIA A100s across two nodes, high-bandwidth networking, CUDA drivers up to date. Clean deployment. The team kicked off their first training job Friday at 6 PM and you went home feeling good.
@@ -58,13 +64,13 @@ Remove any of the three and you have nothing. But the insight most of us miss ea
 | NFS/SMB mount | POSIX access for frameworks | PyTorch and TensorFlow expect filesystem semantics |
 | Encryption at rest | Data protection compliance | Mandatory for PII, medical data, and financial records |
 
-If you already manage storage, networking, and access control, you understand **70% of the AI data stack**. What changes is the *intensity*: AI workloads push read throughput, IOPS, and sequential I/O harder than almost anything you've provisioned before.
+If you already manage storage, networking, and access control, you already understand **most of the AI data stack**. What changes is the *intensity*: AI workloads push read throughput, IOPS, and sequential I/O harder than almost anything you've provisioned before.
 
 ## Data starvation: the invisible bottleneck
 
 The counterintuitive truth about AI infrastructure is simple: **the most common cause of low GPU utilization isn't a GPU problem. It's a storage problem**.
 
-When the data loader can't feed batches to the GPU fast enough, the GPU sits idle waiting for data. This is called *data starvation*, and it turns your $50,000/month GPU cluster into an expensive space heater.
+When the data loader can't feed batches to the GPU fast enough, the GPU sits idle waiting for data. This is called *data starvation*, and it turns an expensive GPU cluster into an expensive space heater.
 
 ### How to diagnose
 
@@ -297,6 +303,16 @@ Before handing off storage for an AI workload:
 - [ ] Storage sized for **10× current data** (datasets multiply with augmentation and versioning)
 - [ ] **Throughput and IOPS** alerts configured
 - [ ] Checkpoints writing back to **Blob Storage** for durability
+
+## Closing the loop
+
+That midnight ticket was not a GPU failure. It was a storage design failure. Once you line up GPU utilization, disk saturation, and cache placement, the root cause becomes obvious.
+
+## Further reading
+
+- [What is BlobFuse?](https://learn.microsoft.com/en-us/azure/storage/blobs/blobfuse2-what-is)
+- [Copy or move data to Azure Storage by using AzCopy v10](https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10)
+- [NFS file shares in Azure Files](https://learn.microsoft.com/en-us/azure/storage/files/files-nfs-protocol)
 
 ## Next up
 

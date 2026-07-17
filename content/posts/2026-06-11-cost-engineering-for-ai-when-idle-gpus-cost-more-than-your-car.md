@@ -4,7 +4,7 @@ aliases:
   - "/2026/06/11/cost-engineering-for-ai-when-idle-gpus-cost-more-than-your-car/"
 translationKey: "cost-engineering-para-ai-quando-gpu-idle-custa-mais-que-seu-carro"
 title: "Cost engineering for AI: when idle GPUs cost more than your car"
-description: "A GPU idle over the weekend costs $4,700. Spot VMs, PTU vs pay-per-token, right-sizing, tagging, and FinOps to keep the CFO happy without killing innovation."
+description: "Idle GPU time can turn into a serious Azure bill fast. Spot VMs, PTU vs pay-per-token, right-sizing, tagging, and FinOps to keep the CFO happy without killing innovation."
 date: 2026-06-11T10:00:00-04:00
 categories:
   - AI
@@ -24,6 +24,11 @@ series:
 
 Ninth post in the series. In the [previous one](/2026/06/07/security-for-ai-threats-your-firewall-wont-catch/), we hardened the platform against prompt injection and data leakage. Now for the part Finance notices first: how not to go bankrupt in the process.
 
+**tl;dr**
+
+- AI cost control starts with lifecycle policy, model choice, and quota discipline.
+- Shut down idle GPUs, use cheaper models where quality allows, and treat every exact cost number as time-sensitive.
+
 ## The $127,000 Monday
 
 Monday morning. Coffee in hand, email from Finance with the subject line: "URGENT: Azure invoice $127,000, please explain." Forecast was $42,000. Two ND96isr_H100_v5 VMs, provisioned three weeks ago for a "quick experiment," never shut down. At about $98/hour each, running 24/7 for three weeks: roughly $99,000 in idle GPU compute. Nobody was using them. Nobody remembered they existed.
@@ -35,7 +40,7 @@ This isn't hypothetical. Some version of this happens all the time. The ML engin
 | Factor | Traditional infra | AI workloads |
 |--------|-------------------|--------------|
 | **Cost per VM** | ~$0.19/hour (D4s_v5) | ~$98/hour (ND96isr_H100_v5) |
-| **VM idle over a weekend** | ~$9 | ~$4,700 |
+| **VM idle over a weekend** | ~$9 | Several thousand dollars on a high-end GPU VM |
 | **Usage pattern** | Steady-state | Bursty (0 → 64 GPUs → 0) |
 | **Pricing model** | Per hour/second | Per hour + per token |
 | **Margin of error** | Hundreds of dollars | Tens of thousands |
@@ -133,6 +138,8 @@ Azure Spot VMs offer the same GPU hardware at a steep discount, but Azure can re
 
 ## Right-sizing: don't use H100 when T4 will do
 
+Use this table as a starting baseline, not a default. Validate memory footprint, quantization, batch size, latency SLOs, and interconnect needs before picking a GPU SKU.
+
 | Workload | Recommended SKU | Why |
 |----------|----------------|-----|
 | Inference (models ≤13B) | NC-series T4 | 16 GB memory, cost-effective |
@@ -157,7 +164,7 @@ az vm auto-shutdown \
   --off
 ```
 
-An ND96isr_H100_v5 running from Friday evening to Monday morning: ~$4,700. Auto-shutdown eliminates that entirely.
+A top-end H100 VM left running from Friday evening to Monday morning can easily burn through several thousand dollars, depending on region and pricing terms. Auto-shutdown removes most of that waste.
 
 ## Azure OpenAI: Standard vs PTU
 
@@ -226,6 +233,13 @@ az consumption budget create \
     }
   }'
 ```
+
+## Further reading
+
+- [Azure VM sizes overview](https://learn.microsoft.com/azure/virtual-machines/sizes/overview)
+- [Azure Spot Virtual Machines](https://learn.microsoft.com/azure/virtual-machines/spot-vms)
+- [Create budgets in Azure Cost Management](https://learn.microsoft.com/azure/cost-management-billing/costs/tutorial-acm-create-budgets)
+- [Azure OpenAI quotas and limits](https://learn.microsoft.com/azure/ai-foundry/openai/quotas-limits)
 
 ## In the next post
 

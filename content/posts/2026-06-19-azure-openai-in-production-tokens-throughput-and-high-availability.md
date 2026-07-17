@@ -23,6 +23,11 @@ series:
 
 Eleventh post in the series. In the [previous one](/2026/06/15/platform-ops-building-a-self-service-ai-platform/), we built the self-service AI platform with multi-tenancy and scheduling. This time it's the service everybody wants to consume: Azure OpenAI, and how to run it without getting slapped by 429s.
 
+**tl;dr**
+
+- Azure OpenAI capacity is a token problem before it is a scaling problem.
+- Design around TPM and RPM, back off on 429s, and route across deployments instead of betting everything on one endpoint.
+
 ## The 429 that changed everything
 
 Your team launched an internal GPT-4o chatbot on Monday. Day 1 was demos for leadership and Slack praise. Day 3 brought "the bot is slow." Day 5 brought HTTP 429 on 30% of requests. You open Azure Monitor and find the 80K TPM ceiling waiting for you.
@@ -206,12 +211,19 @@ Not every request needs the most capable (and most expensive) model. Route accor
 
 | Request type | Model | Rationale |
 |-------------|-------|-----------|
-| Simple FAQ, classification | GPT-4o-mini | 94% cheaper, sufficient quality |
+| Simple FAQ, classification | GPT-4o-mini | Usually much cheaper; verify current Azure OpenAI pricing before hard-coding a percentage |
 | Short summarization | GPT-4o-mini | Good quality for simple texts |
 | Complex reasoning | GPT-4o | Needs the full model |
 | Code generation | GPT-4o | Accuracy matters more than cost |
 
 A simple router based on input length, intent, or a cheap first-pass classifier can take a real bite out of inference costs.
+
+## Further reading
+
+- [Azure OpenAI deployment types](https://learn.microsoft.com/azure/ai-foundry/openai/how-to/deployment-types)
+- [Azure OpenAI quotas and limits](https://learn.microsoft.com/azure/ai-foundry/openai/quotas-limits)
+- [API Management retry policy](https://learn.microsoft.com/azure/api-management/retry-policy)
+- [Backends in API Management](https://learn.microsoft.com/azure/api-management/backends)
 
 ## In the next post
 

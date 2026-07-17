@@ -26,6 +26,12 @@ Second post in the Azure Platform Engineering series. In [Part 1](/platform-engi
 
 An Internal Developer Platform becomes trustworthy when it enforces standards without turning into a bureaucratic cage. That is where governance, observability, and security enter the picture. The platform must make the right path easy, the risky path difficult, and the unsupported path visible.
 
+## tl;dr
+
+- Use Azure Policy for guardrails instead of tribal knowledge.
+- Ship observability by default so teams are not wiring dashboards on day one.
+- Remove long-lived secrets with Workload Identity and make the golden path the easy path.
+
 ## Governance: Azure Policy as guardrails
 
 Guardrails are one of the biggest differences between a real platform and a loose collection of scripts. Azure Policy gives you a way to codify those guardrails so they do not depend on tribal knowledge or manual reviews.
@@ -194,7 +200,6 @@ resource errorAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   }
 }
 
-output instrumentationKey string = appInsights.properties.InstrumentationKey
 output connectionString string = appInsights.properties.ConnectionString
 // The final dashboard URL depends on the actual Managed Grafana endpoint and the imported dashboard UID.
 output dashboardUrl string = 'Resolve from the Managed Grafana endpoint and imported dashboard UID'
@@ -313,7 +318,7 @@ az identity federated-credential create \
 az postgres flexible-server update \
   --name "psql-payment-svc-dev" \
   --resource-group $RESOURCE_GROUP \
-  --active-directory-auth Enabled
+  --microsoft-entra-auth Enabled
 
 # 2. Add Managed Identity as Entra administrator
 az postgres flexible-server ad-admin create \
@@ -478,7 +483,7 @@ The first half of Platform Engineering is self-service. The second half is trust
 
 When those pieces are wired together, the Internal Developer Platform stops being a provisioning shortcut and becomes part of how the organization ships software.
 
-## References
+## Further reading
 
 - [Azure Deployment Environments documentation](https://learn.microsoft.com/en-us/azure/deployment-environments/)
 - [Microsoft Dev Center](https://learn.microsoft.com/en-us/azure/dev-box/how-to-manage-dev-center)

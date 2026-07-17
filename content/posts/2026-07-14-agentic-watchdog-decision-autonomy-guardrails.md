@@ -4,7 +4,7 @@ aliases:
   - "/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/"
 translationKey: "watchdog-agente-autonomia-decisao-guardrails"
 title: "From Script to Agent: Giving the Watchdog Decision Autonomy"
-description: "Adding a reasoning layer to the 429 watchdog so it can tell a benign batch spike from a runaway agent — with explicit guardrails."
+description: "Adding a reasoning layer to the 429 watchdog so it can tell a benign batch spike from a runaway agent, with explicit guardrails."
 date: 2026-07-14T10:00:00-04:00
 categories:
   - AI
@@ -24,6 +24,12 @@ series:
 In the previous post, the Azure OpenAI quota watchdog was a script with `if pct_of_tpm > 0.8: alert`. That works, but it has the same flaw every blunt monitoring rule has: context does not exist. A batch job that predictably eats 90% of TPM for 10 minutes at month-end looks identical to an agent gone feral and burning tokens all afternoon. Both cross the threshold. Only one should wake somebody up.
 
 This post is about closing that gap: giving the watchdog a reasoning layer, without giving up any of the guardrails we've already set.
+
+**tl;dr**
+- The one-minute watchdog stays deterministic and only calls the model after the TPM threshold is crossed.
+- The agent gets historical usage and priority-based alerting tools, not production write access.
+- The model decides whether the event is `info`, `warning`, or `urgent` by comparing the current spike with past patterns.
+- Audit the reasoning, rate-limit alerts, and review low-priority decisions so the watchdog stays useful.
 
 ## What changes (and what doesn't)
 
@@ -67,21 +73,10 @@ The first one gives the agent a baseline for comparison: "has this happened befo
 
 One thing to get right here: **the model does not run every minute**. The deterministic script from post 2 stays the poller: it runs on the cron, once a minute, at zero LLM cost, and only triggers a model call once the threshold is crossed. Putting an LLM in the loop on every iteration of a monitoring cycle is wasting money on a path that, the overwhelming majority of the time, needs no reasoning at all. It's only worth paying the cost of a model call to decide the response level in the minutes the threshold actually gets crossed.
 
-```
- cron (1x/min, zero LLM cost)
-       │
-       ▼
- get_token_usage_trend > 0.8 ?  ──no──▶  loop continues
-       │ yes
-       ▼
- invoke the agent (1 model call)
-       │
-       ▼
- get_token_usage_history + reasoning
-       │
-       ▼
- send_priority_alert(priority = info | warning | urgent)
-```
+1. The cron poller runs once a minute with zero LLM cost.
+2. If `get_token_usage_trend` stays at or below `0.8`, the loop ends and the next minute starts.
+3. If the threshold is crossed, the host invokes the agent once.
+4. The agent calls `get_token_usage_history`, reasons over the spike, and calls `send_priority_alert` with `info`, `warning`, or `urgent`.
 
 The agent's system prompt stays small and direct: it doesn't need much more than this:
 
@@ -124,6 +119,15 @@ One difference from the risk in post 1 matters here. There, the agent reasoned o
 ## What this step buys you
 
 This is the point where the watchdog stops being a threshold alarm and starts being an operator aid. It still cannot fix anything, and that is the right call. In the next post, I wire it to the AKS diagnoser so the alert comes with a candidate cause instead of a shrug.
+
+That closes the gap from the opening scenario. The predictable month-end batch still gets logged, but the runaway agent is the one that wakes somebody up.
+
+## Further reading
+
+- [Monitoring data reference for Azure OpenAI in Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/openai/monitor-openai-reference)
+- [Jobs in Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/jobs)
+- [Overview of Azure Monitor alerts](https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-overview)
+- [What is Azure role-based access control (Azure RBAC)?](https://learn.microsoft.com/en-us/azure/role-based-access-control/overview)
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
 

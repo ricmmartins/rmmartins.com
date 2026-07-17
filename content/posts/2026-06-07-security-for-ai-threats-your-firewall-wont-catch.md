@@ -24,6 +24,11 @@ series:
 
 Eighth post in the series. In the [previous one](/2026/06/03/monitoring-and-observability-for-ai/), we learned that a green dashboard doesn't guarantee a healthy model. Now: the threats your WAF won't catch.
 
+**tl;dr**
+
+- Most AI security failures happen at identity, data access, and prompt boundaries, not at the firewall.
+- Use managed identity, RBAC, Key Vault, private connectivity, and content filtering together.
+
 ## The chatbot that knew too much
 
 Your organization deploys an internal chatbot with Azure OpenAI, connected to a knowledge base of policies, documentation, and FAQs. The rollout goes smoothly, adoption takes off, and leadership is already planning a customer-facing version.
@@ -197,6 +202,14 @@ az cognitiveservices account update \
 ### API Management as a gateway
 
 Don't expose Azure OpenAI directly to applications. Put APIM in front as a gateway: centralized authentication, rate limiting, request/response transformation, caching, and detailed analytics. It's the same abstraction layer you'd use for any internal API.
+
+That original chatbot story ends differently when the app identity can reach only approved data and the model is reachable only through controlled paths.
+
+## Further reading
+
+- [AKS workload identity overview](https://learn.microsoft.com/azure/aks/workload-identity-overview)
+- [Azure Key Vault RBAC guide](https://learn.microsoft.com/azure/key-vault/general/rbac-guide)
+- [Secure Azure AI services with virtual networks](https://learn.microsoft.com/azure/ai-services/cognitive-services-virtual-networks)
 
 ## In the next post
 

@@ -4,7 +4,7 @@ aliases:
   - "/2026/07/01/mcp-and-agents-101-for-infra-engineers/"
 translationKey: "mcp-e-agentes-101-para-engenheiros-de-infra"
 title: "MCP and AI Agents 101 for Infrastructure Engineers"
-description: "What MCP is, how AI agents work, and what changes operationally — explained for infra/SRE engineers with a real AKS example."
+description: "What MCP is, how AI agents work, and what changes operationally, explained for infra/SRE engineers with a real AKS example."
 date: 2026-07-01T10:00:00-04:00
 categories:
   - AI
@@ -22,6 +22,11 @@ series:
 # Chapter 1: MCP and AI Agents 101
 
 At some point in the last few months, someone on your team probably showed up talking about an "AI agent" or an "MCP server" and asked for cluster access, a deployment, or an explanation for the CISO. I wish I'd had a clean mental model before I touched any of this. That's what this post is: no hype, and a real Azure example so this does not stay in slideware.
+
+**tl;dr**
+- An agent is a model plus tools, execution logic, and memory.
+- MCP standardizes how hosts connect models to tools and data.
+- The operational risk is not the protocol. It is the credentials and permissions behind the server.
 
 ## What an agent actually is
 
@@ -171,7 +176,7 @@ On top of all that sits the execution loop itself: the orchestrator that sends t
 
 ## Building an MCP server
 
-Building a server is simpler than it sounds, and in practice you'll rarely start from zero. Today there are official SDKs in Python, TypeScript, Java, Kotlin, C#, and Swift (plus community implementations in Rust and Go), and an ecosystem with 500+ public servers already built: databases, GitHub, Slack, and in your specific case, all of Azure through servers like `aks-mcp`. Before writing a single line of code, it's worth checking whether what you need already exists.
+Building a server is simpler than it sounds, and in practice you'll rarely start from zero. Today there are official SDKs in Python, TypeScript, Java, Kotlin, C#, and Swift (plus community implementations in Rust and Go), and a rapidly growing ecosystem of public servers already built: databases, GitHub, Slack, and in your specific case, all of Azure through servers like `aks-mcp`. Before writing a single line of code, it's worth checking whether what you need already exists.
 
 When it's genuinely worth building one yourself, the heart of a server looks close to this:
 
@@ -214,9 +219,12 @@ MCP standardizes how agents connect to tools and data: LSP for the agent world, 
 
 If you're into applied infrastructure content like this, I keep writing about Azure, AKS, and SRE at [rmmartins.com](https://rmmartins.com), and you'll find more hands-on Kubernetes material at [k8shackathon.com](https://k8shackathon.com) and [fromservertocluster.com](https://fromservertocluster.com).
 
-*This series has a companion repo with the full Terraform used from post 2 through post 5; link at the end of post 5.*
+If that teammate asks for cluster access or the CISO asks what this thing actually is, the short answer is now clear: MCP is the protocol, the host enforces the guardrails, and `--access-level readonly` is not optional.
 
+## Further reading
 
-*Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
-
-*Leia este post em [Português](https://ricardomartins.com.br/mcp-e-agentes-101-para-engenheiros-de-infra/).*
+- [What is MCP?](https://modelcontextprotocol.io/docs/getting-started/intro)
+- [What is Azure Kubernetes Service (AKS)?](https://learn.microsoft.com/en-us/azure/aks/what-is-aks)
+- [How MCP works: the protocol connecting agents to the world](/2026/07/29/how-mcp-works-the-protocol-connecting-agents-to-the-world/)
+- [Companion repository: agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)
+- *Leia este post em [Português](https://ricardomartins.com.br/mcp-e-agentes-101-para-engenheiros-de-infra/).*

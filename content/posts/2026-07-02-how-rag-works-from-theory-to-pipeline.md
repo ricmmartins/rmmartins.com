@@ -24,6 +24,11 @@ The ML team says: "We'll implement RAG."
 
 Everyone nods. You get the job of provisioning the infrastructure. Before you start creating resources, you should know what RAG is actually doing under the hood.
 
+**tl;dr**
+- RAG is search plus an LLM. The retrieval layer determines whether the answer is grounded or generic.
+- The main moving parts are chunking, embeddings, vector storage, and hybrid search.
+- In production, watch retrieval quality and pricing before you obsess over the model.
+
 ## The map for infra engineers
 
 | RAG concept | What it does | Infra equivalent |
@@ -176,7 +181,7 @@ search_client = SearchClient(
 openai_client = AzureOpenAI(
     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
     api_key=os.environ["AZURE_OPENAI_KEY"],
-    api_version="2024-06-01"
+    api_version="2024-10-21"
 )
 
 tokenizer = tiktoken.encoding_for_model("text-embedding-3-small")
@@ -294,15 +299,15 @@ Azure AI Search does this natively and merges the scores with **Reciprocal Rank 
 
 ## Production costs
 
-| Component | Approximate cost | Scales with |
+| Component | Pricing note | Scales with |
 |---|---|---|
-| Azure AI Search (Standard S1) | ~$250/month per search unit | Number of documents and queries |
-| Embedding generation (indexing) | ~$0.02 per 1M input tokens | Document volume |
-| Embedding generation (query) | Negligible | Queries are short |
-| LLM (GPT-4o Global Standard) | ~$5.00/1M input, ~$15.00/1M output | Number of queries |
-| Storage (embeddings) | Included in Search | Dimension × quantity |
+| Azure AI Search (Standard S1) | Check current regional pricing | Number of documents and queries |
+| Embedding generation (indexing) | Check current model pricing | Document volume |
+| Embedding generation (query) | Usually low relative to generation, but still model-dependent | Queries are short |
+| LLM (GPT-4o Global Standard) | Check current model pricing | Number of queries |
+| Storage (embeddings) | Included in the Azure AI Search cost model you choose | Dimension × quantity |
 
-For 10,000 documents (~50MB of text), indexing still costs only a few dollars in embeddings. Serving 1,000 queries/day with 5 chunks each is where the real bill starts, and the exact number depends on your prompt size, response length, region, and model pricing at the time.
+Use the live pricing pages before committing numbers in a design review: [Azure AI Search pricing](https://azure.microsoft.com/pricing/details/search/) and [Azure OpenAI pricing](https://azure.microsoft.com/pricing/details/azure-openai/).
 
 ## Common problems and how to fix them
 
@@ -331,6 +336,12 @@ For 10,000 documents (~50MB of text), indexing still costs only a few dollars in
 
 In a future post, I'll talk about **Context Engineering**. Now that you know how to retrieve information with RAG, the next step is learning how to assemble the prompt so the model gets the most out of it.
 
+When the VP of Product asks for answers grounded in those 2,000 pages, this is the pipeline that turns "the docs exist" into "the model can actually use them."
+
 ## Further reading
 
-*This post is also available in [Portuguese](https://ricardomartins.com.br/como-rag-funciona-da-teoria-ao-pipeline/).*
+- [Vector Search Overview - Azure AI Search](https://learn.microsoft.com/en-us/azure/search/vector-search-overview)
+- [Hybrid Search Overview - Azure AI Search](https://learn.microsoft.com/en-us/azure/search/hybrid-search-overview)
+- [How to generate embeddings with Azure OpenAI in Microsoft Foundry Models](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/embeddings)
+- [Work with chat completion models - Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt)
+- *This post is also available in [Portuguese](https://ricardomartins.com.br/como-rag-funciona-da-teoria-ao-pipeline/).*

@@ -24,6 +24,12 @@ series:
 
 Fifth post in the series. In the [previous one](/2026/05/22/gpu-deep-dive-what-happens-inside-the-silicon/), we went inside the GPU. This time we automate everything around it. Understanding GPUs is useful. Provisioning them consistently and at scale is where infrastructure engineering actually meets AI.
 
+**tl;dr**
+
+- IaC is the only sane way to provision expensive GPU infrastructure repeatedly.
+- Validate SKU choices, remote state, and deployment guardrails before apply.
+- If the pipeline uses OIDC, Terraform and GitHub Actions both need explicit OIDC settings.
+
 ## The $4,000 typo
 
 I started the week with a win. I manually provisioned a GPU cluster in East US 2 for an ML experiment: AKS with a `Standard_NC6s_v3` node pool, accelerated networking, GPU drivers, correct taints. It took most of a day, but it worked.
@@ -151,6 +157,7 @@ terraform {
     storage_account_name = "stterraformstate"
     container_name       = "tfstate"
     key                  = "ai-platform.terraform.tfstate"
+    use_oidc             = true
   }
 }
 ```
@@ -319,6 +326,7 @@ env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_USE_OIDC: true
 
 jobs:
   plan:
@@ -412,6 +420,16 @@ Azure Policy can enforce rules at the subscription level. For AI infra, the high
 ```
 
 No cost-center tag = no GPU. Simple and effective.
+
+## Closing the loop
+
+The typo at the top of the post happened because memory, portal clicks, and chat threads are not deployment systems. IaC is. Catching the wrong SKU at review time is much cheaper than discovering it on the invoice.
+
+## Further reading
+
+- [Store Terraform state in Azure Storage](https://learn.microsoft.com/en-us/azure/developer/terraform/store-state-in-azure-storage)
+- [Authenticate to Azure from GitHub Actions by OpenID Connect](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure-openid-connect)
+- [Use GPUs on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-nvidia-gpu)
 
 ## In the next post
 

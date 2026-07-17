@@ -25,6 +25,12 @@ The previous four posts built agents I designed myself, so I could still keep th
 
 Microsoft's platform for this, now called **Microsoft Foundry**, already covers a good chunk of what I applied by hand in the earlier posts. You may still see the older Azure AI Foundry naming in parts of the portal and in older docs while the rename finishes rolling out. This post is about what the platform handles for you and what it still leaves on your desk, because both matter to whoever has to sign off on the design.
 
+**tl;dr**
+- Use Foundry projects as isolation boundaries so teams do not share state and tools by accident.
+- Split creator and publisher permissions with RBAC instead of relying on process alone.
+- Give each published agent its own identity and a governed MCP/tool catalog.
+- Use policy, tracing, and deployment pipelines to make agent releases reviewable and reversible.
+
 ## Foundry resource and project as the unit of isolation
 
 In the current Foundry model, the top-level resource is the Foundry account itself and projects sit underneath it as isolated workspaces for teams. If you still have older hub-based setups in your subscription, you may still see that vocabulary, but new Terraform examples and the newer control plane center on the Foundry resource plus projects. Files, conversation state, and indexes stay scoped to the project unless you choose to share something explicitly.
@@ -110,6 +116,16 @@ Five posts, from concept to governance: what MCP is and how an agent decides the
 The thread connecting all five is always the same: decision autonomy, yes; autonomy to act on production, no, unless it's an explicit, auditable, reviewed choice rather than a configuration accident. That holds for the `--access-level readonly` on a command-line flag, and it holds for the tool catalog of an entire Microsoft platform, at a completely different scale.
 
 If your company is already at the point where several teams are standing up agents with no shared view, do this design work early. Untangling it later is slower and usually more political.
+
+That answers the opening governance question. You get a place to see what is running, where it lives, and which permissions it carries, without relying on tribal memory.
+
+## Further reading
+
+- [Microsoft Foundry documentation](https://learn.microsoft.com/en-us/azure/foundry/)
+- [Create a project in Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/how-to/create-projects)
+- [Role-based access control for Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/concepts/rbac-foundry)
+- [Overview of Azure Policy](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
+- [What is Azure role-based access control (Azure RBAC)?](https://learn.microsoft.com/en-us/azure/role-based-access-control/overview)
 
 **Companion repo**: I put together the Terraform used from post 2 through post 5, covering Cognitive Account and deployment resources, Action Group, Metric Alert, managed identity with RBAC, and the Foundry resource plus project, in a single per-post-commented file at `infra/terraform/main.tf`.
 

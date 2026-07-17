@@ -25,6 +25,12 @@ Third post in the series where I translate AI into the language of people who li
 
 Spoiler: it is not enough to buy the most expensive GPU. You need the **right** GPU, connected the **right way**.
 
+**tl;dr**
+
+- Pick hardware based on training vs inference, not on sticker price.
+- GPU family, memory size, and interconnect matter more than vCPU count.
+- For distributed jobs, quota, availability, and network fabric decide whether the cluster performs or stalls.
+
 ## The story you don't want to live
 
 The ML team asks for "a GPU cluster for training." You do what any infra engineer would do under time pressure: provision eight `Standard_D64s_v5` VMs. Sixty-four vCPUs each, 256 GiB of RAM, Premium SSD. On paper, it looks respectable.
@@ -327,6 +333,16 @@ GPU infrastructure needs specific observability. Traditional CPU metrics (load a
 | Token throughput (tokens/sec) | Application logs, Azure OpenAI metrics | Model serving efficiency |
 
 **Recommended setup:** Deploy **NVIDIA DCGM Exporter** as a DaemonSet on AKS GPU node pools. It exposes GPU metrics in Prometheus format, which **Azure Managed Prometheus** scrapes automatically. Combine with pre-built **Grafana** dashboards for GPU utilization, memory, temperature, and error rates.
+
+## Closing the loop
+
+The 47-hour job in the opening story was never a general compute shortage. It was a hardware selection mistake. CPU-heavy VMs and the wrong interconnect cannot substitute for the right GPU family.
+
+## Further reading
+
+- [Virtual machine sizes overview for Azure VMs](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview#gpu-accelerated)
+- [Use GPUs on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-nvidia-gpu)
+- [Proximity placement groups](https://learn.microsoft.com/en-us/azure/virtual-machines/co-location)
 
 ## Next up
 

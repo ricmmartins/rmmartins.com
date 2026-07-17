@@ -22,6 +22,12 @@ series:
 
 Fourth post in the series. In the [previous one](/2026/05/18/compute-for-ai-choosing-the-right-hardware/), you learned which GPU VMs to provision and how to connect them. This time we look **inside** the GPU so you can troubleshoot better and talk to the ML team without guessing.
 
+**tl;dr**
+
+- GPU memory is consumed by more than model weights.
+- Gradients, optimizer states, and activations usually dominate training memory.
+- Understanding memory hierarchy and topology makes troubleshooting much faster.
+
 ## The 2 AM ticket
 
 Slack fires at 2 AM. The ML team's training job crashed again. The error is a single line:
@@ -346,6 +352,16 @@ GPU-Util < 50% during active training = **data starvation**. Fixes: increase Dat
 | Blackwell (2024) | B200 | ND GB200 v6 | 192 GB | 1.8 TB/s | 400 Gb/s |
 
 Each generation doubles HBM bandwidth and introduces new precision formats: Ampere brought TF32 and structured sparsity, Hopper brought FP8 and Transformer Engine, Blackwell brings FP4 and 192 GB of HBM per GPU.
+
+## Closing the loop
+
+The 2 AM ticket stops looking mysterious once you account for gradients, optimizer states, and activations. The "14 GB model" in the opening story was never a 14 GB training footprint.
+
+## Further reading
+
+- [Virtual machine sizes overview for Azure VMs](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview#gpu-accelerated)
+- [Azure N-series GPU driver setup for Linux](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/n-series-driver-setup)
+- [Use GPUs on Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/use-nvidia-gpu)
 
 ## Next up
 

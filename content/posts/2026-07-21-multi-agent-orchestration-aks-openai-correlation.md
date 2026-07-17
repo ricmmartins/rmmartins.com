@@ -25,29 +25,21 @@ So far the series has built two separate things: in post 1, an agent that talks 
 
 This post is about closing that last manual step with an orchestrator.
 
+**tl;dr**
+- Escalate to the orchestrator only after the watchdog classifies a spike as `urgent`.
+- Keep scopes tight: the watchdog reads quota, the AKS agent reads cluster state, and only the orchestrator sends the final alert.
+- Correlate events inside a time window and return candidate causes with confidence, not certainty.
+- Spend a few extra seconds on correlation so the page includes a usable hypothesis.
+
 ## The trigger moves
 
 In post 3, when the watchdog classified an event as `urgent`, the `send_priority_alert` tool went straight to Slack. Now that output changes destination: instead of notifying a human directly, an `urgent` classification triggers the orchestrator, which only then decides what (and when) the human sees.
 
-```
- watchdog (post 3)
-       │ classification = urgent
-       ▼
- ┌─────────────────────────────┐
- │         ORCHESTRATOR          │
- └──────┬────────────────┬──────┘
-        │                │
-        ▼                ▼
- watchdog sub-agent    AKS sub-agent
- (token telemetry,     (aks-mcp: detectors,
-  posts 2/3)             monitor, kubectl)
-        │                │
-        └───────┬────────┘
-                ▼
-       send_priority_alert
-       (consolidated message,
-        with cause hypothesis)
-```
+- The watchdog from post 3 classifies the event as `urgent`.
+- The orchestrator fans out to two scoped sub-agents:
+  - the watchdog sub-agent for token telemetry from posts 2 and 3
+  - the AKS sub-agent for `aks-mcp` detectors plus `monitor` and `kubectl`
+- The orchestrator sends one consolidated alert with the cause hypothesis.
 
 Each sub-agent keeps the same scope it already had. The watchdog did not gain access to the cluster. The AKS agent did not gain access to quota. The orchestrator is the only new piece, and it still only gets read access plus the same notification tool as before. Combining them created correlation, not new authority.
 
@@ -89,6 +81,15 @@ Latency adds a few extra seconds before the final alert goes out, compared to an
 ## The trade worth making
 
 A few seconds of extra latency is a fine price to pay when the alert arrives with a plausible cause attached. Once you have several agents doing real work, the hard part stops being orchestration code and starts being governance. That is where the last post goes.
+
+So yes, you can answer "did someone deploy something?" with one alert instead of two browser tabs. You just keep the answer framed as a candidate cause until a human confirms it.
+
+## Further reading
+
+- [Monitor Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/monitor-aks)
+- [Scaling options for applications in Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/concepts-scale)
+- [Monitoring data reference for Azure OpenAI in Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/openai/monitor-openai-reference)
+- [Overview of Azure Monitor alerts](https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-overview)
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
 

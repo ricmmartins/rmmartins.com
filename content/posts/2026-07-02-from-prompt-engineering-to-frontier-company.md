@@ -28,6 +28,11 @@ This year, the conversation is different. People are asking how to transform an 
 
 That progression tells a story, and we often discuss each phase as if it appeared out of nowhere.
 
+**tl;dr**
+- Model quality still matters, but the bigger differentiator is the harness around the model.
+- Agents work in production only when context, tools, permissions, observability, and governance are engineered together.
+- A "frontier company" redesigns processes around agents, not around chat windows.
+
 ## The timeline
 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 520" style="width:100%;height:auto" role="img" aria-label="Evolution of AI engineering: from Prompt Engineering to Frontier Company, showing each discipline as a step in a vertical timeline">
@@ -180,7 +185,7 @@ Context engineering is deciding:
 - In what format it receives data (structured vs unstructured)
 - How much space each piece takes in the token budget
 
-I wrote about this in detail in [the context engineering post](/2026/07/05/context-engineering-the-art-of-feeding-llms/). The short version: well-crafted context is 80% of the result. A mediocre model with excellent context beats a top model with poor context.
+I wrote about this in detail in [the context engineering post](/2026/07/05/context-engineering-the-art-of-feeding-llms/). The short version: context quality usually dominates the result. A mediocre model with excellent context often beats a top model with poor context.
 
 ## MCP: the USB-C of agents
 
@@ -225,6 +230,11 @@ The differentiator will be elsewhere:
 
 Companies do not compete on models alone. They compete on how well they turn knowledge, permissions, and systems into better decisions. That system is the harness.
 
----
+## Further reading
 
-*This post is also available in [Portuguese](https://ricardomartins.com.br/da-prompt-engineering-a-frontier-company/). If you want to dive deeper into the technical concepts mentioned here, check out the posts on [context engineering](/2026/07/05/context-engineering-the-art-of-feeding-llms/), [RAG](/2026/07/02/how-rag-works-from-theory-to-pipeline/), and [MCP](/2026/07/01/mcp-and-agents-101-for-infra-engineers/).*
+- [Context engineering](/2026/07/05/context-engineering-the-art-of-feeding-llms/)
+- [How RAG works: from theory to pipeline](/2026/07/02/how-rag-works-from-theory-to-pipeline/)
+- [MCP and AI Agents 101 for Infrastructure Engineers](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
+- [What is Microsoft Foundry?](https://learn.microsoft.com/en-us/azure/foundry/what-is-foundry)
+- [What is MCP?](https://modelcontextprotocol.io/docs/getting-started/intro)
+- *This post is also available in [Portuguese](https://ricardomartins.com.br/da-prompt-engineering-a-frontier-company/).*

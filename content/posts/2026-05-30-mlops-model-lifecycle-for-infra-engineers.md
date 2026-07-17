@@ -24,6 +24,12 @@ series:
 
 Sixth post in the series. In the [previous one](/2026/05/26/infrastructure-as-code-for-ai-automating-gpu-clusters/), we automated GPU cluster provisioning. Next comes what happens **after** the hardware is ready: how a model goes from "works on my notebook" to "running in production with an SLA."
 
+**tl;dr**
+
+- Models need the same artifact, promotion, and rollback discipline as application builds.
+- Use a real registry with metadata and controlled deployments.
+- Prefer MLflow aliases over deprecated stages when describing promotions.
+
 ## The model with no birth certificate
 
 A data scientist drops a message in the team channel with a link to a shared drive: *"Here's the model. It's a 15 GB PyTorch checkpoint. We need it in production by Friday."*
@@ -100,11 +106,11 @@ mlflow models register \
   --model-uri runs:/<run-id>/model \
   --name sentiment-classifier
 
-# Promote to production
-mlflow models transition-stage \
-  --name sentiment-classifier \
-  --version 3 \
-  --stage Production
+# Point the production alias to version 3
+mlflow models set-alias \
+  -n sentiment-classifier \
+  -v 3 \
+  -a production
 ```
 
 ### Container Registry for model serving
@@ -130,7 +136,7 @@ az acr repository show-tags \
 | Criteria | Azure ML Registry | MLflow Registry | ACR (Container) |
 |----------|-------------------|-----------------|-----------------|
 | **Best for** | Azure-native teams | Multi-cloud / OSS | Containerized serving |
-| **Versioning** | Built-in, immutable | Built-in with stages | Image tags |
+| **Versioning** | Built-in, immutable | Built-in with aliases | Image tags |
 | **Lineage tracking** | Deep (jobs, data, env) | Run-level | Dockerfile only |
 | **Infra overhead** | Managed | Self-hosted or Azure ML | Managed (ACR) |
 | **When to avoid** | Need multi-cloud | Need deep Azure integration | Models without containers |
@@ -334,6 +340,16 @@ az ml online-endpoint update \
   --resource-group ml-prod-rg \
   --workspace-name ml-prod-ws
 ```
+
+## Closing the loop
+
+The `model_final_v2_FIXED.pt` story stops being chaos once the file enters a registry, gets metadata, and moves through controlled promotion gates. That is the real point of MLOps for infrastructure engineers.
+
+## Further reading
+
+- [Register and work with models in Azure Machine Learning](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-models?view=azureml-api-2)
+- [Deploy machine learning models to online endpoints](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-deploy-online-endpoints?view=azureml-api-2)
+- [Safe rollout for online endpoints](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-safely-rollout-online-endpoints?view=azureml-api-2)
 
 ## In the next post
 

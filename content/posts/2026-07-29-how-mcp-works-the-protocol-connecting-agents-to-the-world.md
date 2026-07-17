@@ -4,7 +4,7 @@ aliases:
   - "/2026/07/29/how-mcp-works-the-protocol-connecting-agents-to-the-world/"
 translationKey: "como-mcp-funciona-o-protocolo-que-conecta-agents-ao-mundo"
 title: "How MCP works: the protocol connecting agents to the world"
-description: "A deep dive into MCP's wire format, JSON-RPC messages, transport layers, capability negotiation, and security model — explained for infrastructure engineers who want to understand what's actually on the wire."
+description: "A deep dive into MCP's wire format, JSON-RPC messages, transport layers, capability discovery, and security model, explained for infrastructure engineers who want to understand what's actually on the wire."
 date: 2026-07-29T18:00:00-04:00
 categories:
   - AI
@@ -18,7 +18,13 @@ tags:
   - azure
 ---
 
-You've probably used MCP from the host side already. This post is the other angle: what is actually on the wire. If the [MCP 101 post](/2026/07/01/mcp-and-agents-101-for-infra-engineers/) was the architecture diagram, this one is the packet trace. The short version is that MCP is **JSON-RPC 2.0** plus a standard handshake, capability discovery, and two standard transports. If LSP standardized editor-to-language-server traffic, MCP does the same for host-to-tool-server traffic.
+You've probably used MCP from the host side already. This post is the other angle: what is actually on the wire. If the [MCP 101 post](/2026/07/01/mcp-and-agents-101-for-infra-engineers/) was the architecture diagram, this one is the packet trace. The short version is that MCP is **JSON-RPC 2.0** plus capability discovery, per-request metadata, and two standard transports. As of protocol version `2026-07-28`, the core is stateless. If LSP standardized editor-to-language-server traffic, MCP does the same for host-to-tool-server traffic.
+
+**tl;dr**
+- MCP is JSON-RPC 2.0 with discovery, tool schemas, and transport rules layered on top.
+- In the current stateless protocol, clients advertise version and capabilities per request and can call `server/discover` instead of doing a session handshake.
+- `stdio` is good for local subprocess tools. Streamable HTTP is the remote option and now uses POST-based request/response with optional SSE streaming.
+- The trust boundary is still the host and the server. Validate inputs, split permissions, and treat tool output as untrusted.
 
 ## JSON-RPC 2.0: the foundation
 
@@ -50,41 +56,39 @@ Minimal examples:
 
 The `id` field is the correlation key. Same idea as a request ID in distributed tracing.
 
-## The lifecycle: initialize → use → shutdown
+## The lifecycle: discover, call, repeat
 
-Every MCP connection starts the same way: with `initialize`. Conceptually, this is closer to a TLS or SSH handshake than to a first REST call. Before either side starts doing useful work, they agree on **protocol version** and **capabilities**.
+As of protocol version `2026-07-28`, MCP is stateless. The old `initialize` / `notifications/initialized` handshake is gone, and so is the protocol-level session. No `Mcp-Session-Id`. No sticky connection state the load balancer has to preserve. Each request carries the protocol version and client metadata it needs.
 
-The client starts with `initialize`:
+If a client wants to learn what the server supports up front, it can call `server/discover`:
 
 ```json
 {
   "jsonrpc": "2.0",
-  "id": 1,
-  "method": "initialize",
+  "id": "discover-1",
+  "method": "server/discover",
   "params": {
-    "protocolVersion": "2025-06-18",
-    "capabilities": {
-      "roots": {
-        "listChanged": true
+    "_meta": {
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientInfo": {
+        "name": "CopilotHost",
+        "version": "1.0.0"
       },
-      "sampling": {}
-    },
-    "clientInfo": {
-      "name": "CopilotHost",
-      "version": "1.0.0"
+      "io.modelcontextprotocol/clientCapabilities": {}
     }
   }
 }
 ```
 
-The server replies with the version it will use and the capability families it supports:
+A typical response looks like this:
 
 ```json
 {
   "jsonrpc": "2.0",
-  "id": 1,
+  "id": "discover-1",
   "result": {
-    "protocolVersion": "2025-06-18",
+    "resultType": "complete",
+    "supportedVersions": ["2026-07-28"],
     "capabilities": {
       "tools": {
         "listChanged": true
@@ -98,26 +102,21 @@ The server replies with the version it will use and the capability families it s
       },
       "logging": {}
     },
-    "serverInfo": {
-      "name": "aks-mcp",
-      "version": "2.3.1"
-    }
+    "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+        "name": "aks-mcp",
+        "version": "2.3.1"
+      }
+    },
+    "ttlMs": 3600000,
+    "cacheScope": "public"
   }
 }
 ```
 
-Then the client sends the final handshake message:
+Two details matter here. First, discovery is explicit and on demand. The client can ask when it wants, instead of negotiating once at connection time. Second, capability families are still high-level. The actual inventory still comes later with `tools/list`, `resources/list`, and `prompts/list`.
 
-```json
-{
-  "jsonrpc": "2.0",
-  "method": "notifications/initialized"
-}
-```
-
-Only after that should normal operation begin. The important distinction is that `initialize` advertises **capability families**, not individual tools. Actual inventory comes later with `tools/list`, `resources/list`, and `prompts/list`.
-
-Also: version negotiation is real, and shutdown is transport-level. There is no special `goodbye` RPC.
+For readability, I omit the repeated `_meta` block in the next few examples. In the current protocol, every request still carries it.
 
 ## Transports: how the JSON actually moves
 
@@ -135,17 +134,16 @@ For remote and multi-user scenarios, the modern transport is **Streamable HTTP**
 
 ```http
 POST /mcp
-GET  /mcp
 ```
 
-The model host sends every client-to-server JSON-RPC message as an HTTP `POST` to that endpoint. The server can respond in one of two ways:
+The model host sends each client-to-server JSON-RPC message as an HTTP `POST` to that endpoint. The server can respond in one of two ways:
 
 1. Immediate `application/json` response for simple request/response flows
-2. `text/event-stream` if it wants to stream server messages over SSE before the final response
+2. `text/event-stream` if it wants to stream server messages before the final response
 
-This feels a bit like REST with server push. It is not WebSocket, because you still use normal HTTP requests. It is not plain REST either, because the payload is RPC. Clients can also open `GET /mcp` as an SSE stream for server-initiated notifications or requests.
+This feels a bit like REST with server push. It is not WebSocket, because you still use normal HTTP requests. It is not plain REST either, because the payload is RPC. In the current spec, the old `GET /mcp` stream endpoint is gone. Streamable HTTP is now POST-based, and the SSE stream, when used, is scoped to that request.
 
-For infra teams, the good news is that this fits normal API plumbing: reverse proxies, load balancers, gateways, TLS termination, and central auth. The spec also defines `Mcp-Session-Id` for stateful sessions and `MCP-Protocol-Version` for explicit version signaling on later requests.
+For infra teams, the good news is that this fits normal API plumbing: reverse proxies, load balancers, gateways, TLS termination, and central auth. `MCP-Protocol-Version` can still be sent explicitly at the HTTP layer, but protocol-level sessions are gone, which makes scaling and failover much easier.
 
 ### About the older HTTP+SSE transport
 
@@ -164,7 +162,7 @@ The most important conceptual split in MCP is this:
 - **Capabilities** say *which subsystems exist*
 - **Schemas** say *how to actually use them*
 
-So after initialization, the client asks for the real tool inventory:
+So after discovery, or whenever it needs a refresh, the client asks for the real tool inventory:
 
 ```json
 {
@@ -342,12 +340,21 @@ Once you see MCP as JSON-RPC over a transport, the operational picture gets clea
 
 **Cost control:** bandwidth is cheap; token reinjection is not. Return the smallest useful result.
 
-**Versioning:** pin and test client/server combinations. The move from older HTTP+SSE examples to Streamable HTTP is a good reminder that protocol guidance changes.
+**Versioning:** pin and test client/server combinations. The move from older HTTP+SSE examples to Streamable HTTP, and then to the stateless 2026-07-28 core, is a good reminder that protocol guidance changes.
 
-MCP is often described as "USB-C for AI tools." Fine as a first analogy. At the protocol level it is closer to **LSP for agents**: JSON-RPC messages, negotiated capabilities, structured schemas, and a clean separation between the client that orchestrates and the server that exposes domain-specific power.
+MCP is often described as "USB-C for AI tools." Fine as a first analogy. At the protocol level it is closer to **LSP for agents**: JSON-RPC messages, explicit discovery, structured schemas, and a clean separation between the client that orchestrates and the server that exposes domain-specific power.
 
 Once you understand that, the black box disappears. An MCP session becomes something you can debug with the same instincts you already use for HTTP APIs, SSH, and streaming control planes.
 
 ---
 
 *If you're looking for the operational and architectural perspective, start with [MCP and Agents 101](/2026/07/01/mcp-and-agents-101-for-infra-engineers/). To see a production MCP server built step by step, check the [MCP Agents and Infrastructure series](/series/mcp-agents-and-infrastructure/).*
+
+If your original question was "what is actually on the wire?", that is the answer: JSON-RPC envelopes, explicit discovery, and a transport you can inspect with normal infra tools. Once you see it that way, MCP stops looking magical and starts looking debuggable.
+
+## Further reading
+
+- [Get started using Foundry MCP Server with Visual Studio Code](https://learn.microsoft.com/en-us/azure/foundry/mcp/get-started)
+- [Get started with Learn MCP Server in Foundry](https://learn.microsoft.com/en-us/training/support/mcp-get-started-foundry)
+- [Overview of MCP servers in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/mcp-server-overview)
+- [Microsoft identity platform and OAuth 2.0 authorization code flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow)

@@ -18,9 +18,14 @@ tags:
   - infrastructure
 ---
 
-You build a RAG pipeline, connect it to Azure OpenAI, and the answers come back... meh. Generic. Sometimes it ignores the context you sent. Sometimes it makes things up. The model is powerful, but the input you send determines 80% of the output quality.
+You build a RAG pipeline, connect it to Azure OpenAI, and the answers come back... meh. Generic. Sometimes it ignores the context you sent. Sometimes it makes things up. The model is powerful, but input quality usually determines most of the result.
 
 Context engineering is the discipline of assembling that input so the model gives you what you actually need. It is not just "prompt engineering" with a fresher label. It is engineering: structure, constraints, and trade-offs.
+
+**tl;dr**
+- Context engineering is the work of deciding what the model sees, in what format, and within what token budget.
+- Good results usually come from better structure, better examples, and tighter tool definitions, not from bigger prompts.
+- Treat tokens like capacity: limited, billable, and worth budgeting.
 
 ## The map for infra engineers
 
@@ -257,7 +262,7 @@ then eliminate them one by one based on the symptoms, and only then give the rec
 When you need to parse the response programmatically:
 
 ```bash
-curl -X POST "$AZURE_OPENAI_ENDPOINT/openai/deployments/gpt-4o/chat/completions?api-version=2024-06-01" \
+curl -X POST "$AZURE_OPENAI_ENDPOINT/openai/deployments/gpt-4o/chat/completions?api-version=2024-10-21" \
   -H "Content-Type: application/json" \
   -H "api-key: $AZURE_OPENAI_KEY" \
   -d '{
@@ -283,7 +288,9 @@ Response:
 
 ### Prompt caching
 
-Recent models support caching the prompt prefix. On supported Azure OpenAI models this is automatic. If the system prompt and tool definitions stay the same across requests, the service can reuse that work and cut both latency and cost.
+Some Azure OpenAI deployments support prompt caching, but availability depends on the model family, deployment type, and region. Check the current Azure documentation for your exact deployment before you assume cache hits.
+
+When prompt caching is available, stable prompt prefixes can reduce both latency and cost. If the system prompt and tool definitions stay the same across requests, the service can reuse that work.
 
 ```
 Request 1: [system_prompt + tools + user_msg_1] → cache miss (process everything)
@@ -340,4 +347,7 @@ The natural next step is **LLM Evals**: measuring whether the model is actually 
 
 ## Further reading
 
-*This post is also available in [Portuguese](https://ricardomartins.com.br/context-engineering-a-arte-de-alimentar-llms/).*
+- [Work with chat completion models - Microsoft Foundry](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/chatgpt)
+- [Prompt caching with Azure OpenAI in Microsoft Foundry Models](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/prompt-caching)
+- [How RAG works: from theory to pipeline](/2026/07/02/how-rag-works-from-theory-to-pipeline/)
+- *This post is also available in [Portuguese](https://ricardomartins.com.br/context-engineering-a-arte-de-alimentar-llms/).*

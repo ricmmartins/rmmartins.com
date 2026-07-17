@@ -4,7 +4,7 @@ aliases:
   - "/2026/07/08/deterministic-429-watchdog-azure-openai/"
 translationKey: "watchdog-429-deterministico-azure-openai"
 title: "Building a Deterministic 429 Watchdog for Azure OpenAI"
-description: "An MCP server that detects token consumption trends before the 429 happens — no LLM required, just metrics and a cron job."
+description: "An MCP server that detects token consumption trends before the 429 happens, with no LLM required, just metrics and a cron job."
 date: 2026-07-08T10:00:00-04:00
 categories:
   - AI
@@ -23,9 +23,15 @@ series:
 
 In the previous post I explained what MCP is and how an agent decides its next move from the tools available. Now for something you could actually ship over a weekend: an MCP server that watches token consumption on your Azure OpenAI or Foundry deployment and warns you on Slack or email **before** the 429 lands in production.
 
+## tl;dr
+
+- Watch Azure Monitor metrics before the client hits the first 429.
+- Start with a deterministic threshold plus a rising-trend check.
+- Add agent reasoning later, after the telemetry and alert path prove they work.
+
 ## Why this is subtler than it looks
 
-The first reaction from anyone who's never been bitten by a 429 is "easy, just measure usage and compare it to the quota." The problem is that TPM (tokens per minute) and RPM (requests per minute) on Azure OpenAI are evaluated over **rolling** windows, on short intervals, typically 1 to 10 seconds, not a smooth average across the minute. That means you can blow the limit even while staying "under quota" in aggregate, simply because requests arrived in a burst instead of spread out. That's why teams report 429s "even within the documented limit": the problem isn't total volume, it's distribution over time.
+The first reaction from anyone who's never been bitten by a 429 is "easy, just measure usage and compare it to the quota." The problem is that TPM (tokens per minute) and RPM (requests per minute) on Azure OpenAI are evaluated over short **rolling** windows, not a smooth average across the minute. That means you can blow the limit even while staying "under quota" in aggregate, simply because requests arrived in a burst instead of spread out. That's why teams report 429s "even within the documented limit": the problem isn't total volume, it's distribution over time.
 
 The industry-standard answer is retry with exponential backoff and jitter, reading the `retry-after-ms` header the API already returns. That's necessary, but it's reactive: the client already felt the error. What we want here is the layer before that: seeing the consumption trend climb toward the limit and acting before the first 429 ever fires.
 
@@ -186,5 +192,11 @@ For now, the most important guardrail is already in the design: the server **onl
 If you want to test the pure-script version before you even touch MCP, it really is just the two functions above and a one-minute schedule. Start there. The next step is teaching the watchdog to tell a normal spike from a bad one without giving it the power to change anything in production.
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
+
+## Further reading
+
+- [Azure OpenAI quotas and limits](https://learn.microsoft.com/azure/ai-foundry/openai/quotas-limits)
+- [Metrics in Azure Monitor](https://learn.microsoft.com/azure/azure-monitor/essentials/data-platform-metrics)
+- [Azure Monitor Query client library for Python](https://learn.microsoft.com/python/api/overview/azure/monitor-query-readme?view=azure-python)
 
 *Leia este post em [Português](https://ricardomartins.com.br/watchdog-429-deterministico-azure-openai/).*

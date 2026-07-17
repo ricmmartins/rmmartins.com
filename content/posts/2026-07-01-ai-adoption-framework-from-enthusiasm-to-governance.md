@@ -23,11 +23,16 @@ series:
 
 Fourteenth post in the series. In the [previous one](/2026/06/27/ai-use-cases-for-infra-teams-aiops-and-beyond/), we used AI for our own infrastructure work. This time the scope is bigger: how to take an entire organization from "let's use AI" to a governed platform that can survive contact with finance, security, and production support.
 
+**tl;dr**
+- AI adoption fails when teams skip readiness, guardrails, and cost controls.
+- A workable path is assessment, enablement, platform prep, controlled experimentation, production governance, and continuous review.
+- Treat AI as an operating capability with budgets, runbooks, and policies from day 1.
+
 ## Best intentions, worst outcomes
 
 Your CTO walks into the all-hands and says: "We're going all-in on AI." The room buzzes. Teams start brainstorming use cases before the meeting ends. Within two weeks, Slack is full of threads about GPU availability.
 
-Three months later, five teams have provisioned GPU VMs independently across four subscriptions. Nobody can tell which models are in production versus a weekend experiment. Two teams are paying for reserved capacity on clusters that sit idle 80% of the time. Security has not reviewed a single deployment. The CFO wants to know why the Azure bill went up 40%.
+Three months later, multiple teams have provisioned GPU VMs independently across multiple subscriptions. Nobody can tell which models are in production versus a weekend experiment. Some teams are paying for reserved capacity on clusters that sit mostly idle. Security has not reviewed a single deployment. The CFO wants to know why the Azure bill spiked.
 
 The enthusiasm was there. The framework wasn't.
 
@@ -187,3 +192,11 @@ These anti-patterns stack on top of each other. Big Bang causes Shadow AI becaus
 ## In the next post
 
 That is the framework. The final post is the **visual glossary**: an infra ↔ AI translation sheet for the terms people keep throwing around as if everybody was born knowing them.
+
+If you do this well, the CTO gets a governed AI program, the CFO gets cost visibility, and security is not reverse-engineering shadow deployments after the fact.
+
+## Further reading
+
+- [Cloud Adoption Framework for Microsoft](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/)
+- [Azure Well-Architected Framework](https://learn.microsoft.com/en-us/azure/well-architected/)
+- [Visual glossary: infra ↔ AI](/2026/07/05/visual-glossary-infra-ai-your-rosetta-stone/)

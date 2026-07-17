@@ -23,6 +23,11 @@ series:
 
 Thirteenth post in the series. In the [previous one](/2026/06/23/troubleshooting-playbook-incidents-that-will-wake-you-at-2am/), we dealt with the incidents that wake you up at 2 AM. This time the angle flips: using AI to make the infrastructure work itself less miserable.
 
+**tl;dr**
+
+- AI helps with summarizing, drafting, and finding patterns across noisy data.
+- Do not hand it deterministic enforcement, compliance evidence, or unattended production actions.
+
 ## Flipping the perspective
 
 Over the past 12 posts, you've been building infra for AI: GPUs, clusters, pipelines, security, monitoring, cost management. You know how to keep the runway paved for data scientists.
@@ -44,7 +49,7 @@ from openai import AzureOpenAI
 
 client = AzureOpenAI(
     azure_endpoint="https://aoai-prod.openai.azure.com/",
-    api_version="2024-06-01"
+    api_version="2024-10-21"
 )
 
 def analyze_logs(log_block):
@@ -196,6 +201,12 @@ It doesn't replace the engineer. It reduces diagnosis time when you're operating
 | Anomaly detection | ✅ (dynamic thresholds) | ✅ (if static threshold suffices) |
 
 The rule is simple: AI helps when the job involves messy text, pattern recognition, or drafting. Traditional tooling wins when the job is enforcement, auditing, or any action that has to be deterministic.
+
+## Further reading
+
+- [Use Azure OpenAI chat completions with Python](https://learn.microsoft.com/azure/ai-foundry/openai/how-to/chatgpt?pivots=programming-language-python&tabs=python-new)
+- [Dynamic thresholds in Azure Monitor alerts](https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-dynamic-thresholds)
+- [series_decompose_forecast() in Kusto](https://learn.microsoft.com/kusto/query/series-decompose-forecast-function)
 
 ## In the next post
 

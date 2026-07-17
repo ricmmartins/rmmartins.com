@@ -24,6 +24,12 @@ This is the first post in a series where I'll translate the world of AI into the
 
 The series is based on my open-source book [AI for Infrastructure Professionals](https://ai4infra.com), adapted and expanded here on the blog.
 
+**tl;dr**
+
+- AI is another workload with different performance, cost, and data patterns.
+- Infrastructure engineers already own the hard parts: compute, networking, security, observability, and cost control.
+- If you can run production infrastructure well, you already have the foundation to support AI systems.
+
 ## The Monday morning message
 
 It's 8:47 AM on a Monday. You're halfway through your coffee, reviewing a Terraform plan for a network redesign, when a Slack message lights up your screen. It's from the data science team lead:
@@ -102,13 +108,13 @@ The AI industry has a people problem, and it's not what you'd expect. Data scien
 
 In my experience working with startups and enterprises at Microsoft, I see the same pattern over and over:
 
-**Uncontrolled GPU sprawl.** A data scientist requests 4 `Standard_NC24ads_A100_v4` VMs for an experiment. No resource locks, no budget alerts, no tagging. Three weeks later, the VMs are still running. Nobody remembers who provisioned them or whether the experiment finished. Monthly burn rate: **about $11,000**.
+**Uncontrolled GPU sprawl.** A data scientist requests 4 `Standard_NC24ads_A100_v4` VMs for an experiment. No resource locks, no budget alerts, no tagging. Three weeks later, the VMs are still running. Nobody remembers who provisioned them or whether the experiment finished. Monthly burn rate: **thousands of dollars**.
 
 **Exposed inference endpoints.** The ML team deploys a model to a managed endpoint with public network access. No private endpoint, no WAF, no API management. The model can end up serving responses that expose proprietary business logic.
 
 **Blind observability.** The team monitors model accuracy but not infrastructure health. Inference latency jumps from 200 ms to 8 seconds, and nobody can tell whether the cause is the model, the compute, the network, or a noisy neighbor.
 
-> ⚠️ **The $13K GPU weekend**: A team provisioned 8 `Standard_ND96asr_v4` VMs on a Friday afternoon for a training run that was supposed to finish Saturday morning. The job crashed at 3 AM because checkpoint storage was misconfigured, but the VMs kept running. Nobody had set up auto-shutdown or budget alerts. Monday surprise: **about $13,000 in compute** for 60 hours of idle GPU. An infrastructure engineer would have configured `auto-shutdown`, set a budget alert at $2,000, and stored checkpoints in Blob with lifecycle policies. Fifteen minutes of infra work would have saved roughly **$11,000**.
+> ⚠️ **The GPU weekend nobody wants**: A team provisioned 8 `Standard_ND96asr_v4` VMs on a Friday afternoon for a training run that was supposed to finish Saturday morning. The job crashed at 3 AM because checkpoint storage was misconfigured, but the VMs kept running. Nobody had set up auto-shutdown or budget alerts. Monday surprise: **a five-figure compute bill** for idle GPUs. An infrastructure engineer would have configured `auto-shutdown`, set a budget alert, and stored checkpoints in Blob with lifecycle policies. Fifteen minutes of infra work would have saved a painful amount of money.
 
 ## Hands-on: your first AI reconnaissance
 
@@ -135,6 +141,16 @@ az vm list-usage --location eastus2 --output table | grep -E "NC|ND|NV"
 > On Windows/PowerShell, replace `grep -E "NC|ND|NV"` with `Select-String -Pattern "NC|ND|NV"`.
 
 If your quota is zero across the board, you'll need to request an increase before any provisioning. That's exactly the kind of infra work that the data science team doesn't know (and doesn't want to know) how to do.
+
+## Closing the loop
+
+That Monday morning Slack message was not a request to become a data scientist. It was a request to provision compute, secure the network, expose an endpoint, and monitor a new workload. That is infrastructure work.
+
+## Further reading
+
+- [Virtual machine sizes overview for Azure VMs](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/overview#gpu-accelerated)
+- [Quotas overview](https://learn.microsoft.com/en-us/azure/quotas/quotas-overview)
+- [What is Azure Machine Learning?](https://learn.microsoft.com/en-us/azure/machine-learning/overview-what-is-azure-machine-learning?view=azureml-api-2)
 
 ## Next up
 
