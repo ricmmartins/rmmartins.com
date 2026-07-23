@@ -33,6 +33,7 @@ The complete and always updated log is on the [Activity Log](https://github.com/
 | AKS Newsletter | Monthly curated updates on Azure Kubernetes Service | [aksnewsletter.com](https://aksnewsletter.com) |
 | Azure Digital Natives Guide | Complete checklist for startups and digital-native teams on Azure | [azdnguide.com](https://azdnguide.com) |
 | Azure Feed | Daily aggregator of Azure blog updates | [azurefeed.news](https://azurefeed.news) |
+| Azure SRE Agent Skills | Custom proactive operations skills pack for Azure SRE Agent. 8 skills covering WAF review, compliance, capacity planning, FinOps, postmortems, Defender score, digital-native governance and AI posture | [github.com/ricmmartins/azure-sre-agent-skills](https://github.com/ricmmartins/azure-sre-agent-skills) |
 
 ---
 
@@ -41,6 +42,7 @@ The complete and always updated log is on the [Activity Log](https://github.com/
 Articles published on the official [Startups at Microsoft](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog) blog on Tech Community:
 
 **AI Infrastructure**
+- [Your H100s on Azure won't do distributed training. Here's probably why.](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/your-h100s-on-azure-wont-do-distributed-training-heres-probably-why-/4537502)
 - [Production-grade API Gateway patterns for Microsoft Foundry](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/production-grade-api-gateway-patterns-for-microsoft-foundry/4490494)
 - [When and why startups add a Gateway in front of Azure AI Foundry](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/when-and-why-startups-add-a-gateway-in-front-of-azure-ai-foundry/4489490)
 - [Monitoring Azure OpenAI without switching from your existing observability platform](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/monitoring-azure-openai-without-switching-from-your-existing-observability-platf/4458898)
@@ -58,6 +60,8 @@ Articles published on the official [Startups at Microsoft](https://techcommunity
 - [Highlights from KubeCon North America 2024 and Microsoft Ignite 2024](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/highlights-from-kubecon-north-america-2024-and-microsoft-ignite-2024/4355189)
 
 **Observability & Monitoring**
+- [Azure Service Health has four alert types. You probably configured one.](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/azure-service-health-has-four-alert-types-you-probably-configured-one-/4537501)
+- [Your startup doesn't have an SRE team. Now what?](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/your-startup-doesnt-have-an-sre-team-now-what/4540142)
 - [Your Azure VM went down and nobody knew why. Here's how to fix that.](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/your-azure-vm-went-down-and-nobody-knew-why-heres-how-to-fix-that-/4513733)
 - [Azure Monitor 101: The missing guide to understanding monitoring on Azure](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/azure-monitor-101-the-missing-guide-to-understanding-monitoring-on-azure/4462799)
 - [Advanced Alerting Strategies for Azure Monitoring](https://techcommunity.microsoft.com/t5/startups-at-microsoft/advanced-alerting-strategies-for-azure-monitoring/ba-p/4268698)
