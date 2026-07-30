@@ -96,9 +96,9 @@ You have no tool that can act on the deployment. Your only possible
 output is calling send_priority_alert exactly once.
 ```
 
-Notice the last line: it exists to reinforce, in the prompt itself, the limit that's already baked into the architecture. Intentional redundancy. The real guardrail is the absence of the tool; the prompt is just the second layer.
+Notice the last line: it exists to reinforce, in the prompt itself, the limit that's already baked into the architecture. Intentional redundancy. The absence of the tool is the primary guardrail; the prompt is a secondary reinforcement (defense in depth).
 
-**Where this actually runs**: the schedule from post 2 and the conditional model invocation fit comfortably in an Azure Container Apps Job with a `*/1 * * * *` cron schedule. It starts a Python container, runs `get_token_usage_trend`, decides whether to invoke the model, and exits. No always-on server. No VM to babysit. The job's managed identity (`azurerm_user_assigned_identity` plus an `azurerm_role_assignment` for `Monitoring Reader` on the Cognitive Services account) replaces any fixed API key; the full Terraform is in the series companion repo.
+**Where this actually runs**: the schedule from post 2 and the conditional model invocation fit comfortably in an Azure Container Apps Job with a `*/1 * * * *` cron schedule and `parallelism: 1` (to prevent overlapping runs if a job takes longer than 60 seconds). It starts a Python container, runs `get_token_usage_trend`, decides whether to invoke the model, and exits. No always-on server. No VM to babysit. The job's managed identity (`azurerm_user_assigned_identity` plus an `azurerm_role_assignment` for `Monitoring Reader` on the Cognitive Services account) replaces any fixed API key; the full Terraform is in the series companion repo.
 
 ## Two scenarios side by side
 
@@ -121,6 +121,14 @@ One difference from the risk in post 1 matters here. There, the agent reasoned o
 This is the point where the watchdog stops being a threshold alarm and starts being an operator aid. It still cannot fix anything, and that is the right call. In the next post, I wire it to the AKS diagnoser so the alert comes with a candidate cause instead of a shrug.
 
 That closes the gap from the opening scenario. The predictable month-end batch still gets logged, but the runaway agent is the one that wakes somebody up.
+
+## What can go wrong
+
+1. **Model under-alerts a real incident.** The model classifies a genuine spike as `info` because history had a coincidental match at the same hour. Mitigate with periodic batch audits of `info` classifications — review weekly whether any `info` preceded an actual outage.
+2. **Model over-alerts and causes fatigue.** Everything becomes `urgent` and the team learns to ignore it. The per-hour rate limit (N calls to `send_priority_alert`) is the first line of defense. Track the urgent-to-real-incident ratio monthly.
+3. **Rate-limiting hides a real escalation.** If the model hits the rate limit during a genuine multi-event incident, the Nth alert gets silently dropped. Consider a "rate limit reached" meta-alert that goes to a secondary channel.
+4. **Prompt injection via deployment names.** If `deployment_name` comes from user input or a dynamic source, a crafted name could inject instructions into the prompt. In this design, deployment names come from Terraform/inventory, so the surface is small — but validate inputs if you ever open this up.
+5. **Container Apps Job overlap.** Without `parallelism: 1`, two job instances can run simultaneously, both classifying the same spike and sending duplicate alerts. Always set max parallelism to 1 for this pattern.
 
 ## Further reading
 

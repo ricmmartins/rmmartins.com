@@ -368,9 +368,15 @@ A blameless Azure postmortem process is not done when the document is approved. 
 
 Part 1 covers the mechanics. Part 2 covers the operating model. Put together, they turn Azure incidents into a repeatable learning system instead of a cycle of institutional amnesia.
 
-## Further reading
+## What can go wrong
 
-- [Azure Well-Architected Framework - Incident response](https://learn.microsoft.com/azure/well-architected/operational-excellence/incident-response)
+1. **Action items survive in the backlog forever.** Without a hard SLA (e.g., P1 items closed within 14 days), postmortem follow-ups compete with feature work and always lose. Use the overdue query from this post as a weekly PagerDuty-style check.
+2. **Recurrence detection returns false positives.** The `ProblemId`-based KQL query groups by exception signature, not by user-facing impact. Two exceptions with the same `ProblemId` may affect different customers for different reasons. Validate recurrence by cross-referencing with the incident timeline, not just exception counts.
+3. **MTTD/MTTR numbers become vanity metrics.** Teams optimize the number (declaring detection earlier, closing incidents faster) instead of the outcome. Track alongside customer-facing SLO burn to keep honesty.
+4. **Workbook schema drift.** The Workbook JSON in this post is pseudocode (`// Pseudocode - adapt to actual Workbook ARM schema`). The real ARM schema for Workbooks uses a different structure — export an existing Workbook as ARM template and adapt from there.
+5. **Chaos experiment without a blast radius limit.** The "postmortem → chaos test" loop is powerful, but an experiment that injects real latency into a production dependency without a scope limit becomes its own SEV-1. Always set `StopOnFirstFailure` and scope to a single resource.
+
+## Further reading
 - [Azure Monitor overview](https://learn.microsoft.com/azure/azure-monitor/overview)
 - [Log Analytics overview](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-overview)
 - [Investigate failures with Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/failures-performance-transactions)
