@@ -334,7 +334,7 @@ Use the live pricing pages before committing numbers in a design review: [Azure 
 - **Monitor retrieval separately from generation.** If the model gets it wrong, first check whether the right chunks are being retrieved.
 - **Cost scales with queries, not documents.** Indexing is cheap. Serving thousands of GPT-4o requests is where the real cost lives.
 
-In a future post, I'll talk about **Context Engineering**. Now that you know how to retrieve information with RAG, the next step is learning how to assemble the prompt so the model gets the most out of it.
+In the next post, I cover [**Context Engineering**](/2026/07/05/context-engineering-the-art-of-feeding-llms/). Now that you know how to retrieve information with RAG, the next step is learning how to assemble the prompt so the model gets the most out of it.
 
 When the VP of Product asks for answers grounded in those 2,000 pages, this is the pipeline that turns "the docs exist" into "the model can actually use them."
 

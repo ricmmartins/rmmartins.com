@@ -85,7 +85,7 @@ resource "azurerm_monitor_metric_alert" "tpm_80pct" {
 }
 ```
 
-That alone already covers the most common case, with no agent, no MCP, no code to maintain. The full Terraform, including the `azurerm_cognitive_account` and `azurerm_cognitive_deployment` referenced above, is in the series companion repo (link in post 5).
+That alone already covers the most common case, with no agent, no MCP, no code to maintain. The full Terraform, including the `azurerm_cognitive_account` and `azurerm_cognitive_deployment` referenced above, is in the [series companion repo](https://github.com/ricmmartins/agentic-infra-handbook).
 
 The reason to build the MCP server on top of that alert is what the native rule still does **not** do. It fires when the threshold is crossed, but it does not look at the slope of the curve, compare the spike with the usual pattern for that hour, or roll TPM, RPM, and error rate into one message with context. That part still needs code.
 

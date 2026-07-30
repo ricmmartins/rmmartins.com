@@ -21,7 +21,7 @@ series:
 ---
 # Chapter 4: Multi-Agent Orchestration
 
-So far the series has built two separate things: in post 1, an agent that talks to AKS via `aks-mcp` to diagnose the cluster; in posts 2 and 3, a watchdog that watches TPM consumption on Azure OpenAI and decides how urgent an alert should be. Both are useful on their own. Together, they still leave the first SRE question hanging in the air: when token consumption jumps out of nowhere, did somebody deploy something? In most teams that answer still lives in two browser tabs and one annoyed human.
+So far the series has built two separate things: in post 1, an agent that talks to AKS via `aks-mcp` to diagnose the cluster; in posts 2 and 3, a watchdog that watches TPM consumption on Azure OpenAI and decides how urgent an alert should be. Both are useful on their own. Together, they still leave the first SRE question hanging in the air: when token consumption jumps out of nowhere, did somebody deploy something? In most teams, that answer still lives in two browser tabs and one annoyed human.
 
 This post is about closing that last manual step with an orchestrator.
 
@@ -64,7 +64,7 @@ The result, instead of two disconnected alerts arriving in different channels, b
 
 ## The new risk correlation introduces
 
-This post does add a new risk dimension, because it isn't zero: a model correlating events by time proximity can produce a plausible and wrong narrative. Two events close in time aren't necessarily cause and effect; it could be coincidence, it could be a third factor that affected both. It's the classic "correlation isn't causation," except now stated by an agent with the confident tone of someone who knows what they're talking about.
+Correlation does introduce a new risk — and it is not a trivial one: a model correlating events by time proximity can produce a plausible yet wrong narrative. Two events close in time aren't necessarily cause and effect; it could be coincidence, it could be a third factor that affected both. It's the classic "correlation isn't causation," except now stated by an agent with the confident tone of someone who knows what they're talking about.
 
 The mitigation is not to make the model sound more certain. It is to stop it from speaking in absolutes. The `correlate_incident` tool returns candidates with confidence levels, not a single blessed answer, and the final Slack message needs to keep that language intact: "candidate cause," not "case closed." The person receiving the alert still decides whether the hypothesis is any good. The agent saved the data gathering, not the judgment.
 
@@ -76,7 +76,7 @@ On orchestration itself: for this case, there's no need at all for an agent-to-a
 
 ## Cost and latency: the trade-offs nobody asks about until the bill shows up
 
-The layered design from the earlier posts matters here: the once-a-minute cron stays cheap and LLM-free. The reasoning watchdog only runs when the threshold is crossed. And now the orchestrator only runs once the watchdog has already classified something as `urgent`, meaning the most expensive call in the whole chain (two sub-agent queries plus a correlation) only happens on the rarest event of all. Each layer filters before passing the next, pricier one along. It's the same principle behind any well-designed alerting pipeline, except here each layer, besides filtering, also reasons a bit more than the one before it.
+The layered design from the earlier posts matters here: the once-a-minute cron stays cheap and LLM-free. The reasoning watchdog only runs when the threshold is crossed. And now the orchestrator only runs once the watchdog has already classified something as `urgent`, meaning the most expensive call in the whole chain (two sub-agent queries plus a correlation) only happens on the rarest event of all. Each layer filters before handing off to the next, pricier one. It's the same principle behind any well-designed alerting pipeline, except here each layer, besides filtering, also reasons a bit more than the one before it.
 
 Latency adds 2–5 seconds before the final alert goes out (depending on AKS query performance and metric ingestion lag), compared to an instant generic Slack ping. For a real incident, trading a few seconds for a ready-made cause hypothesis is a favorable trade, but it is a trade, and it's worth measuring, not assuming.
 

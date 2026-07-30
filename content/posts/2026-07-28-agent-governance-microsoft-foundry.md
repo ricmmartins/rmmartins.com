@@ -135,6 +135,6 @@ That answers the opening governance question. You get a place to see what is run
 - [Overview of Azure Policy](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
 - [What is Azure role-based access control (Azure RBAC)?](https://learn.microsoft.com/en-us/azure/role-based-access-control/overview)
 
-**Companion repo**: I put together the Terraform used from post 2 through post 5, covering Cognitive Account and deployment resources, Action Group, Metric Alert, managed identity with RBAC, and the Foundry resource plus project, in a single per-post-commented file at `infra/terraform/main.tf`.
+**Companion repo**: I put together the Terraform used from post 2 through post 5, covering Cognitive Account and deployment resources, Action Group, Metric Alert, managed identity with RBAC, and the Foundry resource plus project, in a single per-post-commented file at `infra/terraform/main.tf` in [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook).
 
 *Leia este post em [Português](https://ricardomartins.com.br/governanca-agentes-microsoft-foundry/).*

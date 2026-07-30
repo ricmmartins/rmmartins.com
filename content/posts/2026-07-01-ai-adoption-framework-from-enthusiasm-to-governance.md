@@ -197,6 +197,6 @@ If you do this well, the CTO gets a governed AI program, the CFO gets cost visib
 
 ## Further reading
 
-- [Cloud Adoption Framework for Microsoft](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/)
+- [Microsoft Cloud Adoption Framework for Azure](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/)
 - [Azure Well-Architected Framework](https://learn.microsoft.com/en-us/azure/well-architected/)
 - [Visual glossary: infra ↔ AI](/2026/07/05/visual-glossary-infra-ai-your-rosetta-stone/)
