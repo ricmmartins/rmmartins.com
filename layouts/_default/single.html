@@ -34,8 +34,6 @@
   {{- partial "toc.html" . }}
   {{- end }}
 
-  {{- partial "ads/ad-post-top.html" . }}
-
   {{- if .Content }}
   <div class="post-content md-content">
     {{- if not (.Param "disableAnchoredHeadings") }}
@@ -43,8 +41,6 @@
     {{- else }}{{ .Content }}{{ end }}
   </div>
   {{- end }}
-
-  {{- partial "ads/ad-post-middle.html" . }}
 
   {{- /* Series Box */ -}}
   {{- with .Params.series }}
@@ -71,8 +67,6 @@
   {{- end }}
   {{- end }}
 
-  {{- partial "ads/ad-post-bottom.html" . }}
-
   <footer class="post-footer">
     {{- $tags := .Language.Params.Taxonomies.tag | default "tags" }}
     <ul class="post-tags">
@@ -92,7 +86,5 @@
   {{- partial "comments.html" . }}
   {{- end }}
 </article>
-
-{{- partial "ads/ad-auto-inject.html" . }}
 
 {{- end }}{{/* end main */}}
