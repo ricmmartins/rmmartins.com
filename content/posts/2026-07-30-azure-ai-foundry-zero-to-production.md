@@ -1,8 +1,24 @@
-# Azure AI Foundry: From Zero to Production — A Practical Guide
+---
+slug: "azure-ai-foundry-zero-to-production"
+aliases:
+  - "/2026/07/30/azure-ai-foundry-zero-to-production/"
+translationKey: "azure-ai-foundry-do-zero-a-producao"
+title: "Azure AI Foundry: From Zero to Production — A Practical Guide"
+description: "What I cover when a customer asks 'we want to build AI applications on Azure, where do we start?' — distilled from a recent workshop into a production-ready playbook covering model selection, PTU vs PAYGO, spillover architecture, and cost optimization."
+date: 2026-07-30T18:00:00-04:00
+categories:
+  - AI
+  - Azure
+tags:
+  - azure-ai-foundry
+  - openai
+  - ptu
+  - cost-optimization
+  - ai-architecture
+  - production-readiness
+---
 
 *What I cover when a customer asks "we want to build AI applications on Azure, where do we start?" — distilled from a recent workshop into a production-ready playbook.*
-
----
 
 ## The starting point
 
