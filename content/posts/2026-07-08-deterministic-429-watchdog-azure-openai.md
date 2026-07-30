@@ -85,7 +85,7 @@ resource "azurerm_monitor_metric_alert" "tpm_80pct" {
 }
 ```
 
-That alone already covers the most common case, with no agent, no MCP, no code to maintain. The full Terraform, including the `azurerm_cognitive_account` and `azurerm_cognitive_deployment` referenced above, is in the series companion repo (link in post 5).
+That alone already covers the most common case, with no agent, no MCP, no code to maintain. The full Terraform, including the `azurerm_cognitive_account` and `azurerm_cognitive_deployment` referenced above, is in the [series companion repo](https://github.com/ricmmartins/agentic-infra-handbook).
 
 The reason to build the MCP server on top of that alert is what the native rule still does **not** do. It fires when the threshold is crossed, but it does not look at the slope of the curve, compare the spike with the usual pattern for that hour, or roll TPM, RPM, and error rate into one message with context. That part still needs code.
 
@@ -156,9 +156,9 @@ if __name__ == "__main__":
     mcp.run(transport="stdio")
 ```
 
-> **Note:** `get_configured_tpm()` is a domain-specific lookup — it reads the configured TPM limit from your Terraform state, Azure Resource Graph, or an environment variable. The implementation depends on how you manage quota. A simple version: `int(os.environ.get(f"TPM_{deployment_name.upper()}", 250000))`.
+> **Note:** `get_configured_tpm()` is a placeholder. In practice, retrieve the TPM limit from your Terraform state, a configuration file, or the Azure API. The implementation depends on how your organization tracks deployment quotas.
 
-> **Prerequisite:** The managed identity running this server needs the `Monitoring Reader` role on the Azure OpenAI resource. Without it, `MetricsQueryClient` returns 403.: it doesn't decide anything, it just sends what it's told to:
+And the notification tool is deliberately dumb: it doesn't decide anything, it just sends what it's told to:
 
 ```python
 @mcp.tool()
@@ -197,11 +197,23 @@ If you want to test the pure-script version before you even touch MCP, it really
 
 ## What can go wrong
 
-1. **Metrics query timeout.** If Azure Monitor is slow or the resource ID is wrong, `MetricsQueryClient` hangs. Wrap the query in a 10-second timeout and return `"trend": "no_data"` so downstream consumers know the data is missing, not zero.
-2. **Quota mismatch.** If `get_configured_tpm()` returns an outdated value (you bumped quota in the portal but forgot the config), every alert fires on a false positive. Pull the limit from Azure Resource Graph for a single source of truth.
-3. **Burst vs. sustained spikes.** A 3-second burst that pushes 1-minute TPM to 95% is normal for batch workloads. The current rising/stable/falling trend is too coarse. Consider adding a `sustained_above_threshold_minutes` counter before alerting.
-4. **Overlapping cron runs.** If the 1-minute cron job takes >60 seconds (slow metrics API), two instances run simultaneously and send duplicate alerts. Use a lock file or set `--max-parallelism 1` on the Container Apps Job.
-5. **Silent failure.** If the Slack webhook URL expires or Slack is down, `send_slack_alert` raises an exception that nobody sees. Add a dead letter mechanism: write failed alerts to a storage queue and retry.
+1. **Stale TPM configuration** — If `get_configured_tpm()` returns an outdated limit (e.g., the deployment was scaled up but the config wasn't updated), the watchdog will calculate the wrong percentage and either miss real spikes or cry wolf.
+2. **Metric ingestion lag** — Azure Monitor metrics have roughly 1-minute ingestion delay. The watchdog may detect a spike after the 429 has already hit production. This is a layer of defense, not a guarantee.
+3. **False-positive bursts** — A legitimate short burst (e.g., a CI/CD pipeline running integration tests) can cross the threshold for a few minutes and trigger unnecessary alerts. The next post addresses this with historical comparison.
+4. **Webhook failure** — If the Slack webhook URL becomes invalid or the endpoint is down, `send_slack_alert` fails silently (or throws). Add a dead-letter mechanism or a secondary notification channel.
+5. **Clock and timezone drift** — If the cron schedule and the Azure Monitor metric timestamps are not aligned to UTC, the trend calculation can produce incorrect slopes.
+
+## Estimated operational cost
+
+The once-a-minute cron on Azure Container Apps Jobs costs very little: a Python container that runs for 1-2 seconds per invocation. At Container Apps consumption pricing, expect roughly $2-5/month. The Azure Monitor metric queries are free for the first 1,000 API calls/month. The Slack webhook is free. The dominant cost is the Azure OpenAI deployment itself, not the watchdog monitoring it.
+
+## Series navigation
+
+1. [MCP and agents 101 for infra engineers](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
+2. **Building a deterministic 429 watchdog** ← you are here
+3. [From script to agent: giving the watchdog decision autonomy](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
+4. [Multi-agent orchestration: correlating AKS and Azure OpenAI](/2026/07/21/multi-agent-orchestration-aks-openai-correlation/)
+5. [Agent governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
 
 ## Further reading
 

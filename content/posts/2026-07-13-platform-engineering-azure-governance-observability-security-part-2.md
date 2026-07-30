@@ -201,8 +201,10 @@ resource errorAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
 }
 
 output connectionString string = appInsights.properties.ConnectionString
-// The final dashboard URL depends on the actual Managed Grafana endpoint and the imported dashboard UID.
-output dashboardUrl string = 'Resolve from the Managed Grafana endpoint and imported dashboard UID'
+// The dashboard URL cannot be computed at deploy time because it depends on
+// the Managed Grafana endpoint and the imported dashboard UID, which are
+// provisioned separately. Retrieve it after deployment with:
+//   az grafana dashboard list --name <grafana-name> --query "[].url"
 ```
 
 This module gives developers a default setup: telemetry retention, latency monitoring, and error monitoring without making them memorize Azure Monitor internals.
@@ -485,10 +487,27 @@ When those pieces are wired together, the Internal Developer Platform stops bein
 
 ## What can go wrong
 
-1. **Policy scope too broad.** A `deny` policy at the subscription level blocks every team, including the one that legitimately needs a non-standard SKU. Use policy exemptions sparingly, and document each one with an expiration date.
-2. **Observability module adds cost nobody budgeted.** The default retention period (90 days in the template above) for Application Insights ingestion can become a meaningful cost at high-throughput services. Set an explicit daily ingestion cap and alert when it is approached.
-3. **Grafana dashboards drift from reality.** The imported dashboard was designed for the first service, but new services emit different telemetry or custom metrics. Treat dashboards as code — version them in the catalog repo, validate them in CI with a JSON schema check.
-4. **Workload Identity federation misconfigured.** If the OIDC issuer URL is wrong or the subject claim does not match the service account, pods fail silently with `403 Forbidden`. Add a post-deploy smoke test that calls `az account get-access-token` from the federated workload.
-5. **GitHub Actions golden path breaks on template update.** When you update the shared workflow, existing repos pinned to `@main` get the change immediately. Pin to a tagged version and roll out upgrades with PR automation.
+1. **Policy conflicts blocking deploys** — Overly broad Azure Policy assignments (e.g., deny all public endpoints) can block legitimate developer scenarios like exposing a public-facing API. Test policies in `Audit` mode before switching to `Deny`, and maintain an exception process.
+2. **Grafana dashboard sprawl** — Without governance, every team creates their own dashboards with different naming conventions and metric queries. Provide a curated set of default dashboards as part of the environment template and make custom dashboards opt-in.
+3. **Workload Identity misconfiguration** — Federated identity credentials are sensitive to exact subject/issuer matches. A typo in the service account name or namespace silently fails with a generic auth error. Add validation in the provisioning pipeline.
+4. **Bicep module version drift** — If service teams pin to old module versions while the platform team ships breaking changes, deployments fail unpredictably. Use a module registry with semantic versioning and publish a changelog.
+5. **Observability cost creep** — Application Insights with 90-day retention on high-traffic services can generate significant Log Analytics costs. Set data caps, configure sampling, and review per-workspace costs monthly.
+
+## Estimated operational cost
+
+The platform components in this post have varying cost profiles. Azure Policy is free. Managed Grafana Standard tier runs roughly $90/month per instance (shared across all teams). Application Insights costs depend on data volume; budget $50-200/month per service at moderate traffic. The GitHub Actions runners for CI/CD are free for public repos or roughly $8/month per runner for private repos. The dominant cost driver is Log Analytics data ingestion, not the platform tooling itself.
+
+## Series navigation
+
+- [Platform Engineering — Part 1: Internal Developer Platform on Azure](/platform-engineering-azure-internal-developer-platform-part-1/) — covers the self-service side: Dev Center, ADE, environment templates
+- **Platform Engineering — Part 2: Governance, observability, and security** ← you are here — covers guardrails: policy, identity, dashboards, CI/CD
 
 ## Further reading
+
+- [Azure Deployment Environments documentation](https://learn.microsoft.com/en-us/azure/deployment-environments/)
+- [Microsoft Dev Center](https://learn.microsoft.com/en-us/azure/dev-box/how-to-manage-dev-center)
+- [Platform Engineering on Azure](https://learn.microsoft.com/en-us/platform-engineering/)
+- [AKS Workload Identity overview](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview)
+- [Azure Managed Grafana overview](https://learn.microsoft.com/en-us/azure/managed-grafana/overview)
+- [Bicep documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/)
+- [Azure Policy documentation](https://learn.microsoft.com/en-us/azure/governance/policy/overview)

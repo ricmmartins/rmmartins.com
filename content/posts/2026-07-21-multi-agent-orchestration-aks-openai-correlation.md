@@ -21,7 +21,7 @@ series:
 ---
 # Chapter 4: Multi-Agent Orchestration
 
-So far the series has built two separate things: in post 1, an agent that talks to AKS via `aks-mcp` to diagnose the cluster; in posts 2 and 3, a watchdog that watches TPM consumption on Azure OpenAI and decides how urgent an alert should be. Both are useful on their own. Together, they still leave the first SRE question hanging in the air: when token consumption jumps out of nowhere, did somebody deploy something? In most teams that answer still lives in two browser tabs and one annoyed human.
+So far the series has built two separate things: in post 1, an agent that talks to AKS via `aks-mcp` to diagnose the cluster; in posts 2 and 3, a watchdog that watches TPM consumption on Azure OpenAI and decides how urgent an alert should be. Both are useful on their own. Together, they still leave the first SRE question hanging in the air: when token consumption jumps out of nowhere, did somebody deploy something? In most teams, that answer still lives in two browser tabs and one annoyed human.
 
 This post is about closing that last manual step with an orchestrator.
 
@@ -55,16 +55,16 @@ def correlate_incident(token_spike_start: str, window_minutes: int = 15) -> dict
     window. Returns candidate causes with their respective confidence
     level, never a single cause stated as certain."""
     cluster_events = aks_agent.get_recent_events(token_spike_start, window_minutes)
-    return rank_candidates(cluster_events)  # domain-specific ranking
+    return rank_candidates(cluster_events)
 ```
 
-> **Note:** `rank_candidates()` is pseudocode. The actual ranking logic depends on your incident taxonomy — you might score by event proximity, blast radius, or historical frequency. The point is the interface: candidates with confidence levels, never a single answer.
+> **Note:** This is pseudocode to illustrate the concept. `rank_candidates()` and `aks_agent.get_recent_events()` are domain-specific functions whose implementation depends on your cluster telemetry setup and correlation logic.
 
-The result, instead of two disconnected alerts arriving in different channels, becomes a single message: "TPM at 91% and rising. Candidate cause: deploy of the `recommendation-api` service at 2:01 p.m., which scaled from 3 to 12 replicas via HPA; each new replica makes a warmup call to GPT-4o on startup, which lines up with the start of the spike." That's no longer "two metrics crossed a threshold." It's a verifiable hypothesis, with evidence attached.
+The result, instead of two disconnected alerts arriving in different channels, becomes a single message: "TPM at 91% and rising. Candidate cause: deploy of the `recommendation-api` service at 2:01 p.m., which scaled from 3 to 12 replicas via HPA; each new replica makes a warmup call to GPT-4o on startup (as of 2026; check current model availability and defaults for your deployment), which lines up with the start of the spike." That's no longer "two metrics crossed a threshold." It's a verifiable hypothesis, with evidence attached.
 
 ## The new risk correlation introduces
 
-This post does add a new risk dimension, because it isn't zero: a model correlating events by time proximity can produce a plausible and wrong narrative. Two events close in time aren't necessarily cause and effect; it could be coincidence, it could be a third factor that affected both. It's the classic "correlation isn't causation," except now stated by an agent with the confident tone of someone who knows what they're talking about.
+Correlation does introduce a new risk — and it is not a trivial one: a model correlating events by time proximity can produce a plausible yet wrong narrative. Two events close in time aren't necessarily cause and effect; it could be coincidence, it could be a third factor that affected both. It's the classic "correlation isn't causation," except now stated by an agent with the confident tone of someone who knows what they're talking about.
 
 The mitigation is not to make the model sound more certain. It is to stop it from speaking in absolutes. The `correlate_incident` tool returns candidates with confidence levels, not a single blessed answer, and the final Slack message needs to keep that language intact: "candidate cause," not "case closed." The person receiving the alert still decides whether the hypothesis is any good. The agent saved the data gathering, not the judgment.
 
@@ -76,9 +76,9 @@ On orchestration itself: for this case, there's no need at all for an agent-to-a
 
 ## Cost and latency: the trade-offs nobody asks about until the bill shows up
 
-The layered design from the earlier posts matters here: the once-a-minute cron stays cheap and LLM-free. The reasoning watchdog only runs when the threshold is crossed. And now the orchestrator only runs once the watchdog has already classified something as `urgent`, meaning the most expensive call in the whole chain (two sub-agent queries plus a correlation) only happens on the rarest event of all. Each layer filters before passing the next, pricier one along. It's the same principle behind any well-designed alerting pipeline, except here each layer, besides filtering, also reasons a bit more than the one before it.
+The layered design from the earlier posts matters here: the once-a-minute cron stays cheap and LLM-free. The reasoning watchdog only runs when the threshold is crossed. And now the orchestrator only runs once the watchdog has already classified something as `urgent`, meaning the most expensive call in the whole chain (two sub-agent queries plus a correlation) only happens on the rarest event of all. Each layer filters before handing off to the next, pricier one. It's the same principle behind any well-designed alerting pipeline, except here each layer, besides filtering, also reasons a bit more than the one before it.
 
-Latency adds 2–5 seconds before the final alert goes out (depending on AKS query performance and metric ingestion lag), compared to an instant generic Slack ping. For a real incident, trading a few seconds for a ready-made cause hypothesis is a favorable trade, but it is a trade, and it's worth measuring, not assuming.
+Latency adds a few extra seconds before the final alert goes out, compared to an instant generic Slack ping. For a real incident, trading a few seconds for a ready-made cause hypothesis is a favorable trade, but it is a trade, and it's worth measuring, not assuming.
 
 ## The trade worth making
 
@@ -88,11 +88,23 @@ So yes, you can answer "did someone deploy something?" with one alert instead of
 
 ## What can go wrong
 
-1. **Sub-agent timeout.** If the AKS agent takes too long to query events (network latency, large event history), the orchestrator hangs. Set a 30-second timeout per sub-agent and return partial results with a "data incomplete" flag.
-2. **False correlation.** Two events coinciding in the same 15-minute window doesn't prove causation. A deploy at 2:01 p.m. and a spike at 2:03 p.m. could be coincidence. Always present candidates, never certainty — and log the reasoning so you can audit false positives later.
-3. **Stale metrics.** Azure Monitor metrics have ~1 minute ingestion lag. A spike that already resolved may still trigger correlation. The orchestrator should check current values, not just the trigger snapshot.
-4. **Window too narrow or too wide.** A 15-minute window catches most deploys, but a canary rollout over 2 hours will be missed. If your deployment strategy is slow, parameterize the window.
-5. **Orchestrator as single point of failure.** If the orchestrator crashes mid-correlation, neither the watchdog alert nor the AKS data reaches anyone. Keep the watchdog's direct-to-Slack path as a fallback for when the orchestrator is unavailable.
+1. **Sub-agent timeout** — If the AKS agent takes too long to respond (large cluster, slow API server), the orchestrator hangs. Set a timeout of 30 seconds per sub-agent call and return partial results with a clear "incomplete data" flag.
+2. **False correlation** — Two events coinciding in the same time window does not prove causation. A deploy at 2:01 p.m. and a TPM spike at 2:02 p.m. could be coincidence. Always present results as "candidate causes with confidence," never as certainty.
+3. **Stale metrics** — Azure Monitor metrics have roughly 1-minute ingestion lag. A spike that already resolved may trigger unnecessary correlation, and a spike that just started may not yet appear in the AKS agent's data.
+4. **Token cost amplification** — Each orchestrator run invokes two sub-agents plus a correlation step, all using LLM calls. If the watchdog threshold is too sensitive, you can burn significant token budget on non-incidents. Monitor orchestrator invocation frequency and cost per run.
+5. **Orchestrator retry storm** — If a sub-agent call fails (network timeout, transient Azure API error), naive retry logic can amplify the problem. Use exponential backoff with a hard cap of 2 retries per sub-agent.
+
+## Estimated operational cost
+
+The orchestrator only runs when the watchdog classifies an event as `urgent`, which should be rare (a few times per month in a healthy system). Each run involves 2-3 LLM calls (sub-agents + correlation), roughly 2K-5K tokens total. At typical Azure OpenAI pricing, expect less than $1/month for the orchestrator itself. The dominant cost remains the once-a-minute cron poller and the occasional watchdog reasoning call from posts 2 and 3.
+
+## Series navigation
+
+1. [MCP and agents 101 for infra engineers](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
+2. [Building a deterministic 429 watchdog](/2026/07/08/deterministic-429-watchdog-azure-openai/)
+3. [From script to agent: giving the watchdog decision autonomy](/2026/07/14/agentic-watchdog-decision-autonomy-guardrails/)
+4. **Multi-agent orchestration** ← you are here
+5. [Agent governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
 
 ## Further reading
 

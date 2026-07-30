@@ -200,7 +200,7 @@ Azure Workbooks are ideal for turning postmortem data into something leaders and
 }
 ```
 
-A practical dashboard usually includes four sections:
+> **Note:** This is pseudocode to illustrate the Workbook structure. The actual Azure Workbook ARM schema uses a different JSON format with `stepType`, `queryType`, and resource references. See the [Workbooks ARM template documentation](https://learn.microsoft.com/en-us/azure/azure-monitor/visualize/workbooks-overview) for the full schema.
 
 1. **Incident volume and severity trend**
 2. **MTTD and MTTR trend over time**
@@ -351,6 +351,19 @@ Action item: Require peer review for database migrations,
 | Restricting visibility too much | The wider engineering org does not learn | Share postmortems broadly unless sensitive data blocks it |
 | Treating incidents in isolation | Systemic patterns remain hidden | Review trends quarterly across services |
 | Skipping reviews for “simple” incidents | Operational debt accumulates | Define clear review thresholds up front |
+
+## What can go wrong
+
+1. **Automation without calibration** — Auto-creating postmortem work items on every Sev3 alert floods DevOps boards with noise. Calibrate the Logic App trigger to only fire on Sev1/Sev2 or on alerts that breach SLO thresholds.
+2. **Vanity metrics on the dashboard** — Tracking MTTR without normalizing for incident complexity gives a misleading picture. A 5-minute MTTR for a config rollback is not comparable to a 2-hour MTTR for a data corruption. Add severity breakdown.
+3. **Stale action items** — If nobody reviews the "overdue action items" panel weekly, the dashboard becomes wallpaper. Assign a rotating owner for the weekly review and set up an alert on the "overdue > 14 days" count.
+4. **KQL query drift** — The KQL queries in the Workbook reference specific table schemas (`AppExceptions`, `AzureActivity`). Schema changes from Azure Monitor updates can silently break queries. Pin queries to known schema versions and test after Azure updates.
+5. **Postmortem fatigue** — If the process generates long documents nobody reads, teams disengage. Keep the template under 2 pages and focus on the 3 most impactful action items per incident.
+
+## Series navigation
+
+- [Postmortems in Azure — Part 1: Blameless incident analysis](/postmortems-azure-blameless-incident-analysis-part-1/) — covers the mechanics: template, timeline, contributing factors
+- **Postmortems in Azure — Part 2: Automation, DevOps, and metrics** ← you are here — covers the operating model: automation, tracking, dashboards
 
 ## Conclusion and implementation checklist
 

@@ -550,10 +550,24 @@ That is enough to get developers provisioning useful environments in minutes ins
 
 ## What can go wrong
 
-1. **Catalog template breaks existing environments.** If you push a breaking change to `main.bicep` and the catalog is pinned to `main`, every new environment provision fails. Pin the catalog to a tagged version (`v1.2.0`) and promote changes through a staging environment first.
-2. **`administratorPassword` parameter exposed in deployment logs.** Even with `@secure()`, if the deployment is triggered without `--no-wait` and someone reads the provisioning output, the password may appear in error messages. Prefer Key Vault references or Azure AD authentication for PostgreSQL instead of passwords.
-3. **AKS namespace isolation assumed but not enforced.** Creating a Kubernetes namespace per team does not provide network isolation by default. Without `NetworkPolicy` resources, pods in namespace A can reach pods in namespace B. Add default-deny network policies in the namespace module.
-4. **Redis as a shared chokepoint.** The template provisions Redis per environment, but if `enableRedis` defaults to `true` and most teams don't actually need it, you're paying for idle caches. For new deployments, consider Azure Managed Redis and flip the default to `false`.
-5. **Dev Center identity over-permissioned.** The managed identity needs `Contributor` on target subscriptions to deploy resources, but that also lets it delete resources. Scope the role assignment to a specific resource group per project, not the entire subscription.
+1. **Environment sprawl** — Self-service without lifecycle management means developers create environments and forget about them. Set auto-expiration policies on ADE environments (e.g., 7-day TTL for dev, 30-day for staging) and send reminders before deletion.
+2. **Bicep template complexity creep** — As teams request variations, the "one template to rule them all" grows conditional branches until nobody can maintain it. Split into composable modules (network, compute, identity) and let teams compose rather than fork.
+3. **Dev Center permission over-provisioning** — Giving every developer the `DevCenter Project Admin` role lets them modify environment types and catalog settings. Use `Deployment Environments User` for self-service and restrict admin to the platform team.
+4. **AKS namespace collisions** — If the environment provisioning template does not enforce unique namespace naming, two developers requesting "my-app" get a conflict. Use a naming convention that includes the environment ID or developer alias.
+5. **Catalog sync failures** — If the GitHub catalog repo goes private, changes branch protection, or rotates the PAT, Dev Center silently stops syncing new templates. Monitor catalog sync status and alert on failures.
+
+## Estimated operational cost
+
+Dev Center itself is free; you pay only for the environments it provisions. A typical dev AKS cluster (Standard_D4s_v5 node pool with 2-3 nodes) runs $300-500/month. Azure Deployment Environments has no per-environment charge. The dominant cost is compute: enforce auto-shutdown and auto-expiration to prevent idle environments from accumulating. Budget $50-100/developer/month for a reasonable dev environment footprint.
+
+## Series navigation
+
+- **Platform Engineering — Part 1: Internal Developer Platform on Azure** ← you are here — covers the self-service side: Dev Center, ADE, environment templates
+- [Platform Engineering — Part 2: Governance, observability, and security](/platform-engineering-azure-governance-observability-security-part-2/) — covers guardrails: policy, identity, dashboards, CI/CD
 
 ## Further reading
+
+- [Azure Deployment Environments documentation](https://learn.microsoft.com/en-us/azure/deployment-environments/)
+- [Microsoft Dev Center](https://learn.microsoft.com/en-us/azure/dev-box/how-to-manage-dev-center)
+- [Bicep documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/)
+- [AKS Workload Identity overview](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview)
