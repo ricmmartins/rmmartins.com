@@ -96,9 +96,9 @@ You have no tool that can act on the deployment. Your only possible
 output is calling send_priority_alert exactly once.
 ```
 
-Notice the last line: it exists to reinforce, in the prompt itself, the limit that's already baked into the architecture. Intentional redundancy. The absence of the tool is the primary guardrail; the prompt is a secondary reinforcement (defense in depth).
+Notice the last line: it exists to reinforce, in the prompt itself, the limit that's already baked into the architecture. Intentional redundancy. The real guardrail is the absence of the tool; the prompt is just the second layer.
 
-**Where this actually runs**: the schedule from post 2 and the conditional model invocation fit comfortably in an Azure Container Apps Job with a `*/1 * * * *` cron schedule and `parallelism: 1` (to prevent overlapping runs if a job takes longer than 60 seconds). It starts a Python container, runs `get_token_usage_trend`, decides whether to invoke the model, and exits. No always-on server. No VM to babysit. The job's managed identity (`azurerm_user_assigned_identity` plus an `azurerm_role_assignment` for `Monitoring Reader` on the Cognitive Services account) replaces any fixed API key; the full Terraform is in the series companion repo.
+**Where this actually runs**: the schedule from post 2 and the conditional model invocation fit comfortably in an Azure Container Apps Job with a `*/1 * * * *` cron schedule. It starts a Python container, runs `get_token_usage_trend`, decides whether to invoke the model, and exits. No always-on server. No VM to babysit. The job's managed identity (`azurerm_user_assigned_identity` plus an `azurerm_role_assignment` for `Monitoring Reader` on the Cognitive Services account) replaces any fixed API key; the full Terraform is in the series companion repo.
 
 ## Two scenarios side by side
 
@@ -124,11 +124,23 @@ That closes the gap from the opening scenario. The predictable month-end batch s
 
 ## What can go wrong
 
-1. **Model under-alerts a real incident.** The model classifies a genuine spike as `info` because history had a coincidental match at the same hour. Mitigate with periodic batch audits of `info` classifications — review weekly whether any `info` preceded an actual outage.
-2. **Model over-alerts and causes fatigue.** Everything becomes `urgent` and the team learns to ignore it. The per-hour rate limit (N calls to `send_priority_alert`) is the first line of defense. Track the urgent-to-real-incident ratio monthly.
-3. **Rate-limiting hides a real escalation.** If the model hits the rate limit during a genuine multi-event incident, the Nth alert gets silently dropped. Consider a "rate limit reached" meta-alert that goes to a secondary channel.
-4. **Prompt injection via deployment names.** If `deployment_name` comes from user input or a dynamic source, a crafted name could inject instructions into the prompt. In this design, deployment names come from Terraform/inventory, so the surface is small — but validate inputs if you ever open this up.
-5. **Container Apps Job overlap.** Without `parallelism: 1`, two job instances can run simultaneously, both classifying the same spike and sending duplicate alerts. Always set max parallelism to 1 for this pattern.
+1. **Under-alerting on novel patterns** — If the model sees a superficial similarity between a current spike and historical data (e.g., "this hour of day had high usage once before"), it may classify a genuine incident as `info`. Audit `info` decisions weekly.
+2. **Over-alerting during ramp-up** — When the watchdog starts with limited historical data, nearly every spike looks unprecedented. Seed the history window with at least 30 days of data before enabling `urgent` classification.
+3. **Model hallucination in reasoning** — The model might fabricate a pattern match ("this is consistent with your usual Tuesday batch") when no such pattern exists. Log the full reasoning chain, not just the final classification, so you can catch this in review.
+4. **Rate limit on the watchdog itself** — If the threshold is crossed for an extended period (e.g., 30 consecutive minutes), the once-a-minute cron fires the model 30 times. Set a cooldown: after the first classification, suppress re-evaluation for at least 10 minutes unless the trend changes direction.
+5. **Slack notification fatigue** — Even with priority levels, multiple `warning` messages in quick succession can train the team to ignore the channel. Aggregate: one message per incident window, updated in-place if the classification changes.
+
+## Estimated operational cost
+
+The LLM reasoning call only fires when the threshold is crossed, which should be rare. Each call uses roughly 1K-2K tokens (system prompt + history data + response). At typical Azure OpenAI pricing, expect $0.01-0.05 per invocation. The dominant cost is the Azure Container Apps Job running the once-a-minute cron, roughly $2-5/month at consumption pricing. Total: under $10/month for most deployments.
+
+## Series navigation
+
+1. [MCP and agents 101 for infra engineers](/2026/07/01/mcp-and-agents-101-for-infra-engineers/)
+2. [Building a deterministic 429 watchdog](/2026/07/08/deterministic-429-watchdog-azure-openai/)
+3. **From script to agent: giving the watchdog decision autonomy** ← you are here
+4. [Multi-agent orchestration: correlating AKS and Azure OpenAI](/2026/07/21/multi-agent-orchestration-aks-openai-correlation/)
+5. [Agent governance on Microsoft Foundry](/2026/07/28/agent-governance-microsoft-foundry/)
 
 ## Further reading
 

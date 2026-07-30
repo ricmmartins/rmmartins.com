@@ -541,10 +541,20 @@ That is the foundation. In [Part 2](/postmortems-azure-automation-devops-metrics
 
 ## What can go wrong
 
-1. **Logic App runs against an ongoing incident.** If the trigger fires while the incident is still in progress, the timeline is incomplete and the draft is misleading. Add a condition that checks `ResolutionTime IS NOT NULL` before generating the draft, or require a manual trigger after resolution.
-2. **KQL time range misses the real start.** The hardcoded `datetime()` ranges in the queries assume you already know when impact started. If detection was delayed (high MTTD), the initial queries miss the leading indicators. Start with a wider window (e.g., 6 hours before the reported start) and narrow after reviewing the data.
-3. **Activity Log retention surprise.** Azure Activity Logs are retained for 90 days by default. If you run a postmortem more than 90 days after the incident, the control-plane evidence is gone. Route Activity Logs to a Log Analytics workspace with longer retention if you need it.
-4. **Template fields left as placeholders.** Teams fill in the timeline but leave `[Factor 1]` and `[Item 1]` as-is, treating the template as a checkbox. Review the first three postmortems from every new team to catch this.
-5. **Severity classification drift.** Without periodic calibration, SEV-2 incidents get classified as SEV-3 to avoid the postmortem deadline. Run a quarterly severity review with on-call leads to keep the bar consistent.
+1. **Blame creep despite blameless intent** — The template says "contributing factors," but during the review meeting someone starts saying "if only team X had done Y." The facilitator must redirect language in real time. Consider a written ground rule at the top of every review: "We discuss systems, not individuals."
+2. **Incomplete timeline** — If the team waits more than 48 hours to start the postmortem, key details (who was paged, what was tried first, which runbook was used) fade from memory. Trigger the draft within 24 hours of resolution, even if it's incomplete.
+3. **KQL query brittleness** — The queries in this post reference specific table names and columns (`AppExceptions`, `AzureActivity`, `AzureDiagnostics`). If your workspace uses custom tables, resource-specific logs, or a different naming convention, the queries need adaptation. Test every query in your own Log Analytics workspace before adding it to the template.
+4. **Logic App trigger false starts** — The severity-based Logic App trigger fires on alert resolution, but if the alert auto-resolves and re-fires within minutes (flapping), you get multiple draft postmortems for the same incident. Add deduplication logic based on incident ID or a cooldown window.
+5. **Overly detailed postmortems** — A 20-page document with every log line pasted in is worse than no postmortem. Focus on the 5 most significant events in the timeline and link to the raw logs rather than inlining them.
+
+## Series navigation
+
+- **Postmortems in Azure — Part 1: Blameless incident analysis** ← you are here — covers the mechanics: template, timeline, contributing factors, KQL evidence
+- [Postmortems in Azure — Part 2: Automation, DevOps, and metrics](/postmortems-azure-automation-devops-metrics-part-2/) — covers the operating model: automation, tracking, dashboards
 
 ## Further reading
+
+- [Azure Monitor overview](https://learn.microsoft.com/azure/azure-monitor/overview)
+- [Log Analytics overview](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-overview)
+- [Azure Logic Apps overview](https://learn.microsoft.com/azure/logic-apps/logic-apps-overview)
+- [KQL reference](https://learn.microsoft.com/kusto/query/)
