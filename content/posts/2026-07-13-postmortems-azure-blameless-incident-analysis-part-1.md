@@ -539,9 +539,12 @@ Blameless postmortems work when people can speak plainly, the evidence is concre
 
 That is the foundation. In [Part 2](/postmortems-azure-automation-devops-metrics-part-2/), the focus shifts to Azure DevOps, MTTD and MTTR metrics, Workbook dashboards, and the rest of the SRE improvement loop.
 
-## Further reading
+## What can go wrong
 
-- [Azure Monitor overview](https://learn.microsoft.com/azure/azure-monitor/overview)
-- [Log Analytics overview](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-overview)
-- [Azure Logic Apps overview](https://learn.microsoft.com/azure/logic-apps/logic-apps-overview)
-- [KQL reference](https://learn.microsoft.com/kusto/query/)
+1. **Logic App runs against an ongoing incident.** If the trigger fires while the incident is still in progress, the timeline is incomplete and the draft is misleading. Add a condition that checks `ResolutionTime IS NOT NULL` before generating the draft, or require a manual trigger after resolution.
+2. **KQL time range misses the real start.** The hardcoded `datetime()` ranges in the queries assume you already know when impact started. If detection was delayed (high MTTD), the initial queries miss the leading indicators. Start with a wider window (e.g., 6 hours before the reported start) and narrow after reviewing the data.
+3. **Activity Log retention surprise.** Azure Activity Logs are retained for 90 days by default. If you run a postmortem more than 90 days after the incident, the control-plane evidence is gone. Route Activity Logs to a Log Analytics workspace with longer retention if you need it.
+4. **Template fields left as placeholders.** Teams fill in the timeline but leave `[Factor 1]` and `[Item 1]` as-is, treating the template as a checkbox. Review the first three postmortems from every new team to catch this.
+5. **Severity classification drift.** Without periodic calibration, SEV-2 incidents get classified as SEV-3 to avoid the postmortem deadline. Run a quarterly severity review with on-call leads to keep the bar consistent.
+
+## Further reading

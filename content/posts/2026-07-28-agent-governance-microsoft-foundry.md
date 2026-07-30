@@ -63,7 +63,7 @@ RBAC per environment (dev, test, production), only a pipeline service principal 
 
 ## Provisioning a Foundry resource and project via Terraform
 
-This part changed quickly enough that it is worth being precise. The current Microsoft Learn guidance for new deployments uses `azurerm_cognitive_account` for the Foundry resource and `azurerm_cognitive_account_project` for the project. The older `azurerm_ai_foundry` resources still exist for classic hub-based setups, but they are not where I would start for a new build. A minimal AzureRM example now looks like this:
+This part changed quickly enough that it is worth being precise. As of mid-2026, the current Microsoft Learn guidance for new deployments uses `azurerm_cognitive_account` for the Foundry resource and `azurerm_cognitive_account_project` for the project. The older `azurerm_ai_foundry` resources still exist for classic hub-based setups, but they are not where I would start for a new build. Check the [current Terraform provider docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs) as this surface is still evolving. A minimal AzureRM example now looks like this:
 
 ```hcl
 resource "azurerm_cognitive_account" "foundry" {
@@ -118,6 +118,14 @@ The thread connecting all five is always the same: decision autonomy, yes; auton
 If your company is already at the point where several teams are standing up agents with no shared view, do this design work early. Untangling it later is slower and usually more political.
 
 That answers the opening governance question. You get a place to see what is running, where it lives, and which permissions it carries, without relying on tribal memory.
+
+## What can go wrong
+
+1. **Policy blocks a deploy mid-pipeline.** If Azure Policy rejects an agent publication after the build succeeds, the pipeline fails silently unless you handle the error explicitly. Add a pre-flight policy check (`az policy state trigger-scan`) before the deploy step.
+2. **Managed identity scope creep.** Each agent gets its own identity, but if someone adds a broad role assignment (e.g., `Contributor` at the resource group level), that identity can touch resources beyond its project. Audit role assignments monthly with Azure Resource Graph.
+3. **Tool catalog drift.** A tool registered in the catalog six months ago may no longer match the MCP server's actual capabilities. Version your tool registrations and validate them in CI.
+4. **Cross-project data leakage.** Projects provide isolation, but shared storage accounts or Key Vaults can bridge that isolation if access policies are too permissive. Review shared resource access when onboarding new projects.
+5. **Observability blind spots.** Foundry's built-in tracing covers agent interactions, but not the data your agent reads from external sources. If your grounding data is corrupted, the agent's traced reasoning looks correct but produces wrong answers. Add data quality checks upstream.
 
 ## Further reading
 

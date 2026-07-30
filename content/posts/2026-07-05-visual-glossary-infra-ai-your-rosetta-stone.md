@@ -43,7 +43,7 @@ Every entry has: the **AI term**, the **infra analogy** in parentheses, a **conc
 | **Foundation Model** | Base image / golden image | Large pre-trained model (GPT-4, LLaMA, Mistral) meant to be adapted for many downstream tasks. | Selecting which base model to deploy or fine-tune. It's the starting artifact in most AI projects |
 | **Parameters / Weights** | Configuration values | The internal numerical values that define how the model processes input and generates output. Large models can have enormous parameter counts, though vendors often keep the exact number private. | Sizing infra: more parameters = more memory, more compute, more storage |
 | **Epoch** | Full backup cycle | One complete pass through the entire training dataset. Fine-tuning jobs often talk in epochs; large-scale pretraining usually talks in tokens instead. | Estimating duration and cost of training jobs |
-| **Batch Size** | Chunk size | Number of samples processed before updating weights. Larger = more GPU memory, more efficient. | Tuning training jobs and troubleshooting OOM errors (reducing batch size is usually the first fix) |
+| **Batch Size** | Chunk size | Number of samples processed before updating weights. Larger = more GPU memory and higher throughput, up to the point where communication overhead dominates. | Tuning training jobs and troubleshooting OOM errors (reducing batch size is usually the first fix) |
 | **Transfer Learning** | Template reuse | Using a model pre-trained on one task as a starting point for another, preserving learned knowledge. | When teams want faster, cheaper results by starting from a foundation model |
 
 ## Data and storage
@@ -65,7 +65,7 @@ Every entry has: the **AI term**, the **infra analogy** in parentheses, a **conc
 | **CUDA** | GPU instruction set / SDK | NVIDIA's parallel computing platform that enables code to execute on GPUs. | Installing drivers, configuring GPU containers, troubleshooting "CUDA out of memory" |
 | **HBM** | GPU RAM | High-bandwidth memory stacked on the GPU die. GPU memory size varies by SKU and generation. | Selecting GPU SKUs: HBM capacity determines the maximum model size a GPU can support |
 | **InfiniBand** | High-speed node-to-node networking | Ultra-low-latency, high-bandwidth interconnect for distributed training. Much faster than Ethernet. | Provisioning multi-node GPU clusters (ND-series VMs) for large training jobs |
-| **NVLink** | GPU-to-GPU interconnect | High-speed link connecting GPUs within a single node. It provides much more bandwidth than plain PCIe, though the exact ratio depends on the generation. | Sizing multi-GPU VMs: GPUs with NVLink exchange data fast enough to matter for model parallel workloads |
+| **NVLink** | GPU-to-GPU interconnect | High-speed link connecting GPUs within a single node. NVLink provides 5–10× higher bandwidth than PCIe (the exact ratio depends on the generation). | Sizing multi-GPU VMs: GPUs with NVLink exchange data fast enough to matter for model parallel workloads |
 | **Tensor Core** | Specialized matrix math unit | Dedicated hardware in NVIDIA GPUs optimized for matrix multiply-and-accumulate operations that dominate AI. | Evaluating GPU generations: Tensor Cores are why A100 is dramatically faster for AI than gaming GPUs |
 
 ## Model operations
@@ -137,6 +137,14 @@ Pin this card. You will need it.
 The full book, in English, is available for free at [ai4infra.com](https://www.ai4infra.com). If this series saved you a few hours, send it to another infra engineer who is getting dragged into AI projects.
 
 AI does not replace what you know. It leans on it. Networking, storage, compute, security, automation, cost control, and ugly incident response at bad hours are still the job. Now you have the vocabulary to map those instincts onto AI systems.
+
+## What can go wrong
+
+1. **Token ≠ word confusion in cost estimates.** The "1 token ≈ 0.75 English words" rule is a rough average. Code, JSON, and non-Latin scripts tokenize very differently — a 500-word JSON payload can consume 2,000+ tokens. Always verify with a tokenizer before estimating costs.
+2. **NVLink assumed but not present.** Not every multi-GPU VM has NVLink. Standard NC-series VMs use PCIe, which is 5–10× slower for GPU-to-GPU communication. Check the VM SKU specifications before committing to model-parallel training.
+3. **Batch size tuned once, never revisited.** A batch size that works for a 7B model OOMs on a 13B model. Always re-validate batch size when changing model size, sequence length, or precision.
+4. **LoRA confused with full fine-tuning.** LoRA adapts <1% of parameters; full fine-tuning updates all of them. The cost, data requirements, and infrastructure are completely different. Be explicit about which one you mean in planning documents.
+5. **Inference vs training GPU confusion.** A training workload needs high memory bandwidth and NVLink; an inference workload needs fast single-request latency. An A100 80GB is overkill for serving a 7B model but undersized for training a 70B one.
 
 ## Further reading
 

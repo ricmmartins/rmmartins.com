@@ -156,7 +156,9 @@ if __name__ == "__main__":
     mcp.run(transport="stdio")
 ```
 
-And the notification tool is deliberately dumb: it doesn't decide anything, it just sends what it's told to:
+> **Note:** `get_configured_tpm()` is a domain-specific lookup — it reads the configured TPM limit from your Terraform state, Azure Resource Graph, or an environment variable. The implementation depends on how you manage quota. A simple version: `int(os.environ.get(f"TPM_{deployment_name.upper()}", 250000))`.
+
+> **Prerequisite:** The managed identity running this server needs the `Monitoring Reader` role on the Azure OpenAI resource. Without it, `MetricsQueryClient` returns 403.: it doesn't decide anything, it just sends what it's told to:
 
 ```python
 @mcp.tool()
@@ -192,6 +194,14 @@ For now, the most important guardrail is already in the design: the server **onl
 If you want to test the pure-script version before you even touch MCP, it really is just the two functions above and a one-minute schedule. Start there. The next step is teaching the watchdog to tell a normal spike from a bad one without giving it the power to change anything in production.
 
 *Companion repository: [agentic-infra-handbook](https://github.com/ricmmartins/agentic-infra-handbook)*
+
+## What can go wrong
+
+1. **Metrics query timeout.** If Azure Monitor is slow or the resource ID is wrong, `MetricsQueryClient` hangs. Wrap the query in a 10-second timeout and return `"trend": "no_data"` so downstream consumers know the data is missing, not zero.
+2. **Quota mismatch.** If `get_configured_tpm()` returns an outdated value (you bumped quota in the portal but forgot the config), every alert fires on a false positive. Pull the limit from Azure Resource Graph for a single source of truth.
+3. **Burst vs. sustained spikes.** A 3-second burst that pushes 1-minute TPM to 95% is normal for batch workloads. The current rising/stable/falling trend is too coarse. Consider adding a `sustained_above_threshold_minutes` counter before alerting.
+4. **Overlapping cron runs.** If the 1-minute cron job takes >60 seconds (slow metrics API), two instances run simultaneously and send duplicate alerts. Use a lock file or set `--max-parallelism 1` on the Container Apps Job.
+5. **Silent failure.** If the Slack webhook URL expires or Slack is down, `send_slack_alert` raises an exception that nobody sees. Add a dead letter mechanism: write failed alerts to a storage queue and retry.
 
 ## Further reading
 

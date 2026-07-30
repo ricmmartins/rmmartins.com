@@ -483,12 +483,12 @@ The first half of Platform Engineering is self-service. The second half is trust
 
 When those pieces are wired together, the Internal Developer Platform stops being a provisioning shortcut and becomes part of how the organization ships software.
 
-## Further reading
+## What can go wrong
 
-- [Azure Deployment Environments documentation](https://learn.microsoft.com/en-us/azure/deployment-environments/)
-- [Microsoft Dev Center](https://learn.microsoft.com/en-us/azure/dev-box/how-to-manage-dev-center)
-- [Platform Engineering on Azure](https://learn.microsoft.com/en-us/platform-engineering/)
-- [AKS Workload Identity overview](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview)
-- [Azure Managed Grafana overview](https://learn.microsoft.com/en-us/azure/managed-grafana/overview)
-- [Bicep documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/)
-- [Azure Policy documentation](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
+1. **Policy scope too broad.** A `deny` policy at the subscription level blocks every team, including the one that legitimately needs a non-standard SKU. Use policy exemptions sparingly, and document each one with an expiration date.
+2. **Observability module adds cost nobody budgeted.** The default retention period (90 days in the template above) for Application Insights ingestion can become a meaningful cost at high-throughput services. Set an explicit daily ingestion cap and alert when it is approached.
+3. **Grafana dashboards drift from reality.** The imported dashboard was designed for the first service, but new services emit different telemetry or custom metrics. Treat dashboards as code — version them in the catalog repo, validate them in CI with a JSON schema check.
+4. **Workload Identity federation misconfigured.** If the OIDC issuer URL is wrong or the subject claim does not match the service account, pods fail silently with `403 Forbidden`. Add a post-deploy smoke test that calls `az account get-access-token` from the federated workload.
+5. **GitHub Actions golden path breaks on template update.** When you update the shared workflow, existing repos pinned to `@main` get the change immediately. Pin to a tagged version and roll out upgrades with PR automation.
+
+## Further reading

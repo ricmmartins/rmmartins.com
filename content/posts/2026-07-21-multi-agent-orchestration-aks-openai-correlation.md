@@ -55,8 +55,10 @@ def correlate_incident(token_spike_start: str, window_minutes: int = 15) -> dict
     window. Returns candidate causes with their respective confidence
     level, never a single cause stated as certain."""
     cluster_events = aks_agent.get_recent_events(token_spike_start, window_minutes)
-    return rank_candidates(cluster_events)
+    return rank_candidates(cluster_events)  # domain-specific ranking
 ```
+
+> **Note:** `rank_candidates()` is pseudocode. The actual ranking logic depends on your incident taxonomy — you might score by event proximity, blast radius, or historical frequency. The point is the interface: candidates with confidence levels, never a single answer.
 
 The result, instead of two disconnected alerts arriving in different channels, becomes a single message: "TPM at 91% and rising. Candidate cause: deploy of the `recommendation-api` service at 2:01 p.m., which scaled from 3 to 12 replicas via HPA; each new replica makes a warmup call to GPT-4o on startup, which lines up with the start of the spike." That's no longer "two metrics crossed a threshold." It's a verifiable hypothesis, with evidence attached.
 
@@ -76,13 +78,21 @@ On orchestration itself: for this case, there's no need at all for an agent-to-a
 
 The layered design from the earlier posts matters here: the once-a-minute cron stays cheap and LLM-free. The reasoning watchdog only runs when the threshold is crossed. And now the orchestrator only runs once the watchdog has already classified something as `urgent`, meaning the most expensive call in the whole chain (two sub-agent queries plus a correlation) only happens on the rarest event of all. Each layer filters before passing the next, pricier one along. It's the same principle behind any well-designed alerting pipeline, except here each layer, besides filtering, also reasons a bit more than the one before it.
 
-Latency adds a few extra seconds before the final alert goes out, compared to an instant generic Slack ping. For a real incident, trading a few seconds for a ready-made cause hypothesis is a favorable trade, but it is a trade, and it's worth measuring, not assuming.
+Latency adds 2–5 seconds before the final alert goes out (depending on AKS query performance and metric ingestion lag), compared to an instant generic Slack ping. For a real incident, trading a few seconds for a ready-made cause hypothesis is a favorable trade, but it is a trade, and it's worth measuring, not assuming.
 
 ## The trade worth making
 
 A few seconds of extra latency is a fine price to pay when the alert arrives with a plausible cause attached. Once you have several agents doing real work, the hard part stops being orchestration code and starts being governance. That is where the last post goes.
 
 So yes, you can answer "did someone deploy something?" with one alert instead of two browser tabs. You just keep the answer framed as a candidate cause until a human confirms it.
+
+## What can go wrong
+
+1. **Sub-agent timeout.** If the AKS agent takes too long to query events (network latency, large event history), the orchestrator hangs. Set a 30-second timeout per sub-agent and return partial results with a "data incomplete" flag.
+2. **False correlation.** Two events coinciding in the same 15-minute window doesn't prove causation. A deploy at 2:01 p.m. and a spike at 2:03 p.m. could be coincidence. Always present candidates, never certainty — and log the reasoning so you can audit false positives later.
+3. **Stale metrics.** Azure Monitor metrics have ~1 minute ingestion lag. A spike that already resolved may still trigger correlation. The orchestrator should check current values, not just the trigger snapshot.
+4. **Window too narrow or too wide.** A 15-minute window catches most deploys, but a canary rollout over 2 hours will be missed. If your deployment strategy is slow, parameterize the window.
+5. **Orchestrator as single point of failure.** If the orchestrator crashes mid-correlation, neither the watchdog alert nor the AKS data reaches anyone. Keep the watchdog's direct-to-Slack path as a fallback for when the orchestrator is unavailable.
 
 ## Further reading
 

@@ -548,9 +548,12 @@ At this point, you have the essential mechanics of an Internal Developer Platfor
 
 That is enough to get developers provisioning useful environments in minutes instead of waiting days. In [Part 2](/platform-engineering-azure-governance-observability-security-part-2/), the focus shifts to the parts that make it hold up in real life: Azure Policy guardrails, built-in observability, GitHub Actions golden paths, and Workload Identity for zero secrets.
 
-## Further reading
+## What can go wrong
 
-- [Azure Deployment Environments documentation](https://learn.microsoft.com/en-us/azure/deployment-environments/)
-- [Microsoft Dev Center](https://learn.microsoft.com/en-us/azure/dev-box/how-to-manage-dev-center)
-- [Bicep documentation](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/)
-- [AKS Workload Identity overview](https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview)
+1. **Catalog template breaks existing environments.** If you push a breaking change to `main.bicep` and the catalog is pinned to `main`, every new environment provision fails. Pin the catalog to a tagged version (`v1.2.0`) and promote changes through a staging environment first.
+2. **`administratorPassword` parameter exposed in deployment logs.** Even with `@secure()`, if the deployment is triggered without `--no-wait` and someone reads the provisioning output, the password may appear in error messages. Prefer Key Vault references or Azure AD authentication for PostgreSQL instead of passwords.
+3. **AKS namespace isolation assumed but not enforced.** Creating a Kubernetes namespace per team does not provide network isolation by default. Without `NetworkPolicy` resources, pods in namespace A can reach pods in namespace B. Add default-deny network policies in the namespace module.
+4. **Redis as a shared chokepoint.** The template provisions Redis per environment, but if `enableRedis` defaults to `true` and most teams don't actually need it, you're paying for idle caches. For new deployments, consider Azure Managed Redis and flip the default to `false`.
+5. **Dev Center identity over-permissioned.** The managed identity needs `Contributor` on target subscriptions to deploy resources, but that also lets it delete resources. Scope the role assignment to a specific resource group per project, not the entire subscription.
+
+## Further reading
