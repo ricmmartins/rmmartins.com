@@ -3,8 +3,8 @@
     <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
       <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.1"/>
     </filter>
-    <marker id="arrowDown" markerWidth="8" markerHeight="6" refX="4" refY="6" orient="auto">
-      <polygon points="0 0, 8 0, 4 6" fill="#6c8ebf"/>
+    <marker id="arrowDown" markerWidth="10" markerHeight="8" refX="5" refY="8" orient="auto">
+      <polygon points="0 0, 10 0, 5 8" fill="#6c8ebf"/>
     </marker>
   </defs>
 
@@ -49,7 +49,7 @@
   <rect x="40" y="255" width="720" height="60" rx="10" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5" filter="url(#shadow)"/>
   <text x="60" y="278" font-size="11" font-weight="600" fill="#d6b656">LAYER 3</text>
   <text x="60" y="296" font-size="14" font-weight="600" fill="#1e293b">API Management (AI Gateway)</text>
-  <text x="360" y="286" font-size="12" fill="#475569">Rate limiting  |  Circuit breaker  |  Token tracking  |  Semantic caching  |  Content safety</text>
+  <text x="360" y="286" font-size="11" fill="#475569">Rate limiting | Circuit breaker | Token tracking | Caching | Content safety</text>
 
   <!-- Arrows down -->
   <line x1="250" y1="315" x2="250" y2="335" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>

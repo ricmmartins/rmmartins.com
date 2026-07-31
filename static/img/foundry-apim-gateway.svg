@@ -3,6 +3,15 @@
     <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
       <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.1"/>
     </filter>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6c8ebf"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#82b366"/>
+    </marker>
+    <marker id="arrowYellow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#d6b656"/>
+    </marker>
   </defs>
 
   <rect width="800" height="520" fill="#f8fafc" rx="12"/>
@@ -75,27 +84,14 @@
   </g>
 
   <!-- Arrows: Apps to APIM -->
-  <line x1="170" y1="95" x2="238" y2="170" stroke="#6c8ebf" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
-  <line x1="170" y1="165" x2="238" y2="170" stroke="#6c8ebf" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
-  <line x1="170" y1="235" x2="238" y2="200" stroke="#6c8ebf" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <path d="M170 95 C200 95, 210 160, 240 160" stroke="#6c8ebf" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
+  <path d="M170 165 L240 165" stroke="#6c8ebf" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
+  <path d="M170 235 C200 235, 210 200, 240 200" stroke="#6c8ebf" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
 
   <!-- Arrows: APIM to Backends -->
-  <line x1="562" y1="130" x2="628" y2="103" stroke="#82b366" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
-  <line x1="562" y1="170" x2="628" y2="168" stroke="#82b366" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
-  <line x1="562" y1="210" x2="628" y2="233" stroke="#d6b656" stroke-width="1.5" marker-end="url(#arrowYellow)"/>
-
-  <!-- Arrow markers -->
-  <defs>
-    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#6c8ebf"/>
-    </marker>
-    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#82b366"/>
-    </marker>
-    <marker id="arrowYellow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#d6b656"/>
-    </marker>
-  </defs>
+  <path d="M560 130 C590 130, 600 103, 630 103" stroke="#82b366" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+  <path d="M560 170 L630 168" stroke="#82b366" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+  <path d="M560 230 C590 230, 600 233, 630 233" stroke="#d6b656" stroke-width="2" fill="none" marker-end="url(#arrowYellow)"/>
 
   <!-- Legend -->
   <rect x="30" y="370" width="740" height="140" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
