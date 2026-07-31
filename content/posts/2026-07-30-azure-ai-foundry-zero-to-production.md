@@ -182,13 +182,15 @@ Things I check before any customer goes live:
 - [ ] Content Safety filters tuned (not just defaults)
 - [ ] VNet integration if required by compliance
 - [ ] Data residency: model deployment region matches data requirements
+- [ ] APIM as AI Gateway (no direct model access from applications)
 
 ### Reliability
 - [ ] Multi-region deployment (primary + failover)
-- [ ] Retry logic with exponential backoff
+- [ ] Retry logic with exponential backoff and jitter
 - [ ] Circuit breaker pattern for downstream dependencies
 - [ ] Health probes and availability monitoring
-- [ ] Spillover configured (PTU → PAYGO)
+- [ ] Spillover configured (PTU primary, PAYGO overflow)
+- [ ] APIM load balancing across PTU backends
 
 ### Observability
 - [ ] Token consumption metrics in Azure Monitor
@@ -196,12 +198,21 @@ Things I check before any customer goes live:
 - [ ] Cost allocation tags on all Foundry resources
 - [ ] Alerting on 429 rates (throttling indicator)
 - [ ] Model performance evaluation pipeline (drift detection)
+- [ ] APIM token tracking enabled (per app/team/user)
 
 ### Cost governance
 - [ ] Budget alerts configured
 - [ ] Chargeback tags for multi-team environments
 - [ ] PTU utilization monitoring (target: 70-85%)
+- [ ] max_tokens tuned per use case (not default 4096)
 - [ ] Regular review cadence (monthly) for tier optimization
+
+### Model governance
+- [ ] Model lifecycle monitoring (Azure Updates subscription)
+- [ ] Automated quality tests per model version
+- [ ] Migration plan documented (60+ days before retirement)
+- [ ] PTU migration runbook (manual swap required)
+- [ ] Semantic caching configured in APIM for recurring queries
 
 ## The typical progression
 
