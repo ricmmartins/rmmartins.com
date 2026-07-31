@@ -241,6 +241,14 @@ Don't skip steps. Each phase teaches you something about your workload that info
 
 ---
 
+## Next steps
+
+1. **Deploy a model in Foundry** — pick GPT-4o on PAYGO, wire it to a single endpoint, and run a test prompt through the REST API. Time: 20 minutes.
+2. **Run ptucalc against your traffic** — export your token consumption from Azure Monitor and model the break-even point. If you're above 60% sustained utilization, PTU likely pays for itself.
+3. **Add APIM in front** — even in dev. Configure a single policy with token-rate-limit and emit-token-metric. This gives you observability and a retry layer from day one.
+
+---
+
 **Resources:**
 - [Azure AI Foundry](https://ai.azure.com)
 - [PTU Calculator](https://ptucalc.com)

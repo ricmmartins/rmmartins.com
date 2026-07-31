@@ -144,6 +144,14 @@ If your team is running Azure SRE Agent and feeling the same gap between reactiv
 
 ---
 
+## Next steps
+
+1. **Install the skills pack** — clone the [repo](https://github.com/ricmmartins/azure-sre-agent-skills/), copy the skill folders into your SRE Agent configuration, and enable Skill 01 (Governance Audit) as a Scheduled Investigation running weekly.
+2. **Run one investigation manually** — trigger a governance audit against a non-production subscription. Review the output, adjust thresholds in `SKILL.md` to match your environment's tolerance.
+3. **Add to your sprint rhythm** — schedule FinOps (Skill 02) bi-weekly and Capacity Planning (Skill 05) monthly. After two cycles, you'll have baseline data to prove proactive value to leadership.
+
+---
+
 **Resources:**
 - [Azure SRE Agent Skills Pack (GitHub)](https://github.com/ricmmartins/azure-sre-agent-skills/)
 - [Azure SRE Agent Documentation](https://learn.microsoft.com/en-us/azure/sre-agent/)
