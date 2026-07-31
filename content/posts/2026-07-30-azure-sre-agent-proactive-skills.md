@@ -1,22 +1,3 @@
----
-title: "From reactive firefighting to proactive operations: custom skills for Azure SRE Agent"
-slug: azure-sre-agent-proactive-skills
-aliases:
-  - /azure-sre-agent-proactive-skills/
-description: "How I built 8 open-source custom skills that transform Azure SRE Agent from reactive incident responder to proactive operations partner."
-date: 2026-07-30
-categories:
-  - Azure
-  - SRE
-tags:
-  - azure-sre-agent
-  - site-reliability
-  - custom-skills
-  - proactive-operations
-  - finops
-  - governance
-translationKey: azure-sre-agent-proactive-skills
----
 # From reactive firefighting to proactive operations: custom skills for Azure SRE Agent
 
 **TL;DR:** Azure SRE Agent is great at reactive incident response, but doesn't cover proactive operations out of the box. I built an [open-source pack of 8 custom skills](https://github.com/ricmmartins/azure-sre-agent-skills/) that add governance audits, FinOps reporting, capacity planning, postmortems, and more. Combined with Scheduled Investigations, they move your operations from reactive to proactive.
@@ -26,6 +7,8 @@ translationKey: azure-sre-agent-proactive-skills
 ---
 
 ## The conversation that started it all
+
+> **Prerequisites:** You need an active [Azure SRE Agent](https://sre.azure.com/) deployment. If you don't have one yet, the setup takes about 15 minutes.
 
 A few weeks ago, I sat down with an engineering team that had never heard of Azure SRE Agent. They were running a growing SaaS platform on Azure, handling incidents manually, and burning engineering hours on repetitive diagnostics. The classic "we don't have an SRE team, but we need SRE outcomes" situation.
 
@@ -86,6 +69,8 @@ I created [8 custom skills](https://github.com/ricmmartins/azure-sre-agent-skill
 | 06 | Defender Secure Score | Score monitoring + prioritized improvement plan | Weekly |
 | 07 | Digital Native Governance | Startup governance maturity (15 checks, scored 0-100) | Monthly |
 | 08 | AI Foundry and OpenAI Posture | Security, reliability and cost posture for AI workloads | Bi-weekly |
+
+> Skill 08 pairs well with the architecture patterns in my companion post: [Azure AI Foundry: from zero to production](/azure-ai-foundry-zero-to-production/). If you're running Foundry workloads, that guide covers APIM as AI Gateway, spillover architecture, and the production checklist that this skill audits against.
 
 ### How they differ from Azure Advisor
 
@@ -168,4 +153,3 @@ If your team is running Azure SRE Agent and feeling the same gap between reactiv
 ---
 
 *Questions or want to share how you're using SRE Agent? Leave a comment or open an issue on the repo.*
-

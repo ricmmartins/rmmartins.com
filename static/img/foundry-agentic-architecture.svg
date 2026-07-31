@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 440" font-family="Segoe UI, system-ui, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrowDown" markerWidth="8" markerHeight="6" refX="4" refY="6" orient="auto">
+      <polygon points="0 0, 8 0, 4 6" fill="#6c8ebf"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="440" fill="#f8fafc" rx="12"/>
+  <text x="400" y="32" text-anchor="middle" font-size="18" font-weight="600" fill="#1e293b">Agentic reference architecture</text>
+
+  <!-- Layer 1: Orchestration -->
+  <rect x="40" y="55" width="720" height="70" rx="10" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="60" y="78" font-size="11" font-weight="600" fill="#6c8ebf">LAYER 1</text>
+  <text x="60" y="96" font-size="14" font-weight="600" fill="#1e293b">Orchestration agent</text>
+  <text x="300" y="88" font-size="12" fill="#475569">GPT-5.x  |  Coordinates sub-agents  |  Maintains state  |  Tool-calling router</text>
+  <text x="300" y="106" font-size="11" fill="#64748b">Decides which specialized agent handles each sub-task</text>
+
+  <!-- Arrows down -->
+  <line x1="200" y1="125" x2="200" y2="145" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <line x1="400" y1="125" x2="400" y2="145" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <line x1="600" y1="125" x2="600" y2="145" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+
+  <!-- Layer 2: Specialized Agents -->
+  <rect x="40" y="150" width="720" height="80" rx="10" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="60" y="173" font-size="11" font-weight="600" fill="#82b366">LAYER 2</text>
+  <text x="60" y="191" font-size="14" font-weight="600" fill="#1e293b">Specialized agents</text>
+
+  <rect x="260" y="165" width="150" height="50" rx="6" fill="#fff" stroke="#82b366" stroke-width="1"/>
+  <text x="335" y="185" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">Data extraction</text>
+  <text x="335" y="200" text-anchor="middle" font-size="10" fill="#64748b">Phi-4</text>
+
+  <rect x="425" y="165" width="150" height="50" rx="6" fill="#fff" stroke="#82b366" stroke-width="1"/>
+  <text x="500" y="185" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">Compliance</text>
+  <text x="500" y="200" text-anchor="middle" font-size="10" fill="#64748b">GPT-4.1</text>
+
+  <rect x="590" y="165" width="150" height="50" rx="6" fill="#fff" stroke="#82b366" stroke-width="1"/>
+  <text x="665" y="185" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">UX / Content</text>
+  <text x="665" y="200" text-anchor="middle" font-size="10" fill="#64748b">GPT-5</text>
+
+  <!-- Arrows down -->
+  <line x1="335" y1="230" x2="335" y2="250" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <line x1="500" y1="230" x2="500" y2="250" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <line x1="665" y1="230" x2="665" y2="250" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+
+  <!-- Layer 3: APIM Gateway -->
+  <rect x="40" y="255" width="720" height="60" rx="10" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="60" y="278" font-size="11" font-weight="600" fill="#d6b656">LAYER 3</text>
+  <text x="60" y="296" font-size="14" font-weight="600" fill="#1e293b">API Management (AI Gateway)</text>
+  <text x="360" y="286" font-size="12" fill="#475569">Rate limiting  |  Circuit breaker  |  Token tracking  |  Semantic caching  |  Content safety</text>
+
+  <!-- Arrows down -->
+  <line x1="250" y1="315" x2="250" y2="335" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <line x1="400" y1="315" x2="400" y2="335" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <line x1="550" y1="315" x2="550" y2="335" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+
+  <!-- Layer 4: Models -->
+  <rect x="40" y="340" width="720" height="70" rx="10" fill="#e8f0fe" stroke="#4285f4" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="60" y="363" font-size="11" font-weight="600" fill="#4285f4">LAYER 4</text>
+  <text x="60" y="381" font-size="14" font-weight="600" fill="#1e293b">Azure AI Foundry models</text>
+
+  <rect x="260" y="355" width="120" height="40" rx="6" fill="#d5e8d4" stroke="#82b366" stroke-width="1"/>
+  <text x="320" y="375" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">PTU Region A</text>
+  <text x="320" y="389" text-anchor="middle" font-size="9" fill="#64748b">Base load</text>
+
+  <rect x="395" y="355" width="120" height="40" rx="6" fill="#d5e8d4" stroke="#82b366" stroke-width="1"/>
+  <text x="455" y="375" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">PTU Region B</text>
+  <text x="455" y="389" text-anchor="middle" font-size="9" fill="#64748b">DR</text>
+
+  <rect x="530" y="355" width="120" height="40" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="1"/>
+  <text x="590" y="375" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">PAYGO Global</text>
+  <text x="590" y="389" text-anchor="middle" font-size="9" fill="#64748b">Spillover</text>
+
+  <!-- Key rule -->
+  <rect x="40" y="418" width="720" height="18" rx="4" fill="none"/>
+  <text x="400" y="432" text-anchor="middle" font-size="11" font-weight="600" fill="#b85450">Rule: agents never call models directly. Always through the gateway.</text>
+</svg>
