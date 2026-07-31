@@ -1,3 +1,24 @@
+---
+title: "Azure AI Foundry: from zero to production"
+slug: azure-ai-foundry-zero-to-production
+aliases:
+  - /azure-ai-foundry-zero-to-production/
+description: "What I cover when a customer asks how to go from playground to production with Azure AI Foundry: model selection, PTU vs PAYGO, spillover architecture, APIM as AI Gateway, and production checklist."
+date: 2026-07-30
+categories:
+  - Azure
+  - AI
+tags:
+  - azure-ai-foundry
+  - openai
+  - ptu
+  - provisioned-throughput
+  - apim
+  - ai-gateway
+  - production
+translationKey: azure-ai-foundry-zero-to-production
+---
+
 # Azure AI Foundry: from zero to production
 
 *What I cover when a customer asks "we want to build AI applications on Azure, where do we start?"*
