@@ -19,16 +19,16 @@
 
   <!-- Left: Apps -->
   <g filter="url(#shadow)">
-    <rect x="30" y="70" width="140" height="50" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
-    <text x="100" y="100" text-anchor="middle" font-size="13" fill="#1e293b">Web App</text>
+    <rect x="30" y="80" width="140" height="46" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="100" y="108" text-anchor="middle" font-size="13" fill="#1e293b">Web App</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="30" y="140" width="140" height="50" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
-    <text x="100" y="170" text-anchor="middle" font-size="13" fill="#1e293b">Agent A</text>
+    <rect x="30" y="145" width="140" height="46" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="100" y="173" text-anchor="middle" font-size="13" fill="#1e293b">Agent A</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="30" y="210" width="140" height="50" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
-    <text x="100" y="240" text-anchor="middle" font-size="13" fill="#1e293b">Agent B</text>
+    <rect x="30" y="210" width="140" height="46" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="100" y="238" text-anchor="middle" font-size="13" fill="#1e293b">Agent B</text>
   </g>
 
   <!-- Center: APIM Gateway -->
@@ -83,15 +83,15 @@
     <text x="700" y="246" text-anchor="middle" font-size="10" fill="#555">Spillover</text>
   </g>
 
-  <!-- Arrows: Apps to APIM -->
-  <path d="M170 95 C200 95, 210 160, 240 160" stroke="#6c8ebf" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
-  <path d="M170 165 L240 165" stroke="#6c8ebf" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
-  <path d="M170 235 C200 235, 210 200, 240 200" stroke="#6c8ebf" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
+  <!-- Arrows: Apps to APIM (horizontal straight lines) -->
+  <line x1="170" y1="95" x2="240" y2="95" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="170" y1="165" x2="240" y2="165" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="170" y1="235" x2="240" y2="235" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowBlue)"/>
 
-  <!-- Arrows: APIM to Backends -->
-  <path d="M560 130 C590 130, 600 103, 630 103" stroke="#82b366" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
-  <path d="M560 170 L630 168" stroke="#82b366" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
-  <path d="M560 230 C590 230, 600 233, 630 233" stroke="#d6b656" stroke-width="2" fill="none" marker-end="url(#arrowYellow)"/>
+  <!-- Arrows: APIM to Backends (horizontal straight lines) -->
+  <line x1="560" y1="103" x2="630" y2="103" stroke="#82b366" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <line x1="560" y1="168" x2="630" y2="168" stroke="#82b366" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <line x1="560" y1="233" x2="630" y2="233" stroke="#d6b656" stroke-width="2" marker-end="url(#arrowYellow)"/>
 
   <!-- Legend -->
   <rect x="30" y="370" width="740" height="140" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
