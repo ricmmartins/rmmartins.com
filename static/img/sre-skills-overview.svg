@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" font-family="Segoe UI, system-ui, sans-serif">
+  <rect width="800" height="400" rx="12" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+  <text x="400" y="35" text-anchor="middle" font-size="18" font-weight="600" fill="#2d3436">8 skills across 4 operational domains</text>
+  <rect x="30" y="60" width="170" height="155" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+  <text x="115" y="85" text-anchor="middle" font-size="13" font-weight="600" fill="#6c8ebf">Architecture</text>
+  <line x1="55" y1="95" x2="175" y2="95" stroke="#6c8ebf" stroke-width="0.5"/>
+  <text x="115" y="115" text-anchor="middle" font-size="11" fill="#333">01 Well-Architected</text>
+  <text x="115" y="135" text-anchor="middle" font-size="11" fill="#333">03 Capacity Planning</text>
+  <text x="115" y="165" text-anchor="middle" font-size="10" fill="#666">Quarterly + bi-weekly</text>
+  <text x="115" y="185" text-anchor="middle" font-size="10" fill="#666">audits and forecasts</text>
+  <rect x="220" y="60" width="170" height="155" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+  <text x="305" y="85" text-anchor="middle" font-size="13" font-weight="600" fill="#82b366">Governance</text>
+  <line x1="245" y1="95" x2="365" y2="95" stroke="#82b366" stroke-width="0.5"/>
+  <text x="305" y="115" text-anchor="middle" font-size="11" fill="#333">02 Compliance</text>
+  <text x="305" y="135" text-anchor="middle" font-size="11" fill="#333">07 Digital Native Gov</text>
+  <text x="305" y="165" text-anchor="middle" font-size="10" fill="#666">Weekly + monthly</text>
+  <text x="305" y="185" text-anchor="middle" font-size="10" fill="#666">policy and maturity</text>
+  <rect x="410" y="60" width="170" height="155" rx="8" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+  <text x="495" y="85" text-anchor="middle" font-size="13" font-weight="600" fill="#d6b656">Cost and Ops</text>
+  <line x1="435" y1="95" x2="555" y2="95" stroke="#d6b656" stroke-width="0.5"/>
+  <text x="495" y="115" text-anchor="middle" font-size="11" fill="#333">04 FinOps Intelligence</text>
+  <text x="495" y="135" text-anchor="middle" font-size="11" fill="#333">05 Postmortem</text>
+  <text x="495" y="165" text-anchor="middle" font-size="10" fill="#666">Monthly + post-incident</text>
+  <text x="495" y="185" text-anchor="middle" font-size="10" fill="#666">cost and learning</text>
+  <rect x="600" y="60" width="170" height="155" rx="8" fill="#f8cecc" stroke="#b85450" stroke-width="1.5"/>
+  <text x="685" y="85" text-anchor="middle" font-size="13" font-weight="600" fill="#b85450">Security</text>
+  <line x1="625" y1="95" x2="745" y2="95" stroke="#b85450" stroke-width="0.5"/>
+  <text x="685" y="115" text-anchor="middle" font-size="11" fill="#333">06 Defender Score</text>
+  <text x="685" y="135" text-anchor="middle" font-size="11" fill="#333">08 AI/OpenAI Posture</text>
+  <text x="685" y="165" text-anchor="middle" font-size="10" fill="#666">Weekly + bi-weekly</text>
+  <text x="685" y="185" text-anchor="middle" font-size="10" fill="#666">security posture</text>
+  <rect x="100" y="245" width="600" height="50" rx="8" fill="#e8e8e8" stroke="#999" stroke-width="1"/>
+  <text x="400" y="275" text-anchor="middle" font-size="14" font-weight="600" fill="#333">Azure SRE Agent (reasoning engine + tool access)</text>
+  <line x1="115" y1="215" x2="115" y2="245" stroke="#6c8ebf" stroke-width="1.5" stroke-dasharray="4"/>
+  <line x1="305" y1="215" x2="305" y2="245" stroke="#82b366" stroke-width="1.5" stroke-dasharray="4"/>
+  <line x1="495" y1="215" x2="495" y2="245" stroke="#d6b656" stroke-width="1.5" stroke-dasharray="4"/>
+  <line x1="685" y1="215" x2="685" y2="245" stroke="#b85450" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="100" y="320" width="600" height="50" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1"/>
+  <text x="400" y="350" text-anchor="middle" font-size="14" font-weight="600" fill="#6c8ebf">Scheduled Investigations (automated cadence)</text>
+  <line x1="400" y1="295" x2="400" y2="320" stroke="#6c8ebf" stroke-width="1.5" stroke-dasharray="4"/>
+</svg>
