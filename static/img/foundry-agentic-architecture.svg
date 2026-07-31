@@ -3,9 +3,6 @@
     <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
       <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.1"/>
     </filter>
-    <marker id="arrowDown" markerWidth="12" markerHeight="8" refX="6" refY="8" orient="auto">
-      <path d="M0,0 L6,8 L12,0" fill="none" stroke="#6c8ebf" stroke-width="2" stroke-linejoin="round"/>
-    </marker>
   </defs>
 
   <rect width="800" height="440" fill="#f8fafc" rx="12"/>
@@ -18,10 +15,13 @@
   <text x="300" y="88" font-size="12" fill="#475569">GPT-5.x  |  Coordinates sub-agents  |  Maintains state  |  Tool-calling router</text>
   <text x="300" y="106" font-size="11" fill="#64748b">Decides which specialized agent handles each sub-task</text>
 
-  <!-- Arrows down -->
-  <line x1="200" y1="125" x2="200" y2="145" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
-  <line x1="400" y1="125" x2="400" y2="145" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
-  <line x1="600" y1="125" x2="600" y2="145" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <!-- Arrows L1 to L2: lines + triangles -->
+  <line x1="200" y1="125" x2="200" y2="142" stroke="#6c8ebf" stroke-width="2"/>
+  <polygon points="194,142 206,142 200,150" fill="#6c8ebf"/>
+  <line x1="400" y1="125" x2="400" y2="142" stroke="#6c8ebf" stroke-width="2"/>
+  <polygon points="394,142 406,142 400,150" fill="#6c8ebf"/>
+  <line x1="600" y1="125" x2="600" y2="142" stroke="#6c8ebf" stroke-width="2"/>
+  <polygon points="594,142 606,142 600,150" fill="#6c8ebf"/>
 
   <!-- Layer 2: Specialized Agents -->
   <rect x="40" y="150" width="720" height="80" rx="10" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5" filter="url(#shadow)"/>
@@ -40,10 +40,13 @@
   <text x="665" y="185" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">UX / Content</text>
   <text x="665" y="200" text-anchor="middle" font-size="10" fill="#64748b">GPT-5</text>
 
-  <!-- Arrows down -->
-  <line x1="335" y1="230" x2="335" y2="250" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
-  <line x1="500" y1="230" x2="500" y2="250" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
-  <line x1="665" y1="230" x2="665" y2="250" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <!-- Arrows L2 to L3 -->
+  <line x1="335" y1="230" x2="335" y2="247" stroke="#6c8ebf" stroke-width="2"/>
+  <polygon points="329,247 341,247 335,255" fill="#6c8ebf"/>
+  <line x1="500" y1="230" x2="500" y2="247" stroke="#6c8ebf" stroke-width="2"/>
+  <polygon points="494,247 506,247 500,255" fill="#6c8ebf"/>
+  <line x1="665" y1="230" x2="665" y2="247" stroke="#6c8ebf" stroke-width="2"/>
+  <polygon points="659,247 671,247 665,255" fill="#6c8ebf"/>
 
   <!-- Layer 3: APIM Gateway -->
   <rect x="40" y="255" width="720" height="60" rx="10" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5" filter="url(#shadow)"/>
@@ -51,10 +54,13 @@
   <text x="60" y="296" font-size="14" font-weight="600" fill="#1e293b">API Management (AI Gateway)</text>
   <text x="360" y="286" font-size="11" fill="#475569">Rate limiting | Circuit breaker | Token tracking | Caching | Content safety</text>
 
-  <!-- Arrows down -->
-  <line x1="250" y1="315" x2="250" y2="335" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
-  <line x1="400" y1="315" x2="400" y2="335" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
-  <line x1="550" y1="315" x2="550" y2="335" stroke="#6c8ebf" stroke-width="2" marker-end="url(#arrowDown)"/>
+  <!-- Arrows L3 to L4 -->
+  <line x1="250" y1="315" x2="250" y2="332" stroke="#6c8ebf" stroke-width="2"/>
+  <polygon points="244,332 256,332 250,340" fill="#6c8ebf"/>
+  <line x1="400" y1="315" x2="400" y2="332" stroke="#6c8ebf" stroke-width="2"/>
+  <polygon points="394,332 406,332 400,340" fill="#6c8ebf"/>
+  <line x1="550" y1="315" x2="550" y2="332" stroke="#6c8ebf" stroke-width="2"/>
+  <polygon points="544,332 556,332 550,340" fill="#6c8ebf"/>
 
   <!-- Layer 4: Models -->
   <rect x="40" y="340" width="720" height="70" rx="10" fill="#e8f0fe" stroke="#4285f4" stroke-width="1.5" filter="url(#shadow)"/>
@@ -74,6 +80,5 @@
   <text x="590" y="389" text-anchor="middle" font-size="9" fill="#64748b">Spillover</text>
 
   <!-- Key rule -->
-  <rect x="40" y="418" width="720" height="18" rx="4" fill="none"/>
   <text x="400" y="432" text-anchor="middle" font-size="11" font-weight="600" fill="#b85450">Rule: agents never call models directly. Always through the gateway.</text>
 </svg>
