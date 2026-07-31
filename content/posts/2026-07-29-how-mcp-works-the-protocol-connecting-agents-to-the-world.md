@@ -58,6 +58,41 @@ The `id` field is the correlation key. Same idea as a request ID in distributed 
 
 ## The lifecycle: discover, call, repeat
 
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 160" style="width:100%;height:auto" role="img" aria-label="MCP lifecycle: discover, list tools, call tool, get result">
+<defs>
+<marker id="la" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#666666" />
+</marker>
+</defs>
+<g font-family="Segoe UI, Arial, sans-serif">
+<!-- Step boxes -->
+<rect x="20" y="50" width="150" height="60" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" />
+<text x="95" y="76" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">server/discover</text>
+<text x="95" y="94" text-anchor="middle" font-size="10" fill="#555555">capabilities + version</text>
+<rect x="220" y="50" width="150" height="60" rx="8" fill="#fff2cc" stroke="#d6b656" stroke-width="2" />
+<text x="295" y="76" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">tools/list</text>
+<text x="295" y="94" text-anchor="middle" font-size="10" fill="#555555">schemas + descriptions</text>
+<rect x="420" y="50" width="150" height="60" rx="8" fill="#e1d5e7" stroke="#9673a6" stroke-width="2" />
+<text x="495" y="76" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">tools/call</text>
+<text x="495" y="94" text-anchor="middle" font-size="10" fill="#555555">arguments → server</text>
+<rect x="620" y="50" width="170" height="60" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+<text x="705" y="76" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">result</text>
+<text x="705" y="94" text-anchor="middle" font-size="10" fill="#555555">content + structured</text>
+<!-- Arrows -->
+<line x1="176" y1="80" x2="214" y2="80" stroke="#666666" stroke-width="2" marker-end="url(#la)" />
+<line x1="376" y1="80" x2="414" y2="80" stroke="#666666" stroke-width="2" marker-end="url(#la)" />
+<line x1="576" y1="80" x2="614" y2="80" stroke="#666666" stroke-width="2" marker-end="url(#la)" />
+<!-- Loop-back arrow from result to tools/call -->
+<path d="M 705 116 V 140 H 495 V 116" stroke="#888888" stroke-width="1.5" stroke-dasharray="6 3" fill="none" marker-end="url(#la)" />
+<text x="600" y="152" text-anchor="middle" font-size="10" font-style="italic" fill="#777777">repeat as needed</text>
+<!-- Phase labels -->
+<text x="95" y="38" text-anchor="middle" font-size="10" font-weight="bold" fill="#6c8ebf">1. DISCOVER</text>
+<text x="295" y="38" text-anchor="middle" font-size="10" font-weight="bold" fill="#d6b656">2. LIST</text>
+<text x="495" y="38" text-anchor="middle" font-size="10" font-weight="bold" fill="#9673a6">3. CALL</text>
+<text x="705" y="38" text-anchor="middle" font-size="10" font-weight="bold" fill="#82b366">4. RESULT</text>
+</g>
+</svg>
+
 As of protocol version `2026-07-28`, MCP is stateless. The old `initialize` / `notifications/initialized` handshake is gone, and so is the protocol-level session. No `Mcp-Session-Id`. No sticky connection state the load balancer has to preserve. Each request carries the protocol version and client metadata it needs.
 
 If a client wants to learn what the server supports up front, it can call `server/discover`:
@@ -121,6 +156,62 @@ For readability, I omit the repeated `_meta` block in the next few examples. In 
 ## Transports: how the JSON actually moves
 
 MCP is transport-agnostic, but in practice you will see two standard transports: **stdio** and **Streamable HTTP**.
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 320" style="width:100%;height:auto" role="img" aria-label="Side-by-side comparison of stdio and Streamable HTTP transports">
+<defs>
+<marker id="ta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#666666" />
+</marker>
+</defs>
+<g font-family="Segoe UI, Arial, sans-serif">
+<!-- Divider -->
+<line x1="410" y1="10" x2="410" y2="310" stroke="#cccccc" stroke-width="1" stroke-dasharray="4 4" />
+<!-- LEFT: stdio -->
+<text x="200" y="28" text-anchor="middle" font-size="14" font-weight="bold" fill="#111111">stdio (local)</text>
+<!-- Host container -->
+<rect x="20" y="48" width="190" height="120" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" />
+<text x="115" y="70" text-anchor="middle" font-size="11" font-weight="bold" fill="#111111">Host process</text>
+<!-- MCP Client -->
+<rect x="40" y="82" width="150" height="36" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="2" />
+<text x="115" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#111111">MCP Client</text>
+<!-- MCP Server -->
+<rect x="255" y="82" width="130" height="36" rx="6" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+<text x="320" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#111111">MCP Server</text>
+<!-- Arrows -->
+<line x1="196" y1="92" x2="249" y2="92" stroke="#888888" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#ta)" />
+<text x="222" y="86" text-anchor="middle" font-size="9" font-style="italic" fill="#777777">spawns</text>
+<line x1="196" y1="108" x2="249" y2="108" stroke="#666666" stroke-width="2" marker-end="url(#ta)" />
+<line x1="249" y1="108" x2="196" y2="108" stroke="#666666" stroke-width="2" marker-end="url(#ta)" />
+<text x="222" y="132" text-anchor="middle" font-size="9" fill="#555555">JSON-RPC via stdin/stdout</text>
+<!-- Characteristics -->
+<text x="20" y="196" font-size="10" fill="#555555">✓ Local only — same machine</text>
+<text x="20" y="214" font-size="10" fill="#555555">✓ One client per process</text>
+<text x="20" y="232" font-size="10" fill="#555555">✓ stdout = protocol, stderr = logs</text>
+<text x="20" y="250" font-size="10" fill="#555555">✓ Newline-delimited UTF-8 JSON</text>
+<!-- RIGHT: Streamable HTTP -->
+<text x="620" y="28" text-anchor="middle" font-size="14" font-weight="bold" fill="#111111">Streamable HTTP (remote)</text>
+<!-- Host -->
+<rect x="430" y="48" width="190" height="120" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" />
+<text x="525" y="70" text-anchor="middle" font-size="11" font-weight="bold" fill="#111111">Host (browser, app)</text>
+<!-- MCP Client -->
+<rect x="450" y="82" width="150" height="36" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="2" />
+<text x="525" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#111111">MCP Client</text>
+<!-- Remote endpoint -->
+<rect x="665" y="62" width="140" height="72" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+<text x="735" y="90" text-anchor="middle" font-size="11" font-weight="bold" fill="#111111">Remote MCP</text>
+<text x="735" y="106" text-anchor="middle" font-size="9" fill="#555555">POST /mcp</text>
+<!-- Arrows -->
+<line x1="606" y1="92" x2="659" y2="92" stroke="#666666" stroke-width="2" marker-end="url(#ta)" />
+<text x="632" y="86" text-anchor="middle" font-size="9" font-weight="bold" fill="#555555">POST</text>
+<line x1="659" y1="108" x2="606" y2="108" stroke="#666666" stroke-width="2" marker-end="url(#ta)" />
+<text x="632" y="132" text-anchor="middle" font-size="9" fill="#555555">JSON or SSE stream</text>
+<!-- Characteristics -->
+<text x="430" y="196" font-size="10" fill="#555555">✓ Remote — over the network</text>
+<text x="430" y="214" font-size="10" fill="#555555">✓ Multiple clients, one endpoint</text>
+<text x="430" y="232" font-size="10" fill="#555555">✓ Standard HTTP infra (LB, TLS, auth)</text>
+<text x="430" y="250" font-size="10" fill="#555555">✓ POST-based, optional SSE streaming</text>
+</g>
+</svg>
 
 ### `stdio`: local, simple, brutally practical
 
@@ -296,6 +387,53 @@ Notifications are how one side says "something changed" without opening a reques
 That means: "my tool inventory changed; call `tools/list` again." Same idea exists for prompts and resources.
 
 ## Security model: the server is the trust boundary
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 280" style="width:100%;height:auto" role="img" aria-label="MCP trust boundaries showing where security enforcement happens">
+<defs>
+<marker id="sa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#666666" />
+</marker>
+</defs>
+<g font-family="Segoe UI, Arial, sans-serif">
+<!-- Trust boundary box -->
+<rect x="10" y="30" width="760" height="220" rx="10" fill="none" stroke="#cc0000" stroke-width="2" stroke-dasharray="8 4" />
+<rect x="20" y="18" width="150" height="22" rx="4" fill="white" />
+<text x="95" y="34" text-anchor="middle" font-size="11" font-weight="bold" fill="#cc0000">TRUST BOUNDARY</text>
+<!-- User -->
+<rect x="40" y="100" width="110" height="56" rx="8" fill="#f5f5f5" stroke="#999999" stroke-width="1.5" />
+<text x="95" y="126" text-anchor="middle" font-size="11" font-weight="bold" fill="#111111">User</text>
+<text x="95" y="142" text-anchor="middle" font-size="9" fill="#555555">input / approval</text>
+<!-- Host -->
+<rect x="200" y="70" width="150" height="120" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2" />
+<text x="275" y="96" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">HOST</text>
+<text x="275" y="114" text-anchor="middle" font-size="9" fill="#555555">approval prompts</text>
+<text x="275" y="128" text-anchor="middle" font-size="9" fill="#555555">permission gates</text>
+<text x="275" y="142" text-anchor="middle" font-size="9" fill="#555555">output sanitization</text>
+<!-- MCP Client inside host -->
+<rect x="215" y="152" width="120" height="28" rx="4" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5" />
+<text x="275" y="171" text-anchor="middle" font-size="10" font-weight="bold" fill="#111111">MCP Client</text>
+<!-- Server -->
+<rect x="440" y="70" width="150" height="120" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="2" />
+<text x="515" y="96" text-anchor="middle" font-size="12" font-weight="bold" fill="#111111">MCP SERVER</text>
+<text x="515" y="114" text-anchor="middle" font-size="9" fill="#555555">input validation</text>
+<text x="515" y="128" text-anchor="middle" font-size="9" fill="#555555">authZ per tool</text>
+<text x="515" y="142" text-anchor="middle" font-size="9" fill="#555555">least privilege</text>
+<!-- Backend -->
+<rect x="650" y="100" width="100" height="56" rx="8" fill="#f8cecc" stroke="#b85450" stroke-width="1.5" />
+<text x="700" y="126" text-anchor="middle" font-size="11" font-weight="bold" fill="#111111">Backend</text>
+<text x="700" y="142" text-anchor="middle" font-size="9" fill="#555555">APIs / DBs</text>
+<!-- Arrows -->
+<line x1="156" y1="128" x2="194" y2="128" stroke="#666666" stroke-width="2" marker-end="url(#sa)" />
+<line x1="356" y1="166" x2="434" y2="130" stroke="#666666" stroke-width="2" marker-end="url(#sa)" />
+<line x1="434" y1="130" x2="356" y2="166" stroke="#666666" stroke-width="2" marker-end="url(#sa)" />
+<line x1="596" y1="128" x2="644" y2="128" stroke="#666666" stroke-width="2" marker-end="url(#sa)" />
+<!-- Labels on arrows -->
+<text x="395" y="136" text-anchor="middle" font-size="9" fill="#555555">JSON-RPC</text>
+<!-- Warning label -->
+<text x="515" y="208" text-anchor="middle" font-size="9" font-weight="bold" fill="#cc0000">⚠ Tool output = untrusted input</text>
+<text x="515" y="224" text-anchor="middle" font-size="9" fill="#777777">(indirect prompt injection risk)</text>
+</g>
+</svg>
 
 The biggest mistake people make with MCP is assuming the model is the safety layer. It isn't. The **server** and the **host** are.
 
