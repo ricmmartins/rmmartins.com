@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" font-family="Segoe UI, system-ui, sans-serif">
+  <defs>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <rect width="800" height="520" fill="#f8fafc" rx="12"/>
+  <text x="400" y="36" text-anchor="middle" font-size="18" font-weight="600" fill="#1e293b">APIM as AI Gateway</text>
+
+  <!-- Left: Apps -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="70" width="140" height="50" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="100" y="100" text-anchor="middle" font-size="13" fill="#1e293b">Web App</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="30" y="140" width="140" height="50" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="100" y="170" text-anchor="middle" font-size="13" fill="#1e293b">Agent A</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="30" y="210" width="140" height="50" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+    <text x="100" y="240" text-anchor="middle" font-size="13" fill="#1e293b">Agent B</text>
+  </g>
+
+  <!-- Center: APIM Gateway -->
+  <rect x="240" y="60" width="320" height="280" rx="12" fill="#e8f0fe" stroke="#4285f4" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="400" y="86" text-anchor="middle" font-size="15" font-weight="600" fill="#1a73e8">Azure API Management</text>
+
+  <g filter="url(#shadow)">
+    <rect x="260" y="100" width="135" height="40" rx="6" fill="#d5e8d4" stroke="#82b366" stroke-width="1.2"/>
+    <text x="327" y="125" text-anchor="middle" font-size="11" fill="#1e293b">Load Balancing</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="405" y="100" width="135" height="40" rx="6" fill="#d5e8d4" stroke="#82b366" stroke-width="1.2"/>
+    <text x="472" y="125" text-anchor="middle" font-size="11" fill="#1e293b">Rate Limit / Token</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="260" y="155" width="135" height="40" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="1.2"/>
+    <text x="327" y="180" text-anchor="middle" font-size="11" fill="#1e293b">Circuit Breaker</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="405" y="155" width="135" height="40" rx="6" fill="#fff2cc" stroke="#d6b656" stroke-width="1.2"/>
+    <text x="472" y="180" text-anchor="middle" font-size="11" fill="#1e293b">Semantic Caching</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="260" y="210" width="135" height="40" rx="6" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.2"/>
+    <text x="327" y="235" text-anchor="middle" font-size="11" fill="#1e293b">Token Tracking</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="405" y="210" width="135" height="40" rx="6" fill="#f8cecc" stroke="#b85450" stroke-width="1.2"/>
+    <text x="472" y="235" text-anchor="middle" font-size="11" fill="#1e293b">Content Safety</text>
+  </g>
+
+  <!-- Monitoring -->
+  <g filter="url(#shadow)">
+    <rect x="290" y="270" width="220" height="36" rx="6" fill="#f0f0f0" stroke="#999" stroke-width="1"/>
+    <text x="400" y="293" text-anchor="middle" font-size="11" fill="#555">Azure Monitor + Log Analytics</text>
+  </g>
+
+  <!-- Right: Model Backends -->
+  <g filter="url(#shadow)">
+    <rect x="630" y="80" width="140" height="46" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="700" y="100" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">PTU Region A</text>
+    <text x="700" y="116" text-anchor="middle" font-size="10" fill="#555">Base load</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="630" y="145" width="140" height="46" rx="8" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+    <text x="700" y="165" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">PTU Region B</text>
+    <text x="700" y="181" text-anchor="middle" font-size="10" fill="#555">DR / Overflow</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="630" y="210" width="140" height="46" rx="8" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+    <text x="700" y="230" text-anchor="middle" font-size="11" font-weight="600" fill="#1e293b">PAYGO Global</text>
+    <text x="700" y="246" text-anchor="middle" font-size="10" fill="#555">Spillover</text>
+  </g>
+
+  <!-- Arrows: Apps to APIM -->
+  <line x1="170" y1="95" x2="238" y2="170" stroke="#6c8ebf" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="170" y1="165" x2="238" y2="170" stroke="#6c8ebf" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+  <line x1="170" y1="235" x2="238" y2="200" stroke="#6c8ebf" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Arrows: APIM to Backends -->
+  <line x1="562" y1="130" x2="628" y2="103" stroke="#82b366" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <line x1="562" y1="170" x2="628" y2="168" stroke="#82b366" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+  <line x1="562" y1="210" x2="628" y2="233" stroke="#d6b656" stroke-width="1.5" marker-end="url(#arrowYellow)"/>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#6c8ebf"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#82b366"/>
+    </marker>
+    <marker id="arrowYellow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#d6b656"/>
+    </marker>
+  </defs>
+
+  <!-- Legend -->
+  <rect x="30" y="370" width="740" height="140" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="50" y="394" font-size="13" font-weight="600" fill="#1e293b">Key capabilities</text>
+  <circle cx="55" cy="416" r="5" fill="#d5e8d4" stroke="#82b366"/>
+  <text x="70" y="420" font-size="11" fill="#555">Load Balancing: round-robin / weighted across backends</text>
+  <circle cx="55" cy="438" r="5" fill="#d5e8d4" stroke="#82b366"/>
+  <text x="70" y="442" font-size="11" fill="#555">Rate Limiting: per token, not per request</text>
+  <circle cx="55" cy="460" r="5" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="70" y="464" font-size="11" fill="#555">Circuit Breaker: auto-failover on 429 (PTU full capacity)</text>
+  <circle cx="430" cy="416" r="5" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="445" y="420" font-size="11" fill="#555">Semantic Caching: response reuse by prompt similarity</text>
+  <circle cx="430" cy="438" r="5" fill="#e1d5e7" stroke="#9673a6"/>
+  <text x="445" y="442" font-size="11" fill="#555">Token Tracking: per app/team/user chargeback</text>
+  <circle cx="430" cy="460" r="5" fill="#f8cecc" stroke="#b85450"/>
+  <text x="445" y="464" font-size="11" fill="#555">Content Safety: gateway-level input blocking</text>
+  <text x="400" y="498" text-anchor="middle" font-size="10" fill="#94a3b8">Pattern: apps/agents call APIM, never the model directly</text>
+</svg>

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" font-family="Segoe UI, system-ui, sans-serif">
+  <rect width="800" height="280" fill="#f8fafc" rx="12"/>
+  <text x="400" y="32" text-anchor="middle" font-size="18" font-weight="600" fill="#1e293b">Model lifecycle in Azure AI Foundry</text>
+
+  <!-- Timeline bar -->
+  <line x1="60" y1="100" x2="740" y2="100" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Preview -->
+  <circle cx="110" cy="100" r="14" fill="#e1d5e7" stroke="#9673a6" stroke-width="2"/>
+  <text x="110" y="80" text-anchor="middle" font-size="13" font-weight="600" fill="#9673a6">Preview</text>
+  <text x="110" y="135" text-anchor="middle" font-size="10" fill="#64748b">Early access</text>
+  <text x="110" y="148" text-anchor="middle" font-size="10" fill="#64748b">No SLA</text>
+
+  <!-- GA -->
+  <circle cx="270" cy="100" r="14" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+  <text x="270" y="80" text-anchor="middle" font-size="13" font-weight="600" fill="#82b366">GA</text>
+  <text x="270" y="135" text-anchor="middle" font-size="10" fill="#64748b">~18 months</text>
+  <text x="270" y="148" text-anchor="middle" font-size="10" fill="#64748b">Production ready</text>
+
+  <!-- Legacy -->
+  <circle cx="430" cy="100" r="14" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+  <text x="430" y="80" text-anchor="middle" font-size="13" font-weight="600" fill="#d6b656">Legacy</text>
+  <text x="430" y="135" text-anchor="middle" font-size="10" fill="#64748b">Replacement available</text>
+  <text x="430" y="148" text-anchor="middle" font-size="10" fill="#64748b">Start migration</text>
+
+  <!-- Deprecated -->
+  <circle cx="570" cy="100" r="14" fill="#f8cecc" stroke="#b85450" stroke-width="2"/>
+  <text x="570" y="80" text-anchor="middle" font-size="13" font-weight="600" fill="#b85450">Deprecated</text>
+  <text x="570" y="135" text-anchor="middle" font-size="10" fill="#64748b">~90 days left</text>
+  <text x="570" y="148" text-anchor="middle" font-size="10" fill="#64748b">Migrate NOW</text>
+
+  <!-- Retired -->
+  <circle cx="700" cy="100" r="14" fill="#666" stroke="#333" stroke-width="2"/>
+  <text x="700" y="80" text-anchor="middle" font-size="13" font-weight="600" fill="#333">Retired</text>
+  <text x="700" y="135" text-anchor="middle" font-size="10" fill="#64748b">410 Gone</text>
+  <text x="700" y="148" text-anchor="middle" font-size="10" fill="#64748b">System breaks</text>
+
+  <!-- Arrows between stages -->
+  <path d="M126,100 L254,100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <path d="M286,100 L414,100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <path d="M446,100 L554,100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+  <path d="M586,100 L684,100" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+  <defs>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Warning box -->
+  <rect x="120" y="185" width="560" height="70" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="150" y="210" font-size="13" font-weight="600" fill="#92400e">&#9888; PTU deployments do NOT auto-upgrade</text>
+  <text x="150" y="230" font-size="11" fill="#78350f">Standard/Global Standard auto-upgrade. PTU requires manual migration:</text>
+  <text x="150" y="246" font-size="11" fill="#78350f">test with existing prompts, validate quality, swap deployment.</text>
+</svg>
