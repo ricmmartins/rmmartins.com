@@ -1,3 +1,22 @@
+---
+slug: azure-sre-agent-proactive-skills
+aliases:
+  - /azure-sre-agent-proactive-skills/
+title: "From reactive firefighting to proactive operations: custom skills for Azure SRE Agent"
+description: "How I built an open-source pack of 8 custom skills that transform Azure SRE Agent from reactive incident response to proactive platform engineering."
+date: 2026-07-30
+categories:
+  - Azure
+  - SRE
+  - AI
+tags:
+  - azure-sre-agent
+  - site-reliability-engineering
+  - proactive-operations
+  - custom-skills
+translationKey: azure-sre-agent-proactive-skills
+---
+
 # From reactive firefighting to proactive operations: custom skills for Azure SRE Agent
 
 **TL;DR:** Azure SRE Agent is great at reactive incident response, but doesn't cover proactive operations out of the box. I built an [open-source pack of 8 custom skills](https://github.com/ricmmartins/azure-sre-agent-skills/) that add governance audits, FinOps reporting, capacity planning, postmortems, and more. Combined with Scheduled Investigations, they move your operations from reactive to proactive.
