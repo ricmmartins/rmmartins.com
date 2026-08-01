@@ -3,7 +3,7 @@ title: "Azure AI Foundry: from zero to production"
 slug: azure-ai-foundry-zero-to-production
 aliases:
   - /azure-ai-foundry-zero-to-production/
-description: "What I cover when a customer asks how to go from playground to production with Azure AI Foundry: model selection, PTU vs PAYGO, spillover architecture, APIM as AI Gateway, and production checklist."
+description: "What I cover when a customer asks how to go from playground to production with Azure AI Foundry: model selection, Standard vs Priority vs PTU, spillover architecture, APIM as AI Gateway, and production checklist."
 date: 2026-07-30
 categories:
   - Azure
@@ -13,6 +13,7 @@ tags:
   - openai
   - ptu
   - provisioned-throughput
+  - priority-processing
   - apim
   - ai-gateway
   - production
@@ -23,7 +24,7 @@ translationKey: azure-ai-foundry-zero-to-production
 
 *What I cover when a customer asks "we want to build AI applications on Azure, where do we start?"*
 
-> **TL;DR:** Azure AI Foundry is the unified platform for building AI apps on Azure. Start with PAYGO, move to PTU when utilization exceeds 60-70%, and always configure spillover (PTU primary + PAYGO overflow). Use [ptucalc.com](https://ptucalc.com) to model your costs before committing.
+> **TL;DR:** Azure AI Foundry is the unified platform for building AI apps on Azure. Start with Standard PAYGO, use Priority Processing selectively when latency matters but traffic is bursty, and move predictable baseline traffic to PTU when utilization exceeds 60-70%. Use [ptucalc.com](https://ptucalc.com) to model your costs before committing.
 
 *This guide is for engineering teams moving from prototype to production on Azure AI Foundry. If you're still evaluating whether Foundry is the right platform, start at [ai.azure.com](https://ai.azure.com).*
 
@@ -41,7 +42,7 @@ That conversation became a workshop, then a deck, and now this guide. The questi
 
 - Model Catalog: 1,900+ models (OpenAI, Meta Llama, Mistral, Cohere, Phi, others)
 - Prompt Engineering: playground, prompt flow, evaluation tools
-- Deployment Options: serverless pay-per-token, Provisioned Throughput (PTU), Global/Data Zone routing
+- Deployment Options: Standard and Priority pay-per-token processing, Provisioned Throughput (PTU), Global/Data Zone routing
 - Safety and Governance: content filters, red teaming tools, model monitoring
 - Agent Framework: multi-step AI agents with tool-calling, code interpreter, file search
 
@@ -80,7 +81,7 @@ My recommendation: create a model governance process. Monitor Azure Updates, mai
 
 ![Model lifecycle in Azure AI Foundry](/img/foundry-model-lifecycle.svg)
 
-### 3. Deployment type: PAYGO vs PTU
+### 3. Deployment type: Standard, Priority, or PTU
 
 Most teams overthink this. The rule is simple:
 
@@ -91,12 +92,27 @@ Most teams overthink this. The rule is simple:
 - Traffic is unpredictable or bursty
 - You're still figuring out which models you'll use long-term
 
+**Add Priority Processing** when:
+- The workload is user-facing and sensitive to latency
+- Traffic is bursty or concentrated in business hours
+- You want model-specific latency targets without reserving PTU capacity
+
 **Move to PTU (Provisioned Throughput Units)** when:
 - Sustained utilization exceeds 60-70% of equivalent PTU capacity
 - You need guaranteed latency (no noisy-neighbor throttling)
 - You're running production workloads with predictable patterns
 
-### 4. How PTU actually works
+### 4. Where Priority Processing fits
+
+[Priority Processing](https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/priority-processing) is the middle ground between Standard PAYGO and PTU. It keeps pay-per-token billing and requires no reservation, but eligible requests are handled by a priority service tier with a defined, model-specific latency target. You can enable it for an entire Global Standard or US Data Zone Standard deployment, or select it per request with `service_tier: "priority"`.
+
+The benefit is simple: more consistent low latency for interactive agents, copilots, and other time-sensitive paths without paying for dedicated capacity during idle periods. A useful pattern is to reserve Priority Processing for requests users are actively waiting on, while background summarization, extraction, and evaluation stay on Standard. For predictable steady-state traffic, PTU is still the stronger economic and capacity choice.
+
+Priority is not reserved capacity. Azure can process a request on the Standard tier during peak demand, for long-context requests on certain models, or when traffic increases by more than 50% tokens per minute in under 15 minutes. When that happens, the response reports `service_tier: "default"` and the request is billed at the Standard rate. Monitor `ServiceTierRequest` and `ServiceTierResponse` in Azure Monitor so you can see requested versus actual processing instead of assuming every request stayed on Priority.
+
+> **Rule of thumb:** Standard for flexible general traffic, Priority for latency-sensitive bursts, and PTU for predictable baseline throughput. Many production systems will use all three.
+
+### 5. How PTU actually works
 
 PTU is a token-bucket model. Each PTU reserves a fixed throughput in tokens per minute. The rate varies by model:
 
@@ -106,7 +122,7 @@ PTU is a token-bucket model. Each PTU reserves a fixed throughput in tokens per 
 
 So 100 PTUs of GPT-5-mini give you roughly 350,000 tokens/minute guaranteed. Go past that and the API returns 429. No queue, no wait. Hard cutoff.
 
-### 5. The cost math (this is where it gets interesting)
+### 6. The cost math (this is where it gets interesting)
 
 | Tier | Price (reference Jul/2026) | Commitment |
 |------|---------------------------|------------|
@@ -120,7 +136,7 @@ The break-even: if sustained utilization is above 60-70% of your PTU capacity, m
 
 I built [ptucalc.com](https://ptucalc.com) to help with exactly this calculation. It is open source. Plug in your usage patterns and it tells you the optimal tier and PTU count.
 
-### 6. Spillover architecture
+### 7. Spillover architecture
 
 The pattern I recommend for production:
 
@@ -200,6 +216,7 @@ Things I check before any customer goes live:
 - [ ] Circuit breaker pattern for downstream dependencies
 - [ ] Health probes and availability monitoring
 - [ ] Spillover configured (PTU primary, PAYGO overflow)
+- [ ] Priority Processing scoped to latency-sensitive paths, not every request
 - [ ] APIM load balancing across PTU backends
 
 ### Observability
@@ -209,6 +226,7 @@ Things I check before any customer goes live:
 - [ ] Alerting on 429 rates (throttling indicator)
 - [ ] Model performance evaluation pipeline (drift detection)
 - [ ] APIM token tracking enabled (per app/team/user)
+- [ ] Priority requests split by `ServiceTierRequest` and `ServiceTierResponse`
 
 ### Cost governance
 - [ ] Budget alerts configured
@@ -251,6 +269,7 @@ Don't skip steps. Each phase teaches you something about your workload that info
 
 **Resources:**
 - [Azure AI Foundry](https://ai.azure.com)
+- [Priority Processing documentation](https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/priority-processing)
 - [PTU Calculator](https://ptucalc.com)
 - [Foundry Documentation](https://learn.microsoft.com/en-us/azure/ai-studio/)
 - [Well-Architected Framework for AI](https://learn.microsoft.com/en-us/azure/well-architected/ai/)
