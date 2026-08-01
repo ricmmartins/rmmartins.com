@@ -85,7 +85,7 @@ My recommendation: create a model governance process. Monitor Azure Updates, mai
 
 Most teams overthink this. The rule is simple:
 
-![PAYGO vs PTU decision tree](/img/foundry-paygo-vs-ptu.svg)
+![Standard, Priority Processing, or PTU decision tree](/img/foundry-paygo-vs-ptu.svg)
 
 **Start with PAYGO (Pay-As-You-Go)** when:
 - You're in development/testing
