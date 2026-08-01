@@ -1,47 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 280" font-family="Segoe UI, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" font-family="Segoe UI, Arial, sans-serif">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/>
-    </marker>
-    <marker id="arrow-yes" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
-    </marker>
-    <marker id="arrow-no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
     </marker>
   </defs>
 
-  <rect x="140" y="10" width="280" height="50" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
-  <text x="280" y="32" text-anchor="middle" font-weight="bold" font-size="12" fill="#1a3a5c">Sustained utilization</text>
-  <text x="280" y="48" text-anchor="middle" font-weight="bold" font-size="12" fill="#1a3a5c">> 60-70% of PTU capacity?</text>
+  <rect width="800" height="340" fill="#f8fafc" rx="12"/>
 
-  <line x1="200" y1="60" x2="120" y2="100" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow-yes)"/>
-  <text x="140" y="78" font-size="11" fill="#2e7d32" font-weight="bold">YES</text>
+  <rect x="250" y="10" width="300" height="55" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+  <text x="400" y="33" text-anchor="middle" font-weight="bold" font-size="13" fill="#1a3a5c">Is traffic predictable and sustained?</text>
+  <text x="400" y="51" text-anchor="middle" font-size="10" fill="#475569">Start with the workload pattern, not the deployment SKU</text>
 
-  <line x1="360" y1="60" x2="440" y2="100" stroke="#c62828" stroke-width="2" marker-end="url(#arrow-no)"/>
-  <text x="405" y="78" font-size="11" fill="#c62828" font-weight="bold">NO</text>
+  <line x1="320" y1="65" x2="200" y2="112" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="245" y="84" font-size="11" fill="#2e7d32" font-weight="bold">YES</text>
+  <line x1="480" y1="65" x2="600" y2="112" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="535" y="84" font-size="11" fill="#c62828" font-weight="bold">NO</text>
 
-  <rect x="30" y="105" width="180" height="50" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
-  <text x="120" y="128" text-anchor="middle" font-weight="bold" font-size="11" fill="#1a3a5c">Need guaranteed latency?</text>
-  <text x="120" y="144" text-anchor="middle" font-size="10" fill="#555">(no noisy-neighbor)</text>
+  <rect x="50" y="115" width="300" height="60" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+  <text x="200" y="140" text-anchor="middle" font-weight="bold" font-size="12" fill="#1a3a5c">Sustained utilization above</text>
+  <text x="200" y="158" text-anchor="middle" font-weight="bold" font-size="12" fill="#1a3a5c">60-70% of equivalent PTU capacity?</text>
 
-  <rect x="350" y="105" width="180" height="50" rx="8" fill="#c8e6c9" stroke="#2e7d32" stroke-width="2"/>
-  <text x="440" y="128" text-anchor="middle" font-weight="bold" font-size="12" fill="#1b5e20">Stay on PAYGO</text>
-  <text x="440" y="144" text-anchor="middle" font-size="10" fill="#555">Flexible, no commitment</text>
+  <rect x="450" y="115" width="300" height="60" rx="8" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+  <text x="600" y="140" text-anchor="middle" font-weight="bold" font-size="12" fill="#1a3a5c">Is the request path</text>
+  <text x="600" y="158" text-anchor="middle" font-weight="bold" font-size="12" fill="#1a3a5c">interactive and latency-sensitive?</text>
 
-  <line x1="75" y1="155" x2="75" y2="195" stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow-yes)"/>
-  <text x="55" y="178" font-size="10" fill="#2e7d32" font-weight="bold">YES</text>
+  <line x1="135" y1="175" x2="100" y2="232" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="102" y="204" font-size="10" fill="#2e7d32" font-weight="bold">YES</text>
+  <line x1="265" y1="175" x2="300" y2="232" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="278" y="204" font-size="10" fill="#c62828" font-weight="bold">NO</text>
+  <line x1="535" y1="175" x2="500" y2="232" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="502" y="204" font-size="10" fill="#2e7d32" font-weight="bold">YES</text>
+  <line x1="665" y1="175" x2="700" y2="232" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="678" y="204" font-size="10" fill="#c62828" font-weight="bold">NO</text>
 
-  <line x1="165" y1="155" x2="255" y2="195" stroke="#c62828" stroke-width="2" marker-end="url(#arrow-no)"/>
-  <text x="220" y="178" font-size="10" fill="#c62828" font-weight="bold">NO</text>
+  <rect x="10" y="235" width="180" height="80" rx="8" fill="#c8e6c9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="100" y="258" text-anchor="middle" font-weight="bold" font-size="12" fill="#1b5e20">PTU</text>
+  <text x="100" y="277" text-anchor="middle" font-size="10" fill="#475569">Reserved throughput</text>
+  <text x="100" y="294" text-anchor="middle" font-size="10" fill="#475569">Predictable baseline load</text>
 
-  <rect x="0" y="200" width="150" height="65" rx="8" fill="#c8e6c9" stroke="#2e7d32" stroke-width="2"/>
-  <text x="75" y="222" text-anchor="middle" font-weight="bold" font-size="12" fill="#1b5e20">PTU Reserved</text>
-  <text x="75" y="238" text-anchor="middle" font-size="10" fill="#555">Monthly or Yearly</text>
-  <text x="75" y="254" text-anchor="middle" font-size="10" fill="#555">+ PAYGO spillover</text>
+  <rect x="210" y="235" width="180" height="80" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <text x="300" y="258" text-anchor="middle" font-weight="bold" font-size="12" fill="#bf360c">Standard PAYGO</text>
+  <text x="300" y="277" text-anchor="middle" font-size="10" fill="#475569">Monitor actual usage</text>
+  <text x="300" y="294" text-anchor="middle" font-size="10" fill="#475569">Re-evaluate as traffic grows</text>
 
-  <rect x="200" y="200" width="180" height="65" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
-  <text x="290" y="222" text-anchor="middle" font-weight="bold" font-size="11" fill="#bf360c">Monitor for 1 month</text>
-  <text x="290" y="238" text-anchor="middle" font-size="10" fill="#555">Track actual patterns,</text>
-  <text x="290" y="254" text-anchor="middle" font-size="10" fill="#555">then re-evaluate</text>
+  <rect x="410" y="235" width="180" height="80" rx="8" fill="#e1d5e7" stroke="#9673a6" stroke-width="2"/>
+  <text x="500" y="258" text-anchor="middle" font-weight="bold" font-size="12" fill="#5b3b66">Priority Processing</text>
+  <text x="500" y="277" text-anchor="middle" font-size="10" fill="#475569">Low-latency target</text>
+  <text x="500" y="294" text-anchor="middle" font-size="10" fill="#475569">No capacity reservation</text>
+
+  <rect x="610" y="235" width="180" height="80" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="700" y="258" text-anchor="middle" font-weight="bold" font-size="12" fill="#1e40af">Standard PAYGO</text>
+  <text x="700" y="277" text-anchor="middle" font-size="10" fill="#475569">Flexible, pay per token</text>
+  <text x="700" y="294" text-anchor="middle" font-size="10" fill="#475569">No latency target</text>
+
+  <text x="400" y="330" text-anchor="middle" font-size="10" fill="#64748b">Priority can fall back to Standard during rapid traffic ramps, peak demand, or eligible long-context requests.</text>
 </svg>
