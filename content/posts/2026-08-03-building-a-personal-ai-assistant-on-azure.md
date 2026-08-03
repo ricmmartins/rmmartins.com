@@ -61,7 +61,7 @@ This narrower scope makes failures easier to isolate. If the first deployment in
 
 ![Validated personal assistant interface returning a RAG answer with runbook citations](/img/personal-assistant-rag-citations.gif)
 
-*The validated interface returns a grounded answer and displays the runbooks used as sources. The recorded UI is a real deployment demo, and some text in the GIF is in Portuguese.*
+*The validated English interface returns a grounded answer and displays the runbooks used as sources.*
 
 ## Repository layout and prerequisites
 
@@ -461,7 +461,7 @@ The response gives the user an `action_id` and preview. The incident adapter has
 
 ![Validated personal assistant interface requesting explicit confirmation before creating an incident](/img/personal-assistant-confirmation-flow.gif)
 
-*The model prepares a pending action. The backend performs the write only after the requesting user confirms it. This GIF shows the validated interface, with some UI text in Portuguese.*
+*The model prepares a pending action. The backend performs the write only after the requesting user confirms it.*
 
 Test the flow locally:
 
