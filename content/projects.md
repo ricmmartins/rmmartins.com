@@ -105,6 +105,7 @@ Articles published on the official [Startups at Microsoft](https://techcommunity
 ## Other official Microsoft blogs
 
 **All Things Azure**
+- [Building an operations assistant on Azure that waits for approval before it acts](https://devblogs.microsoft.com/all-things-azure/building-an-operations-assistant-on-azure-that-waits-for-approval-before-it-acts/)
 - [Build your own Microsoft Docs AI assistant with Azure Container Apps and Azure OpenAI](https://devblogs.microsoft.com/all-things-azure/build-your-own-microsoft-docs-ai-assistant-with-azure-container-apps-and-azure-openai/)
 
 **FastTrack for Azure**
@@ -168,4 +169,3 @@ Contributions to the Red Hat Cloud Experts Blog and official ARO documentation a
 - [Azure Front Door with ARO](https://mobb.ninja/docs/aro/frontdoor/)
 - [Setup a VPN Connection into an ARO Cluster with OpenVPN](https://mobb.ninja/docs/aro/vpn/)
 - [Configure ARO to use Microsoft Entra ID Group Claims](https://cloud.redhat.com/experts/idp/group-claims/aro/)
-
