@@ -1,3 +1,14 @@
+{{- if hugo.IsProduction }}
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JZ60L765HR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JZ60L765HR');
+</script>
+{{- end }}
+
 {{- /* Hreflang tags for multilingual SEO (EN ↔ PT) */ -}}
 {{- if .IsHome }}
 <link rel="alternate" hreflang="en" href="https://rmmartins.com/" />
