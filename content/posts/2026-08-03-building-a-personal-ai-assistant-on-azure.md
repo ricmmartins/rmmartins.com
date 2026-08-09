@@ -65,6 +65,8 @@ This narrower scope makes failures easier to isolate. If the first deployment in
 
 ## Repository layout and prerequisites
 
+**Existing repository layout — do not copy or run:**
+
 ```text
 labs/personal-assistant/
 ├── docs/runbooks/
@@ -110,9 +112,16 @@ The local mode is not a collection of disconnected mocks. It runs the same API, 
 
 On Windows PowerShell:
 
+**Execute — PowerShell:**
+
 ```powershell
 git clone https://github.com/ricmmartins/agentic-infra-handbook.git
 Set-Location agentic-infra-handbook\labs\personal-assistant
+
+$labRoot = (Get-Location).Path
+if (-not (Test-Path .\azure.yaml) -or -not (Test-Path .\pyproject.toml)) {
+  throw "Run this tutorial from the agentic-infra-handbook\labs\personal-assistant directory."
+}
 
 Copy-Item .env.example .env
 py -3.12 -m venv .venv
@@ -122,6 +131,8 @@ pip install -e ".[dev]"
 ```
 
 The relevant defaults in `.env.example` are:
+
+**Existing code — do not copy or run:**
 
 ```dotenv
 APP_ENV=development
@@ -138,11 +149,15 @@ These values prevent the application from reaching Azure. The chat model behaves
 
 Start the API:
 
+**Execute — PowerShell:**
+
 ```powershell
 personal-assistant-api
 ```
 
 Open a second PowerShell window, activate the virtual environment there, and send a request:
+
+**Execute — PowerShell:**
 
 ```powershell
 Invoke-RestMethod `
@@ -152,15 +167,17 @@ Invoke-RestMethod `
   -Body '{"session_id":"demo-1","message":"Which identity headers does the app read in Azure?"}'
 ```
 
-The response contains an answer, citations, and, when a sensitive operation is requested, a `pending_action`.
+**Expected output:** the response contains an answer, citations, and, when a sensitive operation is requested, a `pending_action`.
 
 Run the test suite before changing any cloud setting:
+
+**Execute — PowerShell:**
 
 ```powershell
 pytest -q
 ```
 
-The current lab has 12 tests. They verify:
+The current lab has 14 test functions. They verify:
 
 1. chat answers include citations;
 2. the root route serves the authenticated browser UI;
@@ -173,13 +190,17 @@ The current lab has 12 tests. They verify:
 9. Azure mode refuses incomplete configuration;
 10. tool arguments are validated before an action is created;
 11. concurrent and repeated confirmation remains idempotent;
-12. an authenticated service principal can use its principal ID when no user name exists.
+12. Azure mode accepts only a consistent canonical Easy Auth principal envelope;
+13. partial or inconsistent authentication headers are rejected;
+14. audit telemetry omits user-controlled and identifying details.
 
 The actor ownership test matters more than the UUID used for `action_id`. An identifier that is difficult to guess is not authorization.
 
 ## 2. Make credential selection deterministic
 
 `DefaultAzureCredential` is convenient on a development machine because it can reuse the Azure CLI session. In a Container App, I prefer an explicit managed identity credential.
+
+**Existing code — do not copy or run:**
 
 ```python
 from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
@@ -201,6 +222,8 @@ This split keeps production from walking a long credential chain intended for de
 ## 3. Connect Azure OpenAI without an API key
 
 The implementation uses the OpenAI Python client against Azure OpenAI's v1 base URL:
+
+**Existing code — do not copy or run:**
 
 ```python
 from azure.identity import get_bearer_token_provider
@@ -226,6 +249,8 @@ The `/openai/v1/` base URL is Azure OpenAI's v1 API surface. That name is someti
 
 The companion revision used for this tutorial calls `client.chat.completions.create()` for chat and tool calls:
 
+**Existing code — do not copy or run:**
+
 ```python
 response = client.chat.completions.create(
     model=config.azure_openai_chat_deployment,
@@ -243,6 +268,8 @@ The validated chat deployment is `assistant-chat`, backed by `gpt-5-mini` versio
 
 Embeddings use `text-embedding-3-small` with 1536 dimensions:
 
+**Existing code — do not copy or run:**
+
 ```python
 response = client.embeddings.create(
     model=config.azure_openai_embedding_deployment,
@@ -256,6 +283,8 @@ The model can return fewer dimensions than its maximum, but the index definition
 ## 4. Build the Azure AI Search index
 
 The Azure adapter uses the stable Search REST API version `2026-04-01` and creates the index idempotently. The vector field is:
+
+**Existing code — do not copy or run:**
 
 ```python
 {
@@ -271,11 +300,15 @@ The Azure adapter uses the stable Search REST API version `2026-04-01` and creat
 
 There is no reason to return the vector to the model. Search results select the fields that a response can quote:
 
+**Expected output:**
+
 ```text
 id,title,source,content
 ```
 
 The full index also defines an HNSW algorithm and a semantic configuration:
+
+**Existing code — do not copy or run:**
 
 ```python
 "vectorSearch": {
@@ -305,6 +338,8 @@ The runbooks that ship in `docs/runbooks/` are English, so the `content` field u
 
 The query combines lexical and vector retrieval, then asks for semantic ranking:
 
+**Existing code — do not copy or run:**
+
 ```python
 payload = {
     "search": query,
@@ -332,6 +367,8 @@ Azure AI Search can return HTTP `207 Multi-Status` when a batch contains a mix o
 
 The adapter parses the response body, collects successful document keys, and rejects failures or missing keys:
 
+**Existing code — do not copy or run:**
+
 ```python
 indexed_ids = {
     str(result.get("key"))
@@ -357,7 +394,7 @@ if failures or missing_ids:
     )
 ```
 
-One of the 12 tests constructs a `207` response with one valid document and one invalid document, then confirms that bootstrap fails instead of accepting an incomplete knowledge base.
+One test constructs a `207` response with one valid document and one invalid document, then confirms that bootstrap fails instead of accepting an incomplete knowledge base.
 
 ### Split ingestion from query permissions in production
 
@@ -376,6 +413,8 @@ For the first deployment, `BOOTSTRAP_RAG_ON_STARTUP=true` keeps setup simple. Th
 
 Each chat request starts with the authenticated actor, the caller's `session_id`, and the new message. The memory key includes both actor and session:
 
+**Existing code — do not copy or run:**
+
 ```python
 memory_session_id = f"{actor.actor_id}:{session_id}"
 documents = self.knowledge_base.search(message)
@@ -386,6 +425,8 @@ history = self.memory_store.get_history(memory_session_id)
 Two people can now choose `session_id="demo"` without sharing history.
 
 The model gets the system prompt, retrieved runbooks, prior messages, and current user message. The loop allows at most three model rounds:
+
+**Existing code — do not copy or run:**
 
 ```python
 for _ in range(3):
@@ -421,6 +462,8 @@ In production I would record the termination reason: final answer, tool error, t
 
 `get_resource_metrics` is read-only. Its schema limits the window to 5 through 60 minutes:
 
+**Existing code — do not copy or run:**
+
 ```python
 {
     "type": "function",
@@ -447,6 +490,8 @@ The local adapter hashes the resource name and derives stable CPU, memory, and e
 
 `create_incident` takes a different path. A model tool call only creates a pending record:
 
+**Existing code — do not copy or run:**
+
 ```python
 record = pending_action_service.create_incident_request(
     session_id=session_id,
@@ -464,6 +509,8 @@ The response gives the user an `action_id` and preview. The incident adapter has
 *The model prepares a pending action. The backend performs the write only after the requesting user confirms it.*
 
 Test the flow locally:
+
+**Execute — PowerShell:**
 
 ```powershell
 $chat = Invoke-RestMethod `
@@ -500,15 +547,23 @@ Only after a successful claim does the mock adapter create `INC-0001`. For a rea
 Azure Container Apps has built-in authentication, commonly called Easy Auth. After Microsoft Entra ID validates the request, the platform injects identity headers such as:
 
 - `X-MS-CLIENT-PRINCIPAL-ID`;
-- `X-MS-CLIENT-PRINCIPAL-NAME`.
+- `X-MS-CLIENT-PRINCIPAL-NAME`;
+- the base64-encoded `X-MS-CLIENT-PRINCIPAL` claims envelope.
 
-The API resolves its actor from those headers:
+The API resolves its actor only when the envelope identifies the `aad` provider and contains the same Microsoft Entra object ID:
+
+**Existing code — do not copy or run:**
 
 ```python
 actor_id = request.headers.get("X-MS-CLIENT-PRINCIPAL-ID")
 actor_name = request.headers.get("X-MS-CLIENT-PRINCIPAL-NAME")
+encoded_principal = request.headers.get("X-MS-CLIENT-PRINCIPAL")
 
-if actor_id:
+if (
+    actor_id
+    and encoded_principal
+    and _is_valid_easy_auth_principal(encoded_principal, actor_id)
+):
     return ActorContext(
         actor_id=actor_id,
         actor_name=actor_name or actor_id,
@@ -516,9 +571,9 @@ if actor_id:
     )
 ```
 
-An app-only token may not have a user name. The code then uses the principal ID as the audit name. The fixed local identity is allowed only when `APP_ENV=development`. In any other environment, a missing principal ID returns `401`.
+An authenticated principal may not have a user name. The code then uses the principal ID as the actor name. The fixed local identity is allowed only when `APP_ENV=development`. In any other environment, missing or inconsistent authentication headers return `401`.
 
-This design depends on Easy Auth rejecting anonymous access. Header-reading code does not secure a publicly anonymous API by itself.
+These headers are not cryptographically signed for application-level validation. This design depends on Container Apps managed ingress and Easy Auth being the only path to port 8000. Do not add another public ingress, sidecar proxy, port mapping, or internal caller that can reach the container while supplying its own `X-MS-*` headers. If the architecture gains a bypass path, validate Microsoft Entra bearer tokens and claims in the application.
 
 `/healthz` is intentionally excluded from authentication so Container Apps probes can reach it. The root page, `/me`, `/chat`, and `/actions/{action_id}/confirm` require an authenticated session or valid bearer token.
 
@@ -550,26 +605,136 @@ Model versions and regional quota change. Check both before deployment. If your 
 
 The Bicep fixes `minReplicas` and `maxReplicas` at one. Session history and pending actions still live in memory, so two replicas could create an action on one process and send its confirmation to another. Shared state comes before horizontal scaling.
 
-## 9. Create the Microsoft Entra App Registration
+## 9. Select the tenant, subscription, regions, models, and allowed users
 
-Bicep configures Container Apps authentication, but it expects the client ID and credential of an existing App Registration. Create it in the tenant associated with the target subscription.
+Use PowerShell 7.4 or newer. The companion lab pins the minimum tested tool versions and includes a preflight helper. Verify the local tools before contacting Azure.
 
-The following is Windows PowerShell. Backticks are PowerShell line continuations:
+**Execute — PowerShell:**
 
 ```powershell
-az login --tenant <tenant-id>
+$PSVersionTable.PSVersion
+py -3.12 --version
+az version
+az bicep version
+azd version
 
+.\scripts\preflight.ps1 -LocalOnly
+```
+
+**Expected output:** each tool reports a supported version and the preflight ends successfully. The helper fails rather than guessing when a prerequisite is missing or too old.
+
+Set explicit values for the deployment. Model availability, versions, SKU names, capacity, and quota vary by region and subscription.
+
+**Execute — PowerShell:**
+
+```powershell
+$tenantId = "<tenant-guid>"
+$subscriptionId = "<subscription-guid>"
+$location = "<azure-openai-and-container-apps-region>"
+$searchLocation = "<azure-ai-search-region>"
+
+$chatModelName = "gpt-5-mini"
+$chatModelVersion = "2025-08-07"
+$chatDeploymentSku = "GlobalStandard"
+$chatDeploymentCapacity = 10
+
+$embeddingModelName = "text-embedding-3-small"
+$embeddingModelVersion = "1"
+$embeddingDeploymentSku = "GlobalStandard"
+$embeddingDeploymentCapacity = 10
+$embeddingDimensions = 1536
+
+az login --tenant $tenantId
+az account set --subscription $subscriptionId
+azd auth login
+azd auth status
+
+$signedInObjectId = az ad signed-in-user show --query id --output tsv
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($signedInObjectId)) {
+  throw "Could not resolve the signed-in Microsoft Entra user object ID."
+}
+
+$authAllowedPrincipalIds = @($signedInObjectId)
+$authAllowedGroupIds = @()
+
+az account show `
+  --query "{name:name,id:id,tenantId:tenantId}" `
+  --output table
+
+az cognitiveservices model list `
+  --location $location `
+  --query "[?model.name=='$chatModelName' || model.name=='$embeddingModelName'].{name:model.name,version:model.version,format:model.format,skus:skus[].name}" `
+  --output table
+
+az cognitiveservices usage list `
+  --location $location `
+  --output table
+```
+
+**Expected output:** the active tenant and subscription are the intended targets, both exact model versions and deployment SKUs appear in the live catalog, and available quota covers the requested capacities. Change the variables before provisioning if the live output differs.
+
+The current lab fails closed for interactive access. `AUTH_ALLOWED_PRINCIPAL_IDS` must include the operator's Microsoft Entra user object ID. Add only approved user object IDs or security-group object IDs. Do not put tenant IDs, application client IDs, UPNs, or group names in these lists.
+
+**Optional — PowerShell, only when granting access to another approved user or group:**
+
+```powershell
+$approvedUserId = az ad user show `
+  --id "<approved-user-upn-or-object-id>" `
+  --query id `
+  --output tsv
+$approvedGroupId = az ad group show `
+  --group "<approved-group-name-or-object-id>" `
+  --query id `
+  --output tsv
+
+$authAllowedPrincipalIds += $approvedUserId
+$authAllowedGroupIds += $approvedGroupId
+```
+
+Register the resource providers required by the supplied Bicep.
+
+**Execute — PowerShell:**
+
+```powershell
+$providers = @(
+  "Microsoft.App",
+  "Microsoft.ContainerRegistry",
+  "Microsoft.CognitiveServices",
+  "Microsoft.Insights",
+  "Microsoft.ManagedIdentity",
+  "Microsoft.OperationalInsights",
+  "Microsoft.Search"
+)
+
+foreach ($provider in $providers) {
+  az provider register --namespace $provider --wait
+  if ($LASTEXITCODE -ne 0) {
+    throw "Provider registration failed: $provider"
+  }
+}
+```
+
+## 10. Create the Microsoft Entra application and credential
+
+Bicep configures Container Apps built-in authentication, but it expects an existing single-tenant App Registration. Run steps 9 through 12 in the same PowerShell session because later commands use the variables created here.
+
+**Execute — PowerShell:**
+
+```powershell
 $app = az ad app create `
-  --display-name personal-assistant-reference `
-  --sign-in-audience AzureADMyOrg | ConvertFrom-Json
+  --display-name "personal-assistant-reference" `
+  --sign-in-audience "AzureADMyOrg" `
+  --output json | ConvertFrom-Json
+if ($LASTEXITCODE -ne 0 -or -not $app.appId -or -not $app.id) {
+  throw "App Registration creation failed."
+}
 
 $clientId = $app.appId
-az ad app update `
-  --id $clientId `
-  --identifier-uris "api://$clientId"
-
 $scopeId = [guid]::NewGuid().Guid
-$body = @{
+
+$graphBody = @{
+  identifierUris = @("api://$clientId")
+  groupMembershipClaims = "SecurityGroup"
   api = @{
     requestedAccessTokenVersion = 2
     oauth2PermissionScopes = @(
@@ -591,145 +756,290 @@ $body = @{
       enableAccessTokenIssuance = $false
     }
   }
-} | ConvertTo-Json -Depth 6 -Compress
+} | ConvertTo-Json -Depth 8 -Compress
 
-$graphToken = (
-  az account get-access-token --resource-type ms-graph |
-    ConvertFrom-Json
-).accessToken
+$graphToken = az account get-access-token `
+  --resource-type ms-graph `
+  --query accessToken `
+  --output tsv
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($graphToken)) {
+  throw "Could not obtain a Microsoft Graph token."
+}
 
 Invoke-RestMethod `
   -Method Patch `
   -Uri "https://graph.microsoft.com/v1.0/applications/$($app.id)" `
   -Headers @{ Authorization = "Bearer $graphToken" } `
   -ContentType "application/json" `
-  -Body $body | Out-Null
+  -Body $graphBody | Out-Null
+
+$graphToken = $null
+
+az ad sp create --id $clientId --output none
+if ($LASTEXITCODE -ne 0) {
+  throw "Could not create the Enterprise Application."
+}
 ```
 
-The delegated scope is `api://<client-id>/user_impersonation`. `enableIdTokenIssuance` supports the hybrid flow used by Easy Auth. Without it, the callback can fail with `AADSTS700054`.
+The delegated scope is `api://<client-id>/user_impersonation`. ID-token issuance supports the Easy Auth browser flow, and `SecurityGroup` claims support the optional group allowlist. The lab does not require broad Microsoft Graph application permissions.
 
-Create a short-lived credential for the authentication provider. Keep its lifetime within the policy of your tenant:
+Create a short-lived credential for the authentication provider. Its password is returned only once.
+
+**Execute — PowerShell:**
 
 ```powershell
-$endDate = (Get-Date).ToUniversalTime().AddDays(30).ToString(
+$credentialEnd = (Get-Date).ToUniversalTime().AddDays(30).ToString(
   "yyyy-MM-ddTHH:mm:ssZ"
 )
 
 $credential = az ad app credential reset `
   --id $clientId `
   --append `
-  --display-name container-app-easy-auth `
-  --end-date $endDate | ConvertFrom-Json
+  --display-name "container-app-easy-auth" `
+  --end-date $credentialEnd `
+  --output json | ConvertFrom-Json
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($credential.password)) {
+  throw "App credential creation failed."
+}
+
+$clientSecret = $credential.password
 ```
 
-Some tenants require administrator consent. Follow that policy. The client secret is an operational credential, so schedule rotation before it expires.
+Do not print `$clientSecret`, paste it into chat, commit it, or include it in screenshots or logs.
 
-## 10. Configure an isolated AZD environment
+## 11. Create and validate the AZD environment
 
-Authenticate both command-line tools and select the correct subscription:
+Create one isolated AZD environment and set every Bicep input used by the current lab.
 
-```powershell
-az login --tenant <tenant-id>
-az account set --subscription <subscription-id>
-azd auth login
-```
-
-Create an environment and set its parameters:
+**Execute — PowerShell:**
 
 ```powershell
-azd env new personal-assistant-dev
-azd env set AZURE_SUBSCRIPTION_ID <subscription-id>
-azd env set AZURE_LOCATION eastus2
-azd env set AZURE_SEARCH_LOCATION eastus
+$environmentName = "personal-assistant-dev"
+
+azd env new $environmentName
+azd env set AZURE_SUBSCRIPTION_ID $subscriptionId
+azd env set AZURE_LOCATION $location
+azd env set AZURE_SEARCH_LOCATION $searchLocation
 azd env set AUTH_CLIENT_ID $clientId
-azd env set AUTH_CLIENT_SECRET $credential.password
+azd env set AUTH_CLIENT_SECRET $clientSecret
+azd env set AUTH_ALLOWED_PRINCIPAL_IDS ($authAllowedPrincipalIds -join ",")
+azd env set AUTH_ALLOWED_GROUP_IDS ($authAllowedGroupIds -join ",")
 
-$credential = $null
+azd env set AZURE_OPENAI_CHAT_MODEL_NAME $chatModelName
+azd env set AZURE_OPENAI_CHAT_MODEL_VERSION $chatModelVersion
+azd env set AZURE_OPENAI_CHAT_DEPLOYMENT_SKU $chatDeploymentSku
+azd env set AZURE_OPENAI_CHAT_DEPLOYMENT_CAPACITY $chatDeploymentCapacity
+azd env set AZURE_OPENAI_EMBEDDING_MODEL_NAME $embeddingModelName
+azd env set AZURE_OPENAI_EMBEDDING_MODEL_VERSION $embeddingModelVersion
+azd env set AZURE_OPENAI_EMBEDDING_DEPLOYMENT_SKU $embeddingDeploymentSku
+azd env set AZURE_OPENAI_EMBEDDING_DEPLOYMENT_CAPACITY $embeddingDeploymentCapacity
+azd env set AZURE_OPENAI_EMBEDDING_DIMENSIONS $embeddingDimensions
+
+$clientSecret = $null
+$credential.password = $null
 ```
 
-Set `AZURE_LOCATION` and `AZURE_SEARCH_LOCATION` to the same region when possible. The two-region example is a capacity workaround, not the default architecture.
+This dependency-free path writes `AUTH_CLIENT_SECRET` as plaintext in `.azure\<environment>\.env`. The directory is ignored by Git, but ignore rules are not encryption. Do **not** clear the AZD value yet: `azd up` still needs it to configure Easy Auth.
 
-`azure.yaml` contains:
-
-```yaml
-services:
-  api:
-    project: .
-    host: containerapp
-    language: docker
-    docker:
-      path: Dockerfile
-      context: .
-      remoteBuild: true
-```
-
-AZD sends the build context to ACR and injects the resulting `SERVICE_API_IMAGE_NAME` into Bicep. This removes the local Docker requirement and prevents a later `azd provision` from restoring a placeholder image.
-
-### Do not forget AZD's local secret state
-
-`AUTH_CLIENT_SECRET` is a secure Bicep parameter and becomes a Container App secret. It is not committed to the repository.
-
-There is still a local copy to manage. `azd env set` writes values to `.azure/<environment>/.env` as unencrypted text. The lab ignores `.azure/` in Git, but `.gitignore` is not encryption. Restrict access to that directory and clear the value after provisioning:
+**Optional — PowerShell, only when an organization-approved Key Vault is already available:**
 
 ```powershell
-azd env set AUTH_CLIENT_SECRET ''
+azd env set-secret AUTH_CLIENT_SECRET
 ```
 
-AZD 1.24.1 has no `env unset` command. Setting an empty string clears the sensitive value while leaving the key. Before a later Easy Auth update, create a new credential, set it in the environment, run `azd provision`, and clear the local value again.
+This interactive alternative stores a Key Vault reference in the AZD environment. Record the non-secret vault and secret names for cleanup.
 
-## 11. Validate before provisioning
+Run the companion lab's Azure-aware helper. It performs read-only checks against the tenant, subscription, provider registrations, App Registration, model catalog, RBAC, allowlists, and AZD environment.
 
-Compile the Bicep and run all 12 tests:
+**Execute — PowerShell:**
 
 ```powershell
-az bicep build --file infra\main.bicep --stdout | Out-Null
-pytest -q
+.\scripts\preflight.ps1 `
+  -TenantId $tenantId `
+  -SubscriptionId $subscriptionId `
+  -ClientId $clientId `
+  -AllowedPrincipalIds $authAllowedPrincipalIds `
+  -AllowedGroupIds $authAllowedGroupIds `
+  -Location $location `
+  -SearchLocation $searchLocation `
+  -ChatModelName $chatModelName `
+  -ChatModelVersion $chatModelVersion `
+  -ChatDeploymentSku $chatDeploymentSku `
+  -ChatDeploymentCapacity $chatDeploymentCapacity `
+  -EmbeddingModelName $embeddingModelName `
+  -EmbeddingModelVersion $embeddingModelVersion `
+  -EmbeddingDeploymentSku $embeddingDeploymentSku `
+  -EmbeddingDeploymentCapacity $embeddingDeploymentCapacity `
+  -EmbeddingDimensions $embeddingDimensions
 ```
 
-Then inspect and package the deployment:
+**Expected output:** the helper completes without an error. If access comes only through a group or custom role, have an administrator verify `Microsoft.Authorization/roleAssignments/write`; then use the README-documented `-SkipRoleAssignmentCheck` override.
+
+## 12. Compile, test, preview, and deploy
+
+The first block is static/local. The preview contacts Azure but does not intentionally create resources.
+
+**Execute — PowerShell:**
 
 ```powershell
+az bicep build --file .\infra\main.bicep --stdout | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "Bicep build failed." }
+
+python -m pytest -q
+if ($LASTEXITCODE -ne 0) { throw "Python tests failed." }
+
 azd provision --preview --no-prompt
-azd package --no-prompt
+if ($LASTEXITCODE -ne 0) { throw "AZD deployment preview failed." }
 ```
 
-A preview validates the template but does not reserve Search capacity or model quota. Either resource can still fail during deployment if regional availability changes.
+**Expected output:** Bicep compiles, the Python tests pass, and the AZD preview succeeds. Preview cannot reserve Azure AI Search capacity or Azure OpenAI quota, so a later deployment can still fail because availability changed.
 
-## 12. Deploy with a remote ACR build
+Do **not** run `azd package` for this lab. Packaging a Docker service is a local Docker operation. The checked-in `azure.yaml` intentionally sets `remoteBuild: true`, and `azd up` sends the source to ACR.
 
-With the environment validated:
+**Execute — PowerShell; creates billable Azure resources:**
 
 ```powershell
 azd up
+if ($LASTEXITCODE -ne 0) {
+  throw "azd up failed. Use the companion README diagnostics before retrying."
+}
 ```
 
-This provisions the resources, builds the container image remotely in ACR, and deploys the API. The `API_URL` output already includes `https://`.
+**Expected output:** AZD creates the resource group, provisions Bicep resources and role assignments, builds the image remotely in ACR, deploys the Container App, and saves `API_URL`.
 
-Register the callback URL after the first deployment:
+Only after `azd up` succeeds can you register the final callback and remove the plaintext AZD secret.
+
+**Execute — PowerShell:**
 
 ```powershell
 $appUrl = azd env get-value API_URL
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($appUrl)) {
+  throw "AZD did not return API_URL."
+}
+$clientId = azd env get-value AUTH_CLIENT_ID
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($clientId)) {
+  throw "AZD did not return AUTH_CLIENT_ID."
+}
 
+$redirectUri = "$($appUrl.TrimEnd('/'))/.auth/login/aad/callback"
 az ad app update `
   --id $clientId `
-  --web-redirect-uris "$appUrl/.auth/login/aad/callback"
+  --web-redirect-uris $redirectUri
+if ($LASTEXITCODE -ne 0) {
+  throw "Could not register the Easy Auth callback."
+}
 
-Start-Process $appUrl
+azd env set AUTH_CLIENT_SECRET ""
 ```
 
-The browser redirects to Microsoft sign-in and returns to the chat interface. The page displays RAG sources, can call the metrics tool, and shows a confirmation button for a pending action.
+The minimum tested AZD version has no `env unset`, so an empty value is intentional. Before another `azd provision` or `azd up`, create a fresh App Registration credential, set it, provision, and clear it again. If you used `azd env set-secret`, retain the Key Vault reference instead of replacing it with an empty value.
 
-For later code-only changes:
+**Execute — PowerShell, only for a later code-only change with unchanged infrastructure:**
 
 ```powershell
 azd deploy api
+if ($LASTEXITCODE -ne 0) {
+  throw "Code-only deployment failed."
+}
 ```
 
-At startup, the lab creates the Search index and ingests Markdown files from `/app/docs/runbooks`. The `Dockerfile` sets `DOCS_PATH` explicitly because the installed Python package and copied runbooks live in different paths.
+At startup, the lab creates the Search index and ingests `/app/docs/runbooks`. The first startup can take time while embeddings are created and role assignments propagate.
 
-The first startup may take time while the app creates embeddings and waits for role assignments to propagate. The startup probe allows up to 30 checks at 10-second intervals. Bootstrap failures still appear in the logs instead of being hidden behind a misleading health response.
+## 13. Validate health, authentication, browser behavior, and telemetry
 
-## 13. Check RBAC and keyless authentication
+The lab includes a smoke-test helper for the public boundary.
+
+**Execute — PowerShell:**
+
+```powershell
+$appUrl = azd env get-value API_URL
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($appUrl)) {
+  throw "AZD did not return API_URL."
+}
+
+.\scripts\smoke-test.ps1 `
+  -AppUrl $appUrl `
+  -OpenBrowser
+```
+
+**Expected output:** anonymous `/healthz` returns `200` with `{"status":"ok"}`, and anonymous `/me` returns `302` to Easy Auth/Microsoft Entra. A public `401` still rejects data access, but it means the configured browser redirect is not working.
+
+After sign-in, open the browser developer console. The next block is JavaScript for that console, not PowerShell and not source code to add to the application.
+
+**Execute — browser developer console (JavaScript):**
+
+```javascript
+window.validation = {
+  sessionId: crypto.randomUUID(),
+  async chat(message) {
+    const response = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: this.sessionId, message })
+    });
+    if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
+    return response.json();
+  },
+  async confirm(actionId) {
+    const response = await fetch(`/actions/${encodeURIComponent(actionId)}/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: true })
+    });
+    return { status: response.status, body: await response.json() };
+  }
+};
+
+validation.me = await fetch("/me").then(response => response.json());
+validation.runbook = await validation.chat(
+  "Which identity headers does the Azure app trust?"
+);
+validation.metrics = await validation.chat(
+  "Show CPU metrics for payments-api"
+);
+validation.incident = await validation.chat(
+  "Create an incident for high CPU on payments-api"
+);
+
+console.assert(validation.runbook.citations.length > 0, "Expected citations.");
+console.assert(
+  validation.metrics.pending_action === null,
+  "A read-only metrics request created an action."
+);
+console.assert(
+  validation.incident.pending_action?.status === "pending",
+  "Expected a pending action."
+);
+validation.actionId = validation.incident.pending_action.action_id;
+```
+
+**Expected output:** `/me` identifies the signed-in Microsoft Entra object ID, retrieval has citations, metrics creates no pending action, and the incident request is pending with no `incident_id`.
+
+Use the full [companion README validation sequence](https://github.com/ricmmartins/agentic-infra-handbook/tree/master/labs/personal-assistant#12-validate-health-unauthorized-behavior-authentication-and-browser-flow) to prove the second approved actor receives the application's ownership-specific `403`, then confirm twice as the original actor and verify the same `incident_id`.
+
+Application Insights KQL runs in **Logs** for the deployed Application Insights resource. It is not PowerShell and must not be pasted into the browser console.
+
+**Execute — Application Insights Logs (KQL):**
+
+```kusto
+dependencies
+| where name in ("chat.request", "rag.search", "tool.execute")
+| summarize calls=count(), failures=countif(success == false) by name
+| order by failures desc
+```
+
+**Execute — Application Insights Logs (KQL):**
+
+```kusto
+traces
+| where message startswith "audit_event=pending_action"
+| project timestamp, message
+| order by timestamp desc
+```
+
+**Expected output:** telemetry includes `chat.request`, `rag.search`, `tool.execute`, and pending-action audit events after ingestion delay. Audit messages contain event type, `actor_ref`, and `action_id`, not prompts, incident details, session IDs, actor names/object IDs, tokens, or secrets.
+
+## 14. Check RBAC and keyless authentication
 
 The system-assigned Container App identity receives:
 
@@ -739,24 +1049,35 @@ The system-assigned Container App identity receives:
 | Azure AI Search | Search Service Contributor |
 | Azure AI Search | Search Index Data Contributor |
 
-The user-assigned pull identity receives `AcrPull`. ACR has `adminUserEnabled=false` and enables Microsoft Entra authentication for ARM.
+The user-assigned pull identity receives `AcrPull`. ACR has its admin user disabled. Azure AI Search and Azure OpenAI disable local authentication, so no service API key is stored in the code or Container App environment.
 
-These Search permissions support startup bootstrap in the lab. After moving ingestion out of the API, replace them with Search Index Data Reader for the runtime identity.
-
-Azure AI Search and Azure OpenAI both set `disableLocalAuth=true`. The code and Container App environment contain no service API keys. Development uses the Azure CLI through `DefaultAzureCredential`; Azure uses `ManagedIdentityCredential`.
-
-Easy Auth accepts these audiences:
+**Expected configuration — do not copy or run:**
 
 ```text
-<client-id>
-api://<client-id>
+allowedAudiences:
+  <client-id>
+  api://<client-id>
+allowedApplications:
+  <client-id>
+allowedPrincipals:
+  <approved user and group object IDs>
 ```
 
-The configuration also restricts app-only tokens to the authorized client ID. The provider secret remains in the Container App secret store and must be rotated. User assignment and consent rules still come from your tenant.
+These are separate controls: audiences validate `aud`, applications validate the calling client, and principals restrict interactive users/groups. The Easy Auth provider secret still needs rotation.
 
-## 14. Trace the flow in Application Insights
+## 15. Keep the production boundary explicit
 
-The Bicep passes `APPLICATIONINSIGHTS_CONNECTION_STRING` to the container. The Azure Monitor OpenTelemetry distribution configures itself only when that setting exists:
+**Production guidance — existing code is intentionally not production-ready:**
+
+- move Search schema creation and ingestion to a separate job or pipeline;
+- reduce the API identity to Search Index Data Reader;
+- persist conversation and pending-action state before using more than one replica;
+- add document-level authorization, private networking where required, rate limits, retrieval evaluations, durable action expiry/cancellation, and CSRF protection;
+- replace the mock metrics and incident adapters only after authorization, idempotency, audit, and rollback behavior are production-ready.
+
+The Application Insights setup is existing application code, not a command:
+
+**Existing code — do not copy or run:**
 
 ```python
 from azure.monitor.opentelemetry import configure_azure_monitor
@@ -768,64 +1089,13 @@ if config.applicationinsights_connection_string:
     )
 ```
 
-The application creates spans around chat, RAG, and tool execution. It records counts, backend names, session ID length, and whether a pending action exists. It does not put the user's message body into telemetry attributes.
-
-That avoids turning Application Insights into a prompt archive. The action audit trail is intentionally different. It records actor, action type, severity, title, and result. Resource names may appear there, so retention and access controls must match the sensitivity of operational data.
-
-In the smoke test, `chat.request`, `rag.search`, and `tool.execute` appeared in `dependencies`. The incident flow emitted `pending_action_created`, `pending_action_confirmed`, and `pending_action_result`.
-
-Useful KQL queries:
-
-```kusto
-dependencies
-| where name in ("chat.request", "rag.search", "tool.execute")
-| summarize calls=count(), failures=countif(success == false) by name
-| order by failures desc
-```
-
-```kusto
-traces
-| where message startswith "audit_event=pending_action"
-| project timestamp, message
-| order by timestamp desc
-```
-
-## 15. Run the end-to-end validation
-
-Get the deployed URL and check the anonymous health endpoint:
-
-```powershell
-$appUrl = azd env get-value API_URL
-
-Invoke-RestMethod "$appUrl/healthz"
-```
-
-Open `$appUrl` in a browser window with no existing session. Microsoft sign-in should appear, then return to the chat UI. An unauthenticated API request to `/chat` should receive an authentication challenge. In the validated environment, `curl` received `401`.
-
-For automated calls, obtain a token issued for the App Registration. Do not put a client secret in the repository or leave it in shell history. Also remember that `.azure/<environment>/.env` retains the value until you run:
-
-```powershell
-azd env set AUTH_CLIENT_SECRET ''
-```
-
-Test the deployed behavior in this order:
-
-1. ask a runbook-only question and inspect its citations;
-2. ask for resource metrics and verify the read tool result;
-3. request an incident and verify that `/chat` returns a pending action;
-4. confirm there is no completed incident result or `pending_action_result` audit event before approval;
-5. try to confirm as another actor and expect `403`;
-6. confirm as the requesting actor;
-7. repeat confirmation and verify the same `incident_id`;
-8. inspect Application Insights for request, confirmation, and result events.
-
-In my validation environment, interactive sign-in returned to the UI, RAG returned three citations, and the metrics tool answered. The incident request displayed a confirmation control and created the mock incident only after the click. The Container App ran in single-revision mode with one replica and 100 percent of traffic.
-
 ## Where Redis and Cosmos DB fit
 
 [Azure Cache for Redis is being retired](https://learn.microsoft.com/azure/azure-cache-for-redis/retirement-faq). For a new implementation, plan for [Azure Managed Redis](https://learn.microsoft.com/azure/redis/overview).
 
 Azure Managed Redis uses Microsoft Entra ID by default. Its token scope is:
+
+**Production configuration reference — do not run:**
 
 ```text
 https://redis.azure.com/.default
@@ -834,6 +1104,8 @@ https://redis.azure.com/.default
 The client uses the managed identity object ID as the user name and an access token as the password. That token expires. A production client has to renew it and deal with pooled connections rather than obtaining one token at startup and keeping it forever.
 
 The agent already depends on a protocol:
+
+**Existing code — do not copy or run:**
 
 ```python
 class ConversationMemoryStore(Protocol):
@@ -883,18 +1155,169 @@ The useful outcome is a precise list of what remains. Three successful chat answ
 
 ## Clean up
 
-When you are finished, retrieve the resource group created by AZD and delete it:
+Cleanup is destructive. Preserve the AZD environment until the Azure and Microsoft Entra objects are gone because it contains the identifiers needed for recovery.
+
+**Cleanup — PowerShell; inspect and capture targets before deleting anything:**
 
 ```powershell
-$resourceGroup = azd env get-value AZURE_RESOURCE_GROUP
+$labRoot = (Get-Location).Path
+if (-not (Test-Path .\azure.yaml) -or -not (Test-Path .\pyproject.toml)) {
+  throw "Run cleanup from the personal-assistant lab directory."
+}
 
-az group delete `
-  --name $resourceGroup `
-  --yes `
-  --no-wait
+$environmentName = azd env get-value AZURE_ENV_NAME
+$resourceGroup = azd env get-value AZURE_RESOURCE_GROUP
+$clientId = azd env get-value AUTH_CLIENT_ID
+if (
+  [string]::IsNullOrWhiteSpace($environmentName) -or
+  [string]::IsNullOrWhiteSpace($resourceGroup) -or
+  [string]::IsNullOrWhiteSpace($clientId)
+) {
+  throw "AZD cleanup identifiers are incomplete."
+}
+
+$openAIAccount = az cognitiveservices account list `
+  --resource-group $resourceGroup `
+  --query "[?kind=='OpenAI'] | [0].{name:name,location:location}" `
+  --output json | ConvertFrom-Json
+if ($LASTEXITCODE -ne 0) {
+  throw "Could not inspect the Azure OpenAI account before cleanup."
+}
+
+az resource list `
+  --resource-group $resourceGroup `
+  --output table
+
+az ad app show `
+  --id $clientId `
+  --query "{displayName:displayName,appId:appId}" `
+  --output table
 ```
 
-Check the resource group first and make sure it contains nothing you need to keep. Removing the resource group does not remove the App Registration. Delete that separately when you no longer need it, and revoke any remaining credential.
+**Expected output:** the resource table and App Registration are exactly the lab targets. Stop if the resource group contains anything that must be retained.
+
+Use AZD's cleanup path first.
+
+**Cleanup — PowerShell; deletes the AZD deployment:**
+
+```powershell
+azd down --purge
+if ($LASTEXITCODE -ne 0) {
+  throw "Azure cleanup failed; do not remove local state. Use the reviewed fallback only when AZD cannot locate its deployment."
+}
+```
+
+If `azd down` specifically cannot locate its deployment, use the resource group and Azure OpenAI identity already reviewed above.
+
+**Cleanup — PowerShell; fallback only after the primary cleanup cannot locate the deployment:**
+
+```powershell
+az group delete --name $resourceGroup --yes
+if ($LASTEXITCODE -ne 0) {
+  throw "Manual resource-group cleanup failed."
+}
+
+if ($openAIAccount.name) {
+  az cognitiveservices account purge `
+    --name $openAIAccount.name `
+    --location $openAIAccount.location `
+    --resource-group $resourceGroup `
+    --output none
+  if ($LASTEXITCODE -ne 0) {
+    throw "The resource group was deleted, but the soft-deleted Azure OpenAI account was not purged."
+  }
+}
+```
+
+After either Azure cleanup path succeeds, remove the named Easy Auth credentials, App Registration, and any remaining Enterprise Application.
+
+**Cleanup — PowerShell; deletes Microsoft Entra objects:**
+
+```powershell
+$credentialKeyIds = @(
+  az ad app credential list `
+    --id $clientId `
+    --query "[?displayName=='container-app-easy-auth'].keyId" `
+    --output tsv
+)
+if ($LASTEXITCODE -ne 0) {
+  throw "Could not enumerate the Easy Auth credentials."
+}
+foreach ($keyId in $credentialKeyIds) {
+  if (-not [string]::IsNullOrWhiteSpace($keyId)) {
+    az ad app credential delete --id $clientId --key-id $keyId
+    if ($LASTEXITCODE -ne 0) {
+      throw "Could not delete Easy Auth credential $keyId."
+    }
+  }
+}
+
+az ad app delete --id $clientId
+if ($LASTEXITCODE -ne 0) {
+  throw "The Azure resources were removed, but App Registration cleanup failed."
+}
+
+$remainingServicePrincipalIds = @(
+  az ad sp list `
+    --filter "appId eq '$clientId'" `
+    --query "[].id" `
+    --output tsv
+)
+foreach ($servicePrincipalId in $remainingServicePrincipalIds) {
+  if (-not [string]::IsNullOrWhiteSpace($servicePrincipalId)) {
+    az ad sp delete --id $servicePrincipalId
+    if ($LASTEXITCODE -ne 0) {
+      throw "Could not delete Enterprise Application $servicePrincipalId."
+    }
+  }
+}
+
+$remainingApps = az ad app list `
+  --filter "appId eq '$clientId'" `
+  --query "length(@)" `
+  --output tsv
+$remainingServicePrincipals = az ad sp list `
+  --filter "appId eq '$clientId'" `
+  --query "length(@)" `
+  --output tsv
+if ($remainingApps -ne "0" -or $remainingServicePrincipals -ne "0") {
+  throw "App Registration or Enterprise Application cleanup is incomplete."
+}
+```
+
+**Optional cleanup — PowerShell, only if `azd env set-secret` used an existing Key Vault:**
+
+```powershell
+az keyvault secret delete `
+  --vault-name "<key-vault-name>" `
+  --name "<secret-name>" `
+  --output none
+if ($LASTEXITCODE -ne 0) {
+  throw "Key Vault secret cleanup failed."
+}
+```
+
+Finally remove only this lab's generated local state.
+
+**Cleanup — PowerShell; run only after Azure and Microsoft Entra cleanup succeeds:**
+
+```powershell
+$localAzdEnvironment = Join-Path $labRoot ".azure\$environmentName"
+
+if (Test-Path $localAzdEnvironment) {
+  Remove-Item -LiteralPath $localAzdEnvironment -Recurse -Force
+}
+if (Test-Path (Join-Path $labRoot ".env")) {
+  Remove-Item -LiteralPath (Join-Path $labRoot ".env") -Force
+}
+if (Test-Path (Join-Path $labRoot ".venv")) {
+  Remove-Item -LiteralPath (Join-Path $labRoot ".venv") -Recurse -Force
+}
+
+$credential = $null
+$clientSecret = $null
+$graphToken = $null
+```
 
 ## References
 
