@@ -65,7 +65,7 @@ This narrower scope makes failures easier to isolate. If the first deployment in
 
 ## Repository layout and prerequisites
 
-**Existing repository layout — do not copy or run:**
+*Current repository structure:*
 
 ```text
 labs/personal-assistant/
@@ -112,7 +112,7 @@ The local mode is not a collection of disconnected mocks. It runs the same API, 
 
 On Windows PowerShell:
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 git clone https://github.com/ricmmartins/agentic-infra-handbook.git
@@ -132,7 +132,7 @@ pip install -e ".[dev]"
 
 The relevant defaults in `.env.example` are:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```dotenv
 APP_ENV=development
@@ -149,7 +149,7 @@ These values prevent the application from reaching Azure. The chat model behaves
 
 Start the API:
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 personal-assistant-api
@@ -157,7 +157,7 @@ personal-assistant-api
 
 Open a second PowerShell window, activate the virtual environment there, and send a request:
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 Invoke-RestMethod `
@@ -171,7 +171,7 @@ Invoke-RestMethod `
 
 Run the test suite before changing any cloud setting:
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 pytest -q
@@ -200,7 +200,7 @@ The actor ownership test matters more than the UUID used for `action_id`. An ide
 
 `DefaultAzureCredential` is convenient on a development machine because it can reuse the Azure CLI session. In a Container App, I prefer an explicit managed identity credential.
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
@@ -223,7 +223,7 @@ This split keeps production from walking a long credential chain intended for de
 
 The implementation uses the OpenAI Python client against Azure OpenAI's v1 base URL:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 from azure.identity import get_bearer_token_provider
@@ -249,7 +249,7 @@ The `/openai/v1/` base URL is Azure OpenAI's v1 API surface. That name is someti
 
 The companion revision used for this tutorial calls `client.chat.completions.create()` for chat and tool calls:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 response = client.chat.completions.create(
@@ -268,7 +268,7 @@ The validated chat deployment is `assistant-chat`, backed by `gpt-5-mini` versio
 
 Embeddings use `text-embedding-3-small` with 1536 dimensions:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 response = client.embeddings.create(
@@ -284,7 +284,7 @@ The model can return fewer dimensions than its maximum, but the index definition
 
 The Azure adapter uses the stable Search REST API version `2026-04-01` and creates the index idempotently. The vector field is:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 {
@@ -308,7 +308,7 @@ id,title,source,content
 
 The full index also defines an HNSW algorithm and a semantic configuration:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 "vectorSearch": {
@@ -338,7 +338,7 @@ The runbooks that ship in `docs/runbooks/` are English, so the `content` field u
 
 The query combines lexical and vector retrieval, then asks for semantic ranking:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 payload = {
@@ -367,7 +367,7 @@ Azure AI Search can return HTTP `207 Multi-Status` when a batch contains a mix o
 
 The adapter parses the response body, collects successful document keys, and rejects failures or missing keys:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 indexed_ids = {
@@ -413,7 +413,7 @@ For the first deployment, `BOOTSTRAP_RAG_ON_STARTUP=true` keeps setup simple. Th
 
 Each chat request starts with the authenticated actor, the caller's `session_id`, and the new message. The memory key includes both actor and session:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 memory_session_id = f"{actor.actor_id}:{session_id}"
@@ -426,7 +426,7 @@ Two people can now choose `session_id="demo"` without sharing history.
 
 The model gets the system prompt, retrieved runbooks, prior messages, and current user message. The loop allows at most three model rounds:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 for _ in range(3):
@@ -462,7 +462,7 @@ In production I would record the termination reason: final answer, tool error, t
 
 `get_resource_metrics` is read-only. Its schema limits the window to 5 through 60 minutes:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 {
@@ -490,7 +490,7 @@ The local adapter hashes the resource name and derives stable CPU, memory, and e
 
 `create_incident` takes a different path. A model tool call only creates a pending record:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 record = pending_action_service.create_incident_request(
@@ -510,7 +510,7 @@ The response gives the user an `action_id` and preview. The incident adapter has
 
 Test the flow locally:
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 $chat = Invoke-RestMethod `
@@ -552,7 +552,7 @@ Azure Container Apps has built-in authentication, commonly called Easy Auth. Aft
 
 The API resolves its actor only when the envelope identifies the `aad` provider and contains the same Microsoft Entra object ID:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 actor_id = request.headers.get("X-MS-CLIENT-PRINCIPAL-ID")
@@ -609,7 +609,7 @@ The Bicep fixes `minReplicas` and `maxReplicas` at one. Session history and pend
 
 Use PowerShell 7.4 or newer. The companion lab pins the minimum tested tool versions and includes a preflight helper. Verify the local tools before contacting Azure.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 $PSVersionTable.PSVersion
@@ -625,7 +625,7 @@ azd version
 
 Set explicit values for the deployment. Model availability, versions, SKU names, capacity, and quota vary by region and subscription.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 $tenantId = "<tenant-guid>"
@@ -693,7 +693,7 @@ $authAllowedGroupIds += $approvedGroupId
 
 Register the resource providers required by the supplied Bicep.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 $providers = @(
@@ -718,7 +718,7 @@ foreach ($provider in $providers) {
 
 Bicep configures Container Apps built-in authentication, but it expects an existing single-tenant App Registration. Run steps 9 through 12 in the same PowerShell session because later commands use the variables created here.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 $app = az ad app create `
@@ -785,7 +785,7 @@ The delegated scope is `api://<client-id>/user_impersonation`. ID-token issuance
 
 Create a short-lived credential for the authentication provider. Its password is returned only once.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 $credentialEnd = (Get-Date).ToUniversalTime().AddDays(30).ToString(
@@ -811,7 +811,7 @@ Do not print `$clientSecret`, paste it into chat, commit it, or include it in sc
 
 Create one isolated AZD environment and set every Bicep input used by the current lab.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 $environmentName = "personal-assistant-dev"
@@ -851,7 +851,7 @@ This interactive alternative stores a Key Vault reference in the AZD environment
 
 Run the companion lab's Azure-aware helper. It performs read-only checks against the tenant, subscription, provider registrations, App Registration, model catalog, RBAC, allowlists, and AZD environment.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 .\scripts\preflight.ps1 `
@@ -879,7 +879,7 @@ Run the companion lab's Azure-aware helper. It performs read-only checks against
 
 The first block is static/local. The preview contacts Azure but does not intentionally create resources.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 az bicep build --file .\infra\main.bicep --stdout | Out-Null
@@ -896,7 +896,7 @@ if ($LASTEXITCODE -ne 0) { throw "AZD deployment preview failed." }
 
 Do **not** run `azd package` for this lab. Packaging a Docker service is a local Docker operation. The checked-in `azure.yaml` intentionally sets `remoteBuild: true`, and `azd up` sends the source to ACR.
 
-**Execute — PowerShell; creates billable Azure resources:**
+*PowerShell — run; this creates billable Azure resources:*
 
 ```powershell
 azd up
@@ -909,7 +909,7 @@ if ($LASTEXITCODE -ne 0) {
 
 Only after `azd up` succeeds can you register the final callback and remove the plaintext AZD secret.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 $appUrl = azd env get-value API_URL
@@ -934,7 +934,7 @@ azd env set AUTH_CLIENT_SECRET ""
 
 The minimum tested AZD version has no `env unset`, so an empty value is intentional. Before another `azd provision` or `azd up`, create a fresh App Registration credential, set it, provision, and clear it again. If you used `azd env set-secret`, retain the Key Vault reference instead of replacing it with an empty value.
 
-**Execute — PowerShell, only for a later code-only change with unchanged infrastructure:**
+*PowerShell — run only for a later code-only change with unchanged infrastructure:*
 
 ```powershell
 azd deploy api
@@ -949,7 +949,7 @@ At startup, the lab creates the Search index and ingests `/app/docs/runbooks`. T
 
 The lab includes a smoke-test helper for the public boundary.
 
-**Execute — PowerShell:**
+*PowerShell — run:*
 
 ```powershell
 $appUrl = azd env get-value API_URL
@@ -1051,7 +1051,7 @@ The system-assigned Container App identity receives:
 
 The user-assigned pull identity receives `AcrPull`. ACR has its admin user disabled. Azure AI Search and Azure OpenAI disable local authentication, so no service API key is stored in the code or Container App environment.
 
-**Expected configuration — do not copy or run:**
+*Expected configuration:*
 
 ```text
 allowedAudiences:
@@ -1067,7 +1067,7 @@ These are separate controls: audiences validate `aud`, applications validate the
 
 ## 15. Keep the production boundary explicit
 
-**Production guidance — existing code is intentionally not production-ready:**
+*Production guidance — the current code is intentionally not production-ready:*
 
 - move Search schema creation and ingestion to a separate job or pipeline;
 - reduce the API identity to Search Index Data Reader;
@@ -1077,7 +1077,7 @@ These are separate controls: audiences validate `aud`, applications validate the
 
 The Application Insights setup is existing application code, not a command:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 from azure.monitor.opentelemetry import configure_azure_monitor
@@ -1095,7 +1095,7 @@ if config.applicationinsights_connection_string:
 
 Azure Managed Redis uses Microsoft Entra ID by default. Its token scope is:
 
-**Production configuration reference — do not run:**
+*Production configuration reference:*
 
 ```text
 https://redis.azure.com/.default
@@ -1105,7 +1105,7 @@ The client uses the managed identity object ID as the user name and an access to
 
 The agent already depends on a protocol:
 
-**Existing code — do not copy or run:**
+*Excerpt from the existing code, shown for reference:*
 
 ```python
 class ConversationMemoryStore(Protocol):
