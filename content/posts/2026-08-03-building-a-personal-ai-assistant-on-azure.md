@@ -26,7 +26,7 @@ The companion implementation is in [`labs/personal-assistant`](https://github.co
 
 ## What I am building
 
-The finished slice has:
+The finished slice includes:
 
 - a FastAPI chat API and browser interface;
 - retrieval over Markdown runbooks;
@@ -57,7 +57,7 @@ The incident integration is also a mock adapter. The authorization and approval 
 | Azure Managed Redis | Interface and design notes only |
 | Cosmos DB long-term memory | Interface and design notes only |
 
-This narrower scope makes failures easier to isolate. If the first deployment includes five new data services, a failed answer does not tell me which boundary broke.
+I kept the scope narrow so I could isolate failures. With five new data services in the first deployment, a failed answer would not tell me which boundary broke.
 
 ![Validated personal assistant interface returning a RAG answer with runbook citations](/img/personal-assistant-rag-citations.gif)
 
@@ -108,11 +108,11 @@ Local Docker is optional. `azure.yaml` sets `remoteBuild: true`, so Azure Contai
 
 ## 1. Run the fake mode before creating Azure resources
 
-The local mode is not a collection of disconnected mocks. It runs the same API, agent loop, tool registry, approval service, and memory interfaces used by the Azure mode. Only the model and retrieval adapters change.
+Local mode runs the same API, agent loop, tool registry, approval service, and memory interfaces as Azure mode. Only the model and retrieval adapters change.
 
 On Windows PowerShell:
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 git clone https://github.com/ricmmartins/agentic-infra-handbook.git
@@ -149,7 +149,7 @@ These values prevent the application from reaching Azure. The chat model behaves
 
 Start the API:
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 personal-assistant-api
@@ -157,7 +157,7 @@ personal-assistant-api
 
 Open a second PowerShell window, activate the virtual environment there, and send a request:
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 Invoke-RestMethod `
@@ -171,7 +171,7 @@ Invoke-RestMethod `
 
 Run the test suite before changing any cloud setting:
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 pytest -q
@@ -194,7 +194,7 @@ The current lab has 14 test functions. They verify:
 13. partial or inconsistent authentication headers are rejected;
 14. audit telemetry omits user-controlled and identifying details.
 
-The actor ownership test matters more than the UUID used for `action_id`. An identifier that is difficult to guess is not authorization.
+The ownership test matters more than the UUID used for `action_id`. A hard-to-guess identifier does not provide authorization.
 
 ## 2. Make credential selection deterministic
 
@@ -260,7 +260,7 @@ response = client.chat.completions.create(
 )
 ```
 
-So this implementation uses the Azure OpenAI v1 endpoint, but its agent adapter uses the Chat Completions operation, not `client.responses.create()`. I am calling that out because describing the snippet as Responses API code would be technically wrong. The `ChatModel` protocol isolates this choice, so a later Responses API adapter can replace it without changing retrieval, approvals, or the FastAPI routes.
+So this implementation uses the Azure OpenAI v1 endpoint, but its agent adapter uses the Chat Completions operation, not `client.responses.create()`. I make the distinction because this snippet is not Responses API code. The `ChatModel` protocol isolates this choice, so a later Responses API adapter can replace it without changing retrieval, approvals, or the FastAPI routes.
 
 In both APIs, the value supplied as `model` is the Azure deployment name, not necessarily the public model name.
 
@@ -298,7 +298,7 @@ The Azure adapter uses the stable Search REST API version `2026-04-01` and creat
 }
 ```
 
-There is no reason to return the vector to the model. Search results select the fields that a response can quote:
+The model does not need the vector. Search results select the fields that a response can quote:
 
 **Expected output:**
 
@@ -510,7 +510,7 @@ The response gives the user an `action_id` and preview. The incident adapter has
 
 Test the flow locally:
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 $chat = Invoke-RestMethod `
@@ -609,7 +609,7 @@ The Bicep fixes `minReplicas` and `maxReplicas` at one. Session history and pend
 
 Use PowerShell 7.4 or newer. The companion lab pins the minimum tested tool versions and includes a preflight helper. Verify the local tools before contacting Azure.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 $PSVersionTable.PSVersion
@@ -625,7 +625,7 @@ azd version
 
 Set explicit values for the deployment. Model availability, versions, SKU names, capacity, and quota vary by region and subscription.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 $tenantId = "<tenant-guid>"
@@ -675,7 +675,7 @@ az cognitiveservices usage list `
 
 The current lab fails closed for interactive access. `AUTH_ALLOWED_PRINCIPAL_IDS` must include the operator's Microsoft Entra user object ID. Add only approved user object IDs or security-group object IDs. Do not put tenant IDs, application client IDs, UPNs, or group names in these lists.
 
-**Optional — PowerShell, only when granting access to another approved user or group:**
+**Optional: PowerShell, only when granting access to another approved user or group:**
 
 ```powershell
 $approvedUserId = az ad user show `
@@ -693,7 +693,7 @@ $authAllowedGroupIds += $approvedGroupId
 
 Register the resource providers required by the supplied Bicep.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 $providers = @(
@@ -718,7 +718,7 @@ foreach ($provider in $providers) {
 
 Bicep configures Container Apps built-in authentication, but it expects an existing single-tenant App Registration. Run steps 9 through 12 in the same PowerShell session because later commands use the variables created here.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 $app = az ad app create `
@@ -785,7 +785,7 @@ The delegated scope is `api://<client-id>/user_impersonation`. ID-token issuance
 
 Create a short-lived credential for the authentication provider. Its password is returned only once.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 $credentialEnd = (Get-Date).ToUniversalTime().AddDays(30).ToString(
@@ -811,7 +811,7 @@ Do not print `$clientSecret`, paste it into chat, commit it, or include it in sc
 
 Create one isolated AZD environment and set every Bicep input used by the current lab.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 $environmentName = "personal-assistant-dev"
@@ -841,7 +841,7 @@ $credential.password = $null
 
 This dependency-free path writes `AUTH_CLIENT_SECRET` as plaintext in `.azure\<environment>\.env`. The directory is ignored by Git, but ignore rules are not encryption. Do **not** clear the AZD value yet: `azd up` still needs it to configure Easy Auth.
 
-**Optional — PowerShell, only when an organization-approved Key Vault is already available:**
+**Optional: PowerShell, only when an organization-approved Key Vault is already available:**
 
 ```powershell
 azd env set-secret AUTH_CLIENT_SECRET
@@ -851,7 +851,7 @@ This interactive alternative stores a Key Vault reference in the AZD environment
 
 Run the companion lab's Azure-aware helper. It performs read-only checks against the tenant, subscription, provider registrations, App Registration, model catalog, RBAC, allowlists, and AZD environment.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 .\scripts\preflight.ps1 `
@@ -879,7 +879,7 @@ Run the companion lab's Azure-aware helper. It performs read-only checks against
 
 The first block is static/local. The preview contacts Azure but does not intentionally create resources.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 az bicep build --file .\infra\main.bicep --stdout | Out-Null
@@ -894,9 +894,9 @@ if ($LASTEXITCODE -ne 0) { throw "AZD deployment preview failed." }
 
 **Expected output:** Bicep compiles, the Python tests pass, and the AZD preview succeeds. Preview cannot reserve Azure AI Search capacity or Azure OpenAI quota, so a later deployment can still fail because availability changed.
 
-Do **not** run `azd package` for this lab. Packaging a Docker service is a local Docker operation. The checked-in `azure.yaml` intentionally sets `remoteBuild: true`, and `azd up` sends the source to ACR.
+Skip `azd package` for this lab. Packaging a Docker service is a local Docker operation. The checked-in `azure.yaml` intentionally sets `remoteBuild: true`, and `azd up` sends the source to ACR.
 
-*PowerShell — run; this creates billable Azure resources:*
+*PowerShell: run; this creates billable Azure resources:*
 
 ```powershell
 azd up
@@ -909,7 +909,7 @@ if ($LASTEXITCODE -ne 0) {
 
 Only after `azd up` succeeds can you register the final callback and remove the plaintext AZD secret.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 $appUrl = azd env get-value API_URL
@@ -934,7 +934,7 @@ azd env set AUTH_CLIENT_SECRET ""
 
 The minimum tested AZD version has no `env unset`, so an empty value is intentional. Before another `azd provision` or `azd up`, create a fresh App Registration credential, set it, provision, and clear it again. If you used `azd env set-secret`, retain the Key Vault reference instead of replacing it with an empty value.
 
-*PowerShell — run only for a later code-only change with unchanged infrastructure:*
+*PowerShell: run only for a later code-only change with unchanged infrastructure:*
 
 ```powershell
 azd deploy api
@@ -949,7 +949,7 @@ At startup, the lab creates the Search index and ingests `/app/docs/runbooks`. T
 
 The lab includes a smoke-test helper for the public boundary.
 
-*PowerShell — run:*
+*PowerShell: run:*
 
 ```powershell
 $appUrl = azd env get-value API_URL
@@ -966,7 +966,7 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($appUrl)) {
 
 After sign-in, open the browser developer console. The next block is JavaScript for that console, not PowerShell and not source code to add to the application.
 
-**Execute — browser developer console (JavaScript):**
+**Execute: browser developer console (JavaScript):**
 
 ```javascript
 window.validation = {
@@ -1019,7 +1019,7 @@ Use the full [companion README validation sequence](https://github.com/ricmmarti
 
 Application Insights KQL runs in **Logs** for the deployed Application Insights resource. It is not PowerShell and must not be pasted into the browser console.
 
-**Execute — Application Insights Logs (KQL):**
+**Execute: Application Insights Logs (KQL):**
 
 ```kusto
 dependencies
@@ -1028,7 +1028,7 @@ dependencies
 | order by failures desc
 ```
 
-**Execute — Application Insights Logs (KQL):**
+**Execute: Application Insights Logs (KQL):**
 
 ```kusto
 traces
@@ -1067,7 +1067,7 @@ These are separate controls: audiences validate `aud`, applications validate the
 
 ## 15. Keep the production boundary explicit
 
-*Production guidance — the current code is intentionally not production-ready:*
+*Production guidance: the current code is intentionally not production-ready:*
 
 - move Search schema creation and ingestion to a separate job or pipeline;
 - reduce the API identity to Search Index Data Reader;
@@ -1151,13 +1151,13 @@ This slice proves the boundaries, not production readiness. My next changes woul
 - apply rate limits by authenticated identity;
 - rotate the Easy Auth credential automatically.
 
-The useful outcome is a precise list of what remains. Three successful chat answers do not make a system production ready.
+I want a precise list of what remains. Three successful chat answers do not make a system production ready.
 
 ## Clean up
 
 Cleanup is destructive. Preserve the AZD environment until the Azure and Microsoft Entra objects are gone because it contains the identifiers needed for recovery.
 
-**Cleanup — PowerShell; inspect and capture targets before deleting anything:**
+**Cleanup: PowerShell; inspect and capture targets before deleting anything:**
 
 ```powershell
 $labRoot = (Get-Location).Path
@@ -1198,7 +1198,7 @@ az ad app show `
 
 Use AZD's cleanup path first.
 
-**Cleanup — PowerShell; deletes the AZD deployment:**
+**Cleanup: PowerShell; deletes the AZD deployment:**
 
 ```powershell
 azd down --purge
@@ -1209,7 +1209,7 @@ if ($LASTEXITCODE -ne 0) {
 
 If `azd down` specifically cannot locate its deployment, use the resource group and Azure OpenAI identity already reviewed above.
 
-**Cleanup — PowerShell; fallback only after the primary cleanup cannot locate the deployment:**
+**Cleanup: PowerShell; fallback only after the primary cleanup cannot locate the deployment:**
 
 ```powershell
 az group delete --name $resourceGroup --yes
@@ -1231,7 +1231,7 @@ if ($openAIAccount.name) {
 
 After either Azure cleanup path succeeds, remove the named Easy Auth credentials, App Registration, and any remaining Enterprise Application.
 
-**Cleanup — PowerShell; deletes Microsoft Entra objects:**
+**Cleanup: PowerShell; deletes Microsoft Entra objects:**
 
 ```powershell
 $credentialKeyIds = @(
@@ -1285,7 +1285,7 @@ if ($remainingApps -ne "0" -or $remainingServicePrincipals -ne "0") {
 }
 ```
 
-**Optional cleanup — PowerShell, only if `azd env set-secret` used an existing Key Vault:**
+**Optional cleanup: PowerShell, only if `azd env set-secret` used an existing Key Vault:**
 
 ```powershell
 az keyvault secret delete `
@@ -1299,7 +1299,7 @@ if ($LASTEXITCODE -ne 0) {
 
 Finally remove only this lab's generated local state.
 
-**Cleanup — PowerShell; run only after Azure and Microsoft Entra cleanup succeeds:**
+**Cleanup: PowerShell; run only after Azure and Microsoft Entra cleanup succeeds:**
 
 ```powershell
 $localAzdEnvironment = Join-Path $labRoot ".azure\$environmentName"
