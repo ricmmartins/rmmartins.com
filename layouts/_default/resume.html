@@ -85,7 +85,7 @@
 </head>
 <body>
   <header>
-    <h1>Ricardo Martins - Resume</h1>
+    <h1>{{ .Title }}</h1>
     <nav aria-label="PDF actions">
       <a id="open-pdf" target="_blank" rel="noopener noreferrer nofollow" hidden>Open PDF</a>
       <a id="download-pdf" download="ricardo-nvidia.pdf" rel="nofollow" hidden>Download PDF</a>
@@ -93,7 +93,7 @@
   </header>
   <main>
     <noscript><p>Please enable JavaScript to view or download this PDF.</p></noscript>
-    <object id="resume" type="application/pdf" aria-label="Ricardo Martins resume" hidden>
+    <object id="resume" type="application/pdf" aria-label="{{ .Title }}" hidden>
       <p>Your browser cannot display the PDF inline. Use Open PDF or Download PDF above.</p>
     </object>
   </main>

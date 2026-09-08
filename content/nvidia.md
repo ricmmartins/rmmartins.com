@@ -1,5 +1,5 @@
 ---
-title: "Ricardo Martins - Resume"
+title: "Ricardo Martins \u2014 Professional Profile"
 url: "/nvidia/"
 layout: "resume"
 build:
