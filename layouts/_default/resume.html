@@ -88,7 +88,7 @@
     <h1>{{ .Title }}</h1>
     <nav aria-label="PDF actions">
       <a id="open-pdf" target="_blank" rel="noopener noreferrer nofollow" hidden>Open PDF</a>
-      <a id="download-pdf" download="ricardo-nvidia.pdf" rel="nofollow" hidden>Download PDF</a>
+      <a id="download-pdf" download="{{ .Params.pdfDownloadName | default "ricardo-nvidia.pdf" }}" rel="nofollow" hidden>Download PDF</a>
     </nav>
   </header>
   <main>
@@ -98,7 +98,11 @@
     </object>
   </main>
   {{- /* Embed the PDF without publishing a separate, indexable PDF URL. */ -}}
-  {{- $pdf := resources.Get "documents/ricardo-nvidia.pdf" -}}
+  {{- $pdfPath := .Params.pdfAsset | default "documents/ricardo-nvidia.pdf" -}}
+  {{- $pdf := resources.Get $pdfPath -}}
+  {{- if not $pdf -}}
+    {{- errorf "PDF asset %q not found for %s" $pdfPath .RelPermalink -}}
+  {{- end -}}
   <script id="pdf-data" type="application/octet-stream">{{ $pdf.Content | base64Encode | safeHTML }}</script>
   <script>
     const bytes = Uint8Array.from(atob(document.getElementById("pdf-data").textContent.trim()), char => char.charCodeAt(0));
