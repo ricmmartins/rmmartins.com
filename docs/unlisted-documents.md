@@ -1,18 +1,19 @@
 # Unlisted PDF pages
 
-`/nvis/`, `/nvidia/`, and `/anthropic/` use `layouts/_default/resume.html`.
+`/anthropic/` uses `layouts/_default/resume.html`.
 GitHub Pages redirects extensionless URLs to their trailing-slash form.
 
 Store PDFs under `assets/documents/`, not `static/`. Set `params.pdfAsset`
 and `params.pdfDownloadName` in the page front matter to choose the embedded
-asset and download filename. The default asset and filename preserve the
-existing `/nvidia/` page.
+asset and download filename. Both parameters are required.
+
+The retired `/nvidia/` and `/nvis/` pages and their PDF assets are not published.
+Their URLs return 404. The PDFs remain in the public repository's Git history.
 
 Pages may include a `description` and Markdown body. The description appears
 above the PDF actions. A nonempty body adds links to the project's context
 section and the site's projects page, and renders the Markdown below the PDF.
-The existing PDF-only pages keep their minimal layout. `/anthropic/` uses
-this optional content for project descriptions and distinguishes LLM-powered
+`/anthropic/` uses this optional content for project descriptions and distinguishes LLM-powered
 features from AI-assisted development.
 
 The template embeds the PDF in HTML and creates a browser-local Blob URL for
@@ -32,4 +33,6 @@ URLs or third-party copies.
 
 After a production Hugo build, run `python scripts/check_unlisted_documents.py`
 to check the embedded bytes, indexing directives, and exclusion from generated
-discovery surfaces.
+discovery surfaces, as well as the absence of retired pages. When rebuilding
+locally, remove stale generated output with `hugo --cleanDestinationDir`
+so previously generated pages do not survive deletion of their source files.

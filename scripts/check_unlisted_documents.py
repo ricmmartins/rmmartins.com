@@ -9,8 +9,6 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC = ROOT / "public"
 DOCUMENTS = {
-    "nvis": ("nvis.pdf", "nvis.pdf"),
-    "nvidia": ("ricardo-nvidia.pdf", "ricardo-nvidia.pdf"),
     "anthropic": ("anthropic.pdf", "ricardo-martins-anthropic.pdf"),
 }
 
@@ -51,6 +49,11 @@ class DocumentParser(HTMLParser):
 
 
 def check():
+    for slug in ("nvidia", "nvis", "nvida"):
+        assert not (PUBLIC / slug).exists(), f"Retired page still published: {slug}"
+        assert not (PUBLIC / f"{slug}.html").exists(), slug
+    for filename in ("nvis.pdf", "ricardo-nvidia.pdf"):
+        assert not (ROOT / "assets" / "documents" / filename).exists(), filename
     page_paths = set()
     for slug, (filename, download_name) in DOCUMENTS.items():
         page = PUBLIC / slug / "index.html"

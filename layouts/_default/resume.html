@@ -96,7 +96,7 @@
     {{ with .Description }}<p class="profile-intro">{{ . }}</p>{{ end }}
     <nav aria-label="Profile actions">
       <a id="open-pdf" target="_blank" rel="noopener noreferrer nofollow" hidden>Open PDF</a>
-      <a id="download-pdf" download="{{ .Params.pdfDownloadName | default "ricardo-nvidia.pdf" }}" rel="nofollow" hidden>Download PDF</a>
+      <a id="download-pdf" download="{{ .Params.pdfDownloadName }}" rel="nofollow" hidden>Download PDF</a>
       {{ if .Content }}
       <a href="#project-context">How I use AI</a>
       <a href="{{ "projects" | absURL }}">All projects</a>
@@ -116,7 +116,7 @@
     {{ end }}
   </main>
   {{- /* Embed the PDF without publishing a separate, indexable PDF URL. */ -}}
-  {{- $pdfPath := .Params.pdfAsset | default "documents/ricardo-nvidia.pdf" -}}
+  {{- $pdfPath := .Params.pdfAsset -}}
   {{- $pdf := resources.Get $pdfPath -}}
   {{- if not $pdf -}}
     {{- errorf "PDF asset %q not found for %s" $pdfPath .RelPermalink -}}
