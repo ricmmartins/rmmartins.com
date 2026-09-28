@@ -81,14 +81,26 @@
     [hidden] { display: none; }
     object { display: block; width: 100%; height: calc(100vh - 112px); height: calc(100dvh - 112px); min-height: 320px; border: 0; }
     p { padding: 0 24px; }
+    .profile-intro { padding: 0; max-width: 76ch; line-height: 1.6; color: var(--cp-text-muted); }
+    .project-context { max-width: 76ch; margin: 40px auto; padding: 24px; line-height: 1.7; overflow-wrap: anywhere; }
+    .project-context p { padding: 0; }
+    .project-context h2 { margin-top: 0; line-height: 1.3; }
+    .project-context h3 { margin: 32px 0 8px; line-height: 1.4; }
+    .project-context h3 + p { margin-top: 0; }
+    #project-context, #resume { scroll-margin-top: 24px; }
   </style>
 </head>
 <body>
   <header>
     <h1>{{ .Title }}</h1>
-    <nav aria-label="PDF actions">
+    {{ with .Description }}<p class="profile-intro">{{ . }}</p>{{ end }}
+    <nav aria-label="Profile actions">
       <a id="open-pdf" target="_blank" rel="noopener noreferrer nofollow" hidden>Open PDF</a>
       <a id="download-pdf" download="{{ .Params.pdfDownloadName | default "ricardo-nvidia.pdf" }}" rel="nofollow" hidden>Download PDF</a>
+      {{ if .Content }}
+      <a href="#project-context">How I use AI</a>
+      <a href="{{ "projects" | absURL }}">All projects</a>
+      {{ end }}
     </nav>
   </header>
   <main>
@@ -96,6 +108,12 @@
     <object id="resume" type="application/pdf" aria-label="{{ .Title }}" hidden>
       <p>Your browser cannot display the PDF inline. Use Open PDF or Download PDF above.</p>
     </object>
+    {{ with .Content }}
+    <section id="project-context" class="project-context" aria-label="Projects and practical AI experience">
+      {{ . }}
+      <p><a href="#resume">Back to resume</a></p>
+    </section>
+    {{ end }}
   </main>
   {{- /* Embed the PDF without publishing a separate, indexable PDF URL. */ -}}
   {{- $pdfPath := .Params.pdfAsset | default "documents/ricardo-nvidia.pdf" -}}

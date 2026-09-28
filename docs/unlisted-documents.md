@@ -1,12 +1,19 @@
 # Unlisted PDF pages
 
-`/nvis/` and `/nvidia/` use `layouts/_default/resume.html`. GitHub Pages
-redirects the extensionless `/nvis` URL to `/nvis/`.
+`/nvis/`, `/nvidia/`, and `/anthropic/` use `layouts/_default/resume.html`.
+GitHub Pages redirects extensionless URLs to their trailing-slash form.
 
 Store PDFs under `assets/documents/`, not `static/`. Set `params.pdfAsset`
 and `params.pdfDownloadName` in the page front matter to choose the embedded
 asset and download filename. The default asset and filename preserve the
 existing `/nvidia/` page.
+
+Pages may include a `description` and Markdown body. The description appears
+above the PDF actions. A nonempty body adds links to the project's context
+section and the site's projects page, and renders the Markdown below the PDF.
+The existing PDF-only pages keep their minimal layout. `/anthropic/` uses
+this optional content for project descriptions and distinguishes LLM-powered
+features from AI-assisted development.
 
 The template embeds the PDF in HTML and creates a browser-local Blob URL for
 viewing and downloading. It does not publish a separate PDF URL, because
