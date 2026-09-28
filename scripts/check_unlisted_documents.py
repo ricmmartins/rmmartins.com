@@ -59,7 +59,10 @@ def check():
         page = PUBLIC / slug / "index.html"
         page_paths.add(page)
         parser = DocumentParser()
-        parser.feed(page.read_text(encoding="utf-8"))
+        html = page.read_text(encoding="utf-8")
+        parser.feed(html)
+        assert "open-pdf" not in html and "Open PDF" not in html, page
+        assert {"download-pdf", "resume"} <= parser.ids, page
         assert {"noindex", "nofollow", "nosnippet"} <= parser.robots, page
         assert parser.download == download_name, page
         embedded = base64.b64decode(parser.pdf_data.strip(), validate=True)

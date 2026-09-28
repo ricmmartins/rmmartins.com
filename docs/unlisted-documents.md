@@ -21,6 +21,10 @@ viewing and downloading. It does not publish a separate PDF URL, because
 GitHub Pages does not support custom `X-Robots-Tag` response headers for PDFs.
 The HTML carries `noindex, nofollow, noarchive, nosnippet, noimageindex`.
 
+The page displays the PDF inline and offers a single PDF action, Download PDF.
+If the browser cannot display the embedded document, the fallback message
+directs the reader to download and open it locally.
+
 Keep `build.list: never`, `sitemap.disable: true`, and HTML-only outputs.
 Do not add links from menus, posts, or other public pages. Do not disallow
 these pages in `robots.txt`: search crawlers must fetch the HTML to see

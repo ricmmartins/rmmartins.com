@@ -95,7 +95,6 @@
     <h1>{{ .Title }}</h1>
     {{ with .Description }}<p class="profile-intro">{{ . }}</p>{{ end }}
     <nav aria-label="Profile actions">
-      <a id="open-pdf" target="_blank" rel="noopener noreferrer nofollow" hidden>Open PDF</a>
       <a id="download-pdf" download="{{ .Params.pdfDownloadName }}" rel="nofollow" hidden>Download PDF</a>
       {{ if .Content }}
       <a href="#project-context">How I use AI</a>
@@ -106,7 +105,7 @@
   <main>
     <noscript><p>Please enable JavaScript to view or download this PDF.</p></noscript>
     <object id="resume" type="application/pdf" aria-label="{{ .Title }}" hidden>
-      <p>Your browser cannot display the PDF inline. Use Open PDF or Download PDF above.</p>
+      <p>Your browser cannot display the PDF inline. Use Download PDF above to save and open the file.</p>
     </object>
     {{ with .Content }}
     <section id="project-context" class="project-context" aria-label="Projects and practical AI experience">
@@ -125,11 +124,9 @@
   <script>
     const bytes = Uint8Array.from(atob(document.getElementById("pdf-data").textContent.trim()), char => char.charCodeAt(0));
     const pdfUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-    for (const id of ["open-pdf", "download-pdf"]) {
-      const link = document.getElementById(id);
-      link.href = pdfUrl;
-      link.hidden = false;
-    }
+    const download = document.getElementById("download-pdf");
+    download.href = pdfUrl;
+    download.hidden = false;
     const viewer = document.getElementById("resume");
     viewer.data = pdfUrl;
     viewer.hidden = false;
