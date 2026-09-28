@@ -15,7 +15,9 @@ outputs:
   - HTML
 ---
 
-## How I use AI in my projects
+## Selected projects: how I build with AI
+
+Examples of my work, with details on my contribution and where AI fits.
 
 I have built projects that use LLMs for editorial workflows and agent-guided operations, as well as products developed with AI assistance. I distinguish between models that power a product's functionality and AI tools I use to build it. Some of my projects use conventional software or publish learning materials. You can browse the full collection on [my projects page](https://rmmartins.com/projects).
 
