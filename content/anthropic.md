@@ -1,6 +1,6 @@
 ---
-title: "Ricardo Martins | Resume and projects"
-description: "Cloud architecture, LLM integrations, and agent-guided operations. Read my resume below, or explore how I use AI in the projects I build."
+title: "Ricardo Martins | About me and my projects"
+description: "A short introduction to my background and the projects I build. Read about me below, or explore how I use AI in practice."
 url: "/anthropic/"
 layout: "resume"
 params:

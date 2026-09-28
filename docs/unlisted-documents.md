@@ -2,6 +2,7 @@
 
 `/anthropic/` uses `layouts/_default/resume.html`.
 GitHub Pages redirects extensionless URLs to their trailing-slash form.
+The page presents a personal introduction and selected projects, not a resume.
 
 Store PDFs under `assets/documents/`, not `static/`. Set `params.pdfAsset`
 and `params.pdfDownloadName` in the page front matter to choose the embedded

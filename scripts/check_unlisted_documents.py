@@ -68,6 +68,10 @@ def check():
         embedded = base64.b64decode(parser.pdf_data.strip(), validate=True)
         assert embedded == (ROOT / "assets" / "documents" / filename).read_bytes(), page
         if slug == "anthropic":
+            assert "Ricardo Martins | About me and my projects" in html, page
+            assert "Back to my introduction" in html, page
+            for obsolete in ("Resume and projects", "Read my resume", "Back to resume"):
+                assert obsolete not in html, page
             assert "project-context" in parser.ids, page
             assert parser.headings == 6, "Expected all six project descriptions"
             assert {
