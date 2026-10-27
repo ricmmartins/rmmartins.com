@@ -5,7 +5,7 @@ description: "Open-source projects, official publications, study guides, tools a
 layout: "single"
 summary: "Projects, publications and open-source contributions"
 date: 2024-01-01
-lastmod: 2026-05-06
+lastmod: 2026-10-27
 ShowToc: true
 ShowBreadCrumbs: false
 ---
@@ -34,6 +34,7 @@ The complete and always updated log is on the [Activity Log](https://github.com/
 | Azure Digital Natives Guide | Complete checklist for startups and digital-native teams on Azure | [azdnguide.com](https://azdnguide.com) |
 | Azure Feed | Daily aggregator of Azure blog updates | [azurefeed.news](https://azurefeed.news) |
 | Azure SRE Agent Skills | Custom proactive operations skills pack for Azure SRE Agent. 8 skills covering WAF review, compliance, capacity planning, FinOps, postmortems, Defender score, digital-native governance and AI posture | [github.com/ricmmartins/azure-sre-agent-skills](https://github.com/ricmmartins/azure-sre-agent-skills) |
+| Azure Service Health Slack Bot | Production-oriented integration that sends authenticated Azure Service Health notifications to Slack, deduplicates incidents, and keeps lifecycle updates in one canonical message and thread | [github.com/ricmmartins/azure-service-health-slack-bot](https://github.com/ricmmartins/azure-service-health-slack-bot) |
 
 ---
 
@@ -61,6 +62,7 @@ Articles published on the official [Startups at Microsoft](https://techcommunity
 - [Highlights from KubeCon North America 2024 and Microsoft Ignite 2024](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/highlights-from-kubecon-north-america-2024-and-microsoft-ignite-2024/4355189)
 
 **Observability & Monitoring**
+- [Know before your customers do: a secure Azure Service Health to Slack pipeline](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/know-before-your-customers-do-a-secure-azure-service-health-to-slack-pipeline/4566890)
 - [From reactive firefighting to proactive operations: custom skills for Azure SRE Agent](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/from-reactive-firefighting-to-proactive-operations-custom-skills-for-azure-sre-a/4542961)
 - [Azure Service Health has four alert types. You probably configured one.](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/azure-service-health-has-four-alert-types-you-probably-configured-one-/4537501)
 - [Your startup doesn't have an SRE team. Now what?](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/your-startup-doesnt-have-an-sre-team-now-what/4540142)
