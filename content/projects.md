@@ -5,7 +5,7 @@ description: "Open-source projects, official publications, study guides, tools a
 layout: "single"
 summary: "Projects, publications and open-source contributions"
 date: 2024-01-01
-lastmod: 2026-10-27
+lastmod: 2026-10-30
 ShowToc: true
 ShowBreadCrumbs: false
 ---
@@ -27,20 +27,30 @@ The complete and always updated log is on the [Activity Log](https://github.com/
 | K8s Hackathon | Hands-on Kubernetes hackathon. 20 challenges covering 100% of CKA + CKAD + CKS certification domains | [k8shackathon.com](https://k8shackathon.com) |
 | Linux Hackathon | The 1st Linux hackathon by Microsoft, part of the official "What The Hack" program | [linuxhackathon.com](https://linuxhackathon.com) |
 | PTU Calculator | PTU estimator for Azure OpenAI. Compares PAYGO, PTU and hybrid pricing models | [ptucalc.com](https://ptucalc.com) |
-| Azure Cert Prep | 205 hands-on challenges across 5 Microsoft certification exams (AZ-900, AZ-104, AZ-305, AZ-400, SC-500). 100% exam coverage with validated commands, break-and-fix scenarios, and one-click labs in GitHub Codespaces. Free and open-source | [azurecertprep.github.io](https://azurecertprep.github.io/) |
+| Azure Cert Prep | 327 hands-on challenges across 5 Microsoft certification exams (AZ-900, AZ-104, AZ-305, AZ-400, SC-500). 100% exam coverage with validated commands, break-and-fix scenarios, and one-click labs in GitHub Codespaces. Free and open-source | [azurecertprep.github.io](https://azurecertprep.github.io/) |
 | Azure Governance Made Simple | 30 chapters on identity, policy, IaC, cost, observability and governance at scale | [azgovernance.com](https://azgovernance.com) |
 | Startup-Scale Landing Zone | Opinionated landing zone for startups on Azure. Deploy in under 1 hour (Bicep + Terraform) | [startupscalelanding.zone](https://startupscalelanding.zone) |
 | AKS Newsletter | Monthly curated updates on Azure Kubernetes Service | [aksnewsletter.com](https://aksnewsletter.com) |
 | Azure Digital Natives Guide | Complete checklist for startups and digital-native teams on Azure | [azdnguide.com](https://azdnguide.com) |
 | Azure Feed | Daily aggregator of Azure blog updates | [azurefeed.news](https://azurefeed.news) |
 | Azure SRE Agent Skills | Custom proactive operations skills pack for Azure SRE Agent. 8 skills covering WAF review, compliance, capacity planning, FinOps, postmortems, Defender score, digital-native governance and AI posture | [github.com/ricmmartins/azure-sre-agent-skills](https://github.com/ricmmartins/azure-sre-agent-skills) |
-| Azure Service Health Slack Bot | Production-oriented integration that sends authenticated Azure Service Health notifications to Slack, deduplicates incidents, and keeps lifecycle updates in one canonical message and thread | [github.com/ricmmartins/azure-service-health-slack-bot](https://github.com/ricmmartins/azure-service-health-slack-bot) |
+| Azure Service Health to Slack | Secure Azure Service Health to Slack pipeline. One Slack message per incident, updated as it evolves, with Entra-authenticated Secure Webhook, multi-subscription and Management Group support, deployed with Bicep on Azure Container Apps. Community project, not an official Microsoft product | [github.com/ricmmartins/azure-service-health-slack-bot](https://github.com/ricmmartins/azure-service-health-slack-bot) · [article](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/know-before-your-customers-do-a-secure-azure-service-health-to-slack-pipeline/4566890) |
 
 ---
 
 ## Blog: Startups at Microsoft
 
 Articles published on the official [Startups at Microsoft](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog) blog on Tech Community:
+
+### AI on Azure (five-part series)
+
+A five-part series on choosing models and services for AI applications on Azure, from training, fine-tuning, and inference to managing your own infrastructure.
+
+1. [AI on Azure 101: training, fine-tuning, inference, and where everything lives](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/ai-on-azure-101-training-fine-tuning-inference-and-where-everything-lives/4569066/)
+2. [AI on Azure: models as a service](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/ai-on-azure-models-as-a-service/4569083/)
+3. [AI on Azure: platforms for apps and agents](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/ai-on-azure-platforms-for-apps-and-agents/4569086/)
+4. [AI on Azure: managed ML](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/ai-on-azure-managed-ml/4569087/)
+5. [AI on Azure: when you own the infrastructure](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/ai-on-azure-when-you-own-the-infrastructure/4569089)
 
 **AI Infrastructure**
 - [Azure AI Foundry: from zero to production](https://techcommunity.microsoft.com/blog/startupsatmicrosoftblog/azure-ai-foundry-from-zero-to-production/4542960)
