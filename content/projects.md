@@ -5,7 +5,7 @@ description: "Open-source projects, official publications, study guides, tools a
 layout: "single"
 summary: "Projects, publications and open-source contributions"
 date: 2024-01-01
-lastmod: 2026-10-30
+lastmod: 2026-11-02
 ShowToc: true
 ShowBreadCrumbs: false
 ---
@@ -21,7 +21,8 @@ The complete and always updated log is on the [Activity Log](https://github.com/
 | Project | Description | Link |
 |---------|-------------|------|
 | AKS Learning | From zero to production on Azure Kubernetes Service. Covers networking, security, observability, scaling, GitOps, AI/ML workloads and best practices | [aks-learning.github.io](https://aks-learning.github.io/) |
-| Decodifica.Tech | Daily tech news digest synthesized from 290+ international sources into a single summary in Portuguese. Cloud, AI, DevOps, security & software engineering — with a daily podcast on Spotify. *(Content in Portuguese only for now)* | [decodifica.tech](https://decodifica.tech) |
+| Decodifica.Tech | Daily technology news digest in Brazilian Portuguese, curated from international sources. Cloud, AI, DevOps, security and software engineering — with a daily podcast on Spotify | [decodifica.tech](https://decodifica.tech) |
+| Decode the Stack | Daily technology briefing in English, combining curated international sources, AI-assisted analysis and links to original reporting. Covers cloud, AI, DevOps, security and software engineering, with a three-host podcast on the site and Spotify. Sister project to Decodifica.Tech, with independently generated editions rather than translations | [decodethestack.com](https://decodethestack.com/) |
 | AI for Infra | Practical AI handbook for infrastructure engineers. 220+ pages, 15 chapters, 10 troubleshooting scenarios | [ai4infra.com](https://ai4infra.com) |
 | From Server to Cluster | Kubernetes ebook for Linux professionals. 15 chapters bridging Linux skills → K8s with hands-on labs | [fromservertocluster.com](https://fromservertocluster.com) |
 | K8s Hackathon | Hands-on Kubernetes hackathon. 20 challenges covering 100% of CKA + CKAD + CKS certification domains | [k8shackathon.com](https://k8shackathon.com) |
